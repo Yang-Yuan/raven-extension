@@ -85,4 +85,27 @@ def octalize(img, show_me = False):
 
     return octals
 
-def what_refection_rotation(int):
+
+def decode_reflection_rotation(code, default = None):
+    switch = {
+        # code : [mirror_left_right, degree to rotate]
+        0: [False, 0],
+        1: [False, 90],
+        2: [False, 180],
+        3: [False, 270],
+        4: [True, 0],
+        5: [True, 90],
+        6: [True, 180],
+        7: [True, 270]
+    }
+    return switch.get(code, default)
+
+
+def apply_operations(img, ops):
+    if ops[0]:
+        img = mirror_left_right(img)
+
+    if ops[1]:
+        img = rot_binary(img, ops[1])
+
+    return img

@@ -50,3 +50,4 @@ def jaccard_coef_all_trans(A, B):
     max_id_x = max_id[:, 0] - A_shape_x
     max_id_y = max_id[:, 1] - A_shape_y
     return j_coefs_max, max_id_x, max_id_y
+
