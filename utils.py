@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-def to_binary(img, bg_color, tolerance):
+def rgb_to_binary(img, bg_color, tolerance):
     """
     convert img to a binary image (0, 1)
     :param img: image to be converted
@@ -11,10 +11,20 @@ def to_binary(img, bg_color, tolerance):
     :return: binary image
     """
 
-    rgb = img[:, :, : -1]
+    rgb = img[:, :, : 3]
 
     return np.logical_not(np.average(abs(rgb - bg_color), axis = -1) < tolerance)
 
+def grey_to_binary(img, bg_color, tolerance):
+    """
+    convert img to a binary image (0, 1)
+    :param img: image to be converted
+    :param bg_color: background color
+    :param tolerance:  tolerance
+    :return: binary image
+    """
+
+    return np.logical_not(abs(img - bg_color) < tolerance)
 
 def cut(img, rectangles, show_me = False):
     """
@@ -59,3 +69,14 @@ def pad(img, r, show_me):
         plt.show()
 
     return padded
+
+
+def extract_components(img, coords):
+    """
+
+    :param img:
+    :param coords:  list of coordinates of objects in a single puzzle image
+    :return:
+    """
+    return [img[y: y + delta_y, x: x + delta_x]
+            for x, y, delta_x, delta_y in coords]

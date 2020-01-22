@@ -13,7 +13,7 @@ raw_img = rescale(image = plt.imread("./problems/X1.gif"),
 
 raw_img = utils.pad(raw_img, r = 0.05, show_me = True)
 
-bin_img = utils.to_binary(raw_img, [1, 1, 1], 0.2)
+bin_img = utils.rgb_to_binary(raw_img, [1, 1, 1], 0.2)
 
 rect_selector = RectSelector(bin_img)
 
