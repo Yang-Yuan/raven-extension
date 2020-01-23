@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from skimage.transform import rotate
 import numpy as np
+import metrics
 
 
 def rot_binary(img, angle):
@@ -63,9 +64,10 @@ def mirror(img, mode):
         pass
 
 
-def octalize(img, show_me = False):
+def unary_transform(img, show_me = False):
     """
 
+    :param show_me:
     :param img:
     :return:
     """
@@ -86,7 +88,8 @@ def octalize(img, show_me = False):
     return octals
 
 
-def decode_reflection_rotation(code, default = None):
+def argmax_unary_sim(simlarities, default = None):
+    tran_n = np.argmax(simlarities)
     switch = {
         # code : [mirror_left_right, degree to rotate]
         0: [False, 0],
@@ -98,14 +101,21 @@ def decode_reflection_rotation(code, default = None):
         6: [True, 180],
         7: [True, 270]
     }
-    return switch.get(code, default)
+    return switch.get(tran_n, default)
 
 
-def apply_operations(img, ops):
-    if ops[0]:
+def apply_unary_transformation(img, trans):
+    if trans[0]:
         img = mirror_left_right(img)
 
-    if ops[1]:
-        img = rot_binary(img, ops[1])
+    if trans[1]:
+        img = rot_binary(img, trans[1])
 
     return img
+
+def binary_transform(imgA, imgB, show_me = False):
+
+    # TODO this alignment must be enhanced in the future.
+    _, x, y = metrics.jaccard_coef_shift_invariant(imgA, imgB)
+
+    imgA_shifted = imgA[]

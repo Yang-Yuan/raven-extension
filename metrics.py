@@ -16,7 +16,7 @@ def jaccard_coef(A, B):
     return (A & B).sum() / (A | B).sum()
 
 
-def jaccard_coef_all_trans(A, B):
+def jaccard_coef_shift_invariant(A, B):
     """
     calculate the similarity under all possible relative translations.
     These two  images are aligned at the top-left corner (x =0, y = 0).

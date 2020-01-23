@@ -4,7 +4,7 @@ import numpy as np
 from skimage.transform import rescale
 from RectSelector import RectSelector
 import utils
-import operas
+import transform
 import metrics
 
 # preprocessing
@@ -26,24 +26,30 @@ top_right = imgs[1]
 bottom_left = imgs[2]
 bottom_right = imgs[3]
 
-octals_top_left = operas.octalize(top_left, show_me = True)
+octals_top_left = transform.unary_transform(top_left, show_me = True)
 
 sim_top_left_right = []
 for img, ii in zip(octals_top_left, np.arange(len(octals_top_left))):
-    sim, _, _ = metrics.jaccard_coef_all_trans(img, top_right)
+    sim, _, _ = metrics.jaccard_coef_shift_invariant(img, top_right)
     sim_top_left_right.append(sim)
 
 print(sim_top_left_right)
 
-ops = operas.decode_reflection_rotation(np.argmax(sim_top_left_right))
+unary_trans = transform.argmax_unary_sim(sim_top_left_right)
 
-guess = operas.apply_operations(bottom_left, ops)
+guess = transform.apply_unary_transformation(bottom_left, unary_trans)
+
+plt.imshow(bottom_left)
+plt.show()
+
+plt.imshow(guess)
+plt.show()
 
 options = imgs[4:]
 
 option_sims = []
 for img in options:
-    sim, _, _ = metrics.jaccard_coef_all_trans(img, guess)
+    sim, _, _ = metrics.jaccard_coef_shift_invariant(img, guess)
     option_sims.append(sim)
 
 print(option_sims)

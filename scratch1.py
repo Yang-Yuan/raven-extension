@@ -1,8 +1,45 @@
 from problems import load_problems
-
+from analogy import get_analogies
+import transform
+import metrics
 
 raven_folder = ".\\problems\\SPMpadded"
 raven_coordinates_file = ".\\problems\\SPM coordinates.txt"
 
-problems = load_problems(raven_folder, raven_coordinates_file, show_me = True)
+problems = load_problems(raven_folder,
+                         raven_coordinates_file,
+                         show_me = True)
+
+problem = problems[0]
+
+analogies = get_analogies(problem)
+
+unary_analogies = analogies.get("unary_analogies")
+for unary_analog in unary_analogies:
+    u1 = problem.matrix[unary_analog[0]]
+    u2 = problem.matrix[unary_analog[1]]
+    u3 = problem.matrix[unary_analog[2]]
+
+    u1_trans = transform.unary_transform(u1)
+    sim_u1_trans_u2 = []
+    for u1_t in u1_trans:
+        sim, _, _ = metrics.jaccard_coef_shift_invariant(u1_t, u2)
+        sim_u1_trans_u2.append(sim)
+
+    unary_trans = transform.argmax_unary_sim(sim_u1_trans_u2)
+    u4_predicted = transform.apply_unary_transformation(u3, unary_trans)
+
+    sim_u4_predicted_ops = []
+    for op in problem.options:
+        sim_u4_predicted_ops.append(
+            metrics.jaccard_coef_shift_invariant(op, u4_predicted))
+    print(sim_u4_predicted_ops)
+
+binary_analogies = analogies.get("binary_analogies")
+for binary_analog in binary_analogies:
+    b1 = problem.matrix[binary_analog[0]]
+    b2 = problem.matrix[binary_analog[1]]
+    b3 = problem.matrix[binary_analog[2]]
+    b4 = problem.matrix[binary_analog[3]]
+    b5 = problem.matrix[binary_analog[4]]
 
