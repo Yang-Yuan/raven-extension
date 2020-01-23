@@ -21,26 +21,25 @@ rectangles = rect_selector.rects
 
 imgs = utils.cut(bin_img, rectangles, show_me = True)
 
-top_left = imgs[0]
-top_right = imgs[1]
-bottom_left = imgs[2]
-bottom_right = imgs[3]
+u1 = imgs[0]
+u2 = imgs[1]
+u3 = imgs[2]
+u4 = imgs[3]
 
-octals_top_left = transform.unary_transform(top_left, show_me = True)
+u1_trans, u1_transformations = transform.unary_transform(u1, show_me = True)
 
-sim_top_left_right = []
-for img, ii in zip(octals_top_left, np.arange(len(octals_top_left))):
-    sim, _, _ = metrics.jaccard_coef_shift_invariant(img, top_right)
-    sim_top_left_right.append(sim)
+sim_u1_u2 = []
+for img, ii in zip(u1_trans, np.arange(len(u1_trans))):
+    sim, _, _ = metrics.jaccard_coef_shift_invariant(img, u2)
+    sim_u1_u2.append(sim)
 
-print(sim_top_left_right)
+print("similarities between u1_trans and u2: " + str(sim_u1_u2))
 
-unary_trans = transform.argmax_unary_sim(sim_top_left_right)
+unary_trans = u1_transformations[np.argmax(sim_u1_u2)]
 
-guess = transform.apply_unary_transformation(bottom_left, unary_trans)
+print("apply transformation: " + str(unary_trans))
 
-plt.imshow(bottom_left)
-plt.show()
+guess = transform.apply_unary_transformation(u3, unary_trans)
 
 plt.imshow(guess)
 plt.show()
@@ -52,4 +51,4 @@ for img in options:
     sim, _, _ = metrics.jaccard_coef_shift_invariant(img, guess)
     option_sims.append(sim)
 
-print(option_sims)
+print("similarties between options and guess: " + str(option_sims))

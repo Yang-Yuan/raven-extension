@@ -80,3 +80,15 @@ def extract_components(img, coords):
     """
     return [img[y: y + delta_y, x: x + delta_x]
             for x, y, delta_x, delta_y in coords]
+
+def trim_binary_image(img):
+    if 2 != len(img.shape):
+        raise Exception("Crap!")
+
+    y, x = np.where(img)
+    y_max = y.max() + 1
+    x_min = x.min()
+    x_max = x.max() + 1
+    y_min = y.min()
+
+    return img[y_min : y_max, x_min :x_max]

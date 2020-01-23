@@ -30,6 +30,7 @@ def load_problems(problem_folder, problem_coordinates_file, show_me = False):
     problems = []
     for img, coords in zip(binary_images, problem_coordinates):
         coms = utils.extract_components(img, coords)
+        trimmed_coms = [utils.trim_binary_image(com) for com in coms]
         if 10 == len(coms):
             problems.append(RavenProgressiveMatrix(coms[: 4], coms[4:]))
         elif 17 == len(coms):

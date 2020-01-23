@@ -1,3 +1,4 @@
+import numpy as np
 from problems import load_problems
 from analogy import get_analogies
 import transform
@@ -20,14 +21,14 @@ for unary_analog in unary_analogies:
     u2 = problem.matrix[unary_analog[1]]
     u3 = problem.matrix[unary_analog[2]]
 
-    u1_trans = transform.unary_transform(u1)
+    u1_trans, u1_transformations = transform.unary_transform(u1)
     sim_u1_trans_u2 = []
     for u1_t in u1_trans:
         sim, _, _ = metrics.jaccard_coef_shift_invariant(u1_t, u2)
         sim_u1_trans_u2.append(sim)
 
-    unary_trans = transform.argmax_unary_sim(sim_u1_trans_u2)
-    u4_predicted = transform.apply_unary_transformation(u3, unary_trans)
+    unary_tran = u1_transformations[np.argmax(sim_u1_trans_u2)]
+    u4_predicted = transform.apply_unary_transformation(u3, unary_tran)
 
     sim_u4_predicted_ops = []
     for op in problem.options:
@@ -43,3 +44,10 @@ for binary_analog in binary_analogies:
     b4 = problem.matrix[binary_analog[3]]
     b5 = problem.matrix[binary_analog[4]]
 
+    b1_b2_trans, b1_b2_align_x, b1_b2_align_y= transform.binary_transform(b1, b2, show_me = True)
+    sim_b1_b2_trans_b3 = []
+    for b1_b2_t in b1_b2_trans:
+        sim, _, _ = metrics.jaccard_coef_shift_invariant(b1_b2_t, b3)
+        sim_b1_b2_trans_b3.append(sim)
+
+    b1_b2_tran = transform.argmax_binary_sim(sim_b1_b2_trans_b3)

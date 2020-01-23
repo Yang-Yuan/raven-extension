@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class RavenProgressiveMatrix:
 
     def __init__(self, matrix_components, option_components):
