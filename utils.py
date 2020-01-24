@@ -85,6 +85,9 @@ def trim_binary_image(img):
     if 2 != len(img.shape):
         raise Exception("Crap!")
 
+    if (img == False).all():
+        return img
+
     y, x = np.where(img)
     y_max = y.max() + 1
     x_min = x.min()

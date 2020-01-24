@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from problems import load_problems
 from analogy import get_analogies
@@ -10,14 +11,13 @@ raven_coordinates_file = ".\\problems\\SPM coordinates.txt"
 problems = load_problems(raven_folder,
                          raven_coordinates_file)
 
-problem_data = {}
 for problem in problems:
 
     analogies = get_analogies(problem)
 
     unary_analogies = analogies.get("unary_analogies")
     unary_analogies_data = {}
-    for unary_analog_name, unary_analog in unary_analogies:
+    for unary_analog_name, unary_analog in unary_analogies.items():
         u1 = problem.matrix[unary_analog[0]]
         u2 = problem.matrix[unary_analog[1]]
         u3 = problem.matrix[unary_analog[2]]
@@ -45,7 +45,7 @@ for problem in problems:
 
     binary_analogies = analogies.get("binary_analogies")
     binary_analogies_data = {}
-    for binary_analog_name, binary_analog in binary_analogies:
+    for binary_analog_name, binary_analog in binary_analogies.items():
         b1 = problem.matrix[binary_analog[0]]
         b2 = problem.matrix[binary_analog[1]]
         b3 = problem.matrix[binary_analog[2]]
@@ -78,7 +78,13 @@ for problem in problems:
             "argmax_sim_b6_predicted_ops": np.argmax(sim_b6_predicted_ops)
         }
 
-    problem_data[problem.name] = {
+    problem_data = {
         "unary_analogies_data" : unary_analogies_data,
         "binary_analogies_data" : binary_analogies_data
     }
+
+    with open("./data/" + problem.name + ".json", 'w') as outfile:
+        json.dump(problem_data, outfile)
+        outfile.close()
+
+

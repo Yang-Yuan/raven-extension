@@ -30,6 +30,7 @@ class RavenProgressiveMatrix:
         if 2 == self.matrix_n:
             fig, axs = plt.subplots(nrows = 3,
                                     ncols = len(self.options))
+            fig.suptitle(self.name)
             for ax, com in zip(axs[: 2, : 2].flatten(order = 'C'), self.matrix.flatten(order = 'C')):
                 ax.imshow(com, cmap = "binary")
             for ax in axs[: 2, 2:].flatten():
@@ -39,6 +40,7 @@ class RavenProgressiveMatrix:
         elif 3 == self.matrix_n:
             fig, axs = plt.subplots(nrows = 4,
                                     ncols = len(self.options))
+            fig.suptitle(self.name)
             for ax, com in zip(axs[: 3, : 3].flatten(order = 'C'), self.matrix.flatten()):
                 ax.imshow(com, cmap = "binary")
             for ax in axs[: 3, 3:].flatten():
