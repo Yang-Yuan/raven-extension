@@ -28,38 +28,18 @@ def load_problems(problem_folder, problem_coordinates_file, show_me = False):
                 coordinates.append(rect_coords)
 
     problems = []
-    for img, coords in zip(binary_images, problem_coordinates):
+    for img, coords, problem_path in zip(binary_images, problem_coordinates, problem_paths):
         coms = utils.extract_components(img, coords)
         trimmed_coms = [utils.trim_binary_image(com) for com in coms]
         if 10 == len(coms):
-            problems.append(RavenProgressiveMatrix(coms[: 4], coms[4:]))
+            problems.append(RavenProgressiveMatrix(problem_path, coms[: 4], coms[4:]))
         elif 17 == len(coms):
-            problems.append(RavenProgressiveMatrix(coms[: 9], coms[9:]))
+            problems.append(RavenProgressiveMatrix(problem_path, coms[: 9], coms[9:]))
         else:
             raise Exception("Crap!")
 
     if show_me:
         for prob in problems:
-            if 2 == prob.matrix_n:
-                fig, axs = plt.subplots(nrows = 3,
-                                        ncols = len(prob.options))
-                for ax, com in zip(axs[: 2, : 2].flatten(order = 'C'), prob.matrix.flatten(order = 'C')):
-                    ax.imshow(com, cmap = "binary")
-                for ax in axs[: 2, 2:].flatten():
-                    ax.remove()
-                for ax, com in zip(axs[2], prob.options):
-                    ax.imshow(com, cmap = "binary")
-            elif 3 == prob.matrix_n:
-                fig, axs = plt.subplots(nrows = 4,
-                                        ncols = len(prob.options))
-                for ax, com in zip(axs[: 3, : 3].flatten(order = 'C'), prob.matrix.flatten()):
-                    ax.imshow(com, cmap = "binary")
-                for ax in axs[: 3, 3:].flatten():
-                    ax.remove()
-                for ax, com in zip(axs[3], prob.options):
-                    ax.imshow(com, cmap = "binary")
-            else:
-                raise Exception("Crap!")
-            plt.show()
+            prob.plot_problem()
 
     return problems
