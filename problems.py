@@ -18,8 +18,6 @@ def load_problems(problem_folder, problem_coordinates_file, show_me = False):
 
     raw_images = [plt.imread(path) for path in problem_paths]
 
-    binary_images = [utils.grey_to_binary(img, 1, 0.2) for img in raw_images]
-
     with open(problem_coordinates_file) as f:
         problem_coordinates = []
         coordinates = []
@@ -32,14 +30,18 @@ def load_problems(problem_folder, problem_coordinates_file, show_me = False):
                 coordinates.append(rect_coords)
 
     problems = []
-    for img, coords, problem_name in zip(binary_images, problem_coordinates, problem_names):
+    for img, coords, problem_name in zip(raw_images, problem_coordinates, problem_names):
         coms = utils.extract_components(img, coords)
+        smaller_coms = [rescale(image = com, scale = (0.5, 0.5)) for com in coms]
+        binary_smaller_coms = [utils.grey_to_binary(com, 1, 0.2) for com in smaller_coms]
+
         # shouldn't trim components. It's gonna mess up the alignment.
         # trimmed_coms = [utils.trim_binary_image(com) for com in coms]
+
         if 10 == len(coms):
-            problems.append(RavenProgressiveMatrix(problem_name, coms[: 4], coms[4:]))
+            problems.append(RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 4], binary_smaller_coms[4:]))
         elif 17 == len(coms):
-            problems.append(RavenProgressiveMatrix(problem_name, coms[: 9], coms[9:]))
+            problems.append(RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 9], binary_smaller_coms[9:]))
         else:
             raise Exception("Crap!")
 
