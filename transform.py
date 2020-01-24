@@ -105,7 +105,7 @@ def unary_transform(img, show_me = False):
     return transformed_images, transformations
 
 
-def apply_unary_transformation(img, unary_transformations):
+def apply_unary_transformation(img, unary_transformations, show_me = False):
     for tran in unary_transformations:
 
         name = tran.get("name")
@@ -119,6 +119,10 @@ def apply_unary_transformation(img, unary_transformations):
             img = foo(img)
         else:
             img = foo(img, **args)
+
+    if show_me:
+        plt.imshow(img)
+        plt.show()
 
     return img
 

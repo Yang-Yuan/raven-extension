@@ -13,7 +13,7 @@ def jaccard_coef(A, B):
     if A.shape != B.shape:
         raise Exception("A and B should have the same shape")
 
-    return (A & B).sum() / (A | B).sum()
+    return np.logical_and(A, B).sum() / np.logical_or(A, B).sum()
 
 
 def jaccard_coef_shift_invariant(A, B):
@@ -35,8 +35,8 @@ def jaccard_coef_shift_invariant(A, B):
     A_expanded = np.full_like(B_expanded, False)
 
     cartesian_prod = [(x, y)
-                      for x in np.arange(A_shape_x + B_shape_x)
-                      for y in np.arange(A_shape_y + B_shape_y)]
+                      for x in np.arange(A_shape_x + B_shape_x)[int(A_shape_x / 2) : -int(A_shape_x / 2)]
+                      for y in np.arange(A_shape_y + B_shape_y)[int(A_shape_y / 2) : -int(A_shape_y / 2)]]
 
     j_coefs = np.zeros(len(cartesian_prod))
     for (x, y), ii in zip(cartesian_prod, np.arange(len(j_coefs))):
