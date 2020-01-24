@@ -6,6 +6,7 @@ import metrics
 
 THIS = modules[__name__]
 
+
 def rot_binary(img, angle):
     """
 
@@ -105,12 +106,11 @@ def unary_transform(img, show_me = False):
 
 
 def apply_unary_transformation(img, unary_transformations):
-
     for tran in unary_transformations:
 
         name = tran.get("name")
 
-        if name is  None:
+        if name is None:
             continue
         foo = getattr(THIS, name)
 
@@ -119,6 +119,30 @@ def apply_unary_transformation(img, unary_transformations):
             img = foo(img)
         else:
             img = foo(img, **args)
+
+    return img
+
+
+def apply_binary_transformation(imgA, imgB,
+                                align_x, align_y,
+                                binary_transformations):
+    imgA_aligned, imgB_aligned = align(imgA, imgB, align_x, align_y)
+
+    img = None
+
+    for tran in binary_transformations:
+
+        name = tran.get("name")
+
+        if name is None:
+            continue
+        foo = getattr(THIS, name)
+
+        args = tran.get("args")
+        if args is None:
+            img = foo(imgA_aligned, imgB_aligned)
+        else:
+            img = foo(imgA_aligned, imgB_aligned, **args)
 
     return img
 
