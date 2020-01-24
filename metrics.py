@@ -13,7 +13,12 @@ def jaccard_coef(A, B):
     if A.shape != B.shape:
         raise Exception("A and B should have the same shape")
 
-    return np.logical_and(A, B).sum() / np.logical_or(A, B).sum()
+    uninion = np.logical_or(A, B).sum()
+
+    if 0 == uninion:
+        return 1
+    else:
+         return np.logical_and(A, B).sum() / uninion
 
 
 def jaccard_coef_shift_invariant(A, B):
@@ -49,5 +54,11 @@ def jaccard_coef_shift_invariant(A, B):
     max_id = np.array(cartesian_prod)[np.where(j_coefs == j_coefs_max)]
     max_id_x = max_id[:, 0] - A_shape_x
     max_id_y = max_id[:, 1] - A_shape_y
-    return j_coefs_max, max_id_x, max_id_y
+
+    if 1 == len(max_id):
+        return j_coefs_max, max_id_x[0], max_id_y[0]
+    else:
+        smallest = np.argmin(abs(max_id_x) + abs(max_id_y))
+        return j_coefs_max, max_id_x[smallest], max_id_y[smallest]
+
 

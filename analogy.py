@@ -33,7 +33,7 @@ binary_analogies_3by3 = {
 def get_analogies(problem):
     if 2 == problem.matrix_n:
         return {"unary_analogies": unary_analogies_2by2,
-                "binary_analogies": []}
+                "binary_analogies": {}}
     elif 3 == problem.matrix_n:
         return {"unary_analogies": unary_analogies_3by3,
                 "binary_analogies": binary_analogies_3by3}

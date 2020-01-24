@@ -208,8 +208,8 @@ def align(imgA, imgB, x, y):
     y_AB_min = y_AB.min()
     x_AB_max = x_AB.max() + 1
 
-    A_expanded = np.full_like(AB_expanded)
-    B_expanded = np.full_like(AB_expanded)
+    A_expanded = np.full_like(AB_expanded, False)
+    B_expanded = np.full_like(AB_expanded, False)
     A_expanded[y + A_shape_y: y + 2 * A_shape_y, x + A_shape_x: x + 2 * A_shape_x] = imgA
     B_expanded[A_shape_y: A_shape_y + B_shape_y, A_shape_x: A_shape_x + B_shape_x] = imgB
 
@@ -228,8 +228,8 @@ def binary_transform(imgA, imgB, show_me = False):
     transformed_images = [unite(A_aligned, B_aligned),
                           intersect(A_aligned, B_aligned),
                           subtract(A_aligned, B_aligned),
-                          backward_subtract(imgA, imgB),
-                          xor(imgA, imgB)]
+                          backward_subtract(A_aligned, B_aligned),
+                          xor(A_aligned, B_aligned)]
 
     transformations = [
         [{"name": "unite"}],
