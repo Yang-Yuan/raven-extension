@@ -5,8 +5,8 @@ from analogy import get_analogies
 import transform
 import metrics
 
-raven_folder = ".\\problems\\SPMpadded"
-raven_coordinates_file = ".\\problems\\SPM coordinates.txt"
+raven_folder = "./problems/SPMpadded"
+raven_coordinates_file = "./problems/SPM coordinates.txt"
 
 problems = load_problems(raven_folder,
                          raven_coordinates_file)
