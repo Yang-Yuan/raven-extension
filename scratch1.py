@@ -13,38 +13,37 @@ problems = load_problems(raven_folder,
 
 for problem in problems:
 
-    if 2 == problem.matrix_n:
-        continue
+    print(problem.name)
 
     analogies = get_analogies(problem)
 
     unary_analogies = analogies.get("unary_analogies")
     unary_analogies_data = {}
-    # for unary_analog_name, unary_analog in unary_analogies.items():
-    #     u1 = problem.matrix[unary_analog[0]]
-    #     u2 = problem.matrix[unary_analog[1]]
-    #     u3 = problem.matrix[unary_analog[2]]
-    #
-    #     u1_trans, u1_transformations = transform.unary_transform(u1)
-    #     sim_u1_trans_u2 = []
-    #     for u1_t in u1_trans:
-    #         sim, _, _ = metrics.jaccard_coef_shift_invariant(u1_t, u2)
-    #         sim_u1_trans_u2.append(sim)
-    #
-    #     unary_tran = u1_transformations[np.argmax(sim_u1_trans_u2)]
-    #     u4_predicted = transform.apply_unary_transformation(u3, unary_tran)
-    #
-    #     sim_u4_predicted_ops = []
-    #     for op in problem.options:
-    #         sim, _, _ = metrics.jaccard_coef_shift_invariant(op, u4_predicted)
-    #         sim_u4_predicted_ops.append(sim)
-    #
-    #     unary_analogies_data[unary_analog_name] = {
-    #         "sim_u1_trans_u2": sim_u1_trans_u2,
-    #         "unary_tran": unary_tran,
-    #         "sim_u4_predicted_ops": sim_u4_predicted_ops,
-    #         "argmax_sim_u4_predicted_ops": int(np.argmax(sim_u4_predicted_ops))
-    #     }
+    for unary_analog_name, unary_analog in unary_analogies.items():
+        u1 = problem.matrix[unary_analog[0]]
+        u2 = problem.matrix[unary_analog[1]]
+        u3 = problem.matrix[unary_analog[2]]
+
+        u1_trans, u1_transformations = transform.unary_transform(u1)
+        sim_u1_trans_u2 = []
+        for u1_t in u1_trans:
+            sim, _, _ = metrics.jaccard_coef_shift_invariant(u1_t, u2)
+            sim_u1_trans_u2.append(sim)
+
+        unary_tran = u1_transformations[np.argmax(sim_u1_trans_u2)]
+        u4_predicted = transform.apply_unary_transformation(u3, unary_tran)
+
+        sim_u4_predicted_ops = []
+        for op in problem.options:
+            sim, _, _ = metrics.jaccard_coef_shift_invariant(op, u4_predicted)
+            sim_u4_predicted_ops.append(sim)
+
+        unary_analogies_data[unary_analog_name] = {
+            "sim_u1_trans_u2": sim_u1_trans_u2,
+            "unary_tran": unary_tran,
+            "sim_u4_predicted_ops": sim_u4_predicted_ops,
+            "argmax_sim_u4_predicted_ops": int(np.argmax(sim_u4_predicted_ops)) + 1
+        }
 
     binary_analogies = analogies.get("binary_analogies")
     binary_analogies_data = {}
@@ -77,7 +76,7 @@ for problem in problems:
             "sim_b1_b2_trans_b3" : sim_b1_b2_trans_b3,
             "b1_b2_tran": b1_b2_tran,
             "sim_b6_predicted_ops": sim_b6_predicted_ops,
-            "argmax_sim_b6_predicted_ops": int(np.argmax(sim_b6_predicted_ops))
+            "argmax_sim_b6_predicted_ops": int(np.argmax(sim_b6_predicted_ops)) + 1
         }
 
     problem_data = {
