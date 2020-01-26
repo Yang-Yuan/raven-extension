@@ -1,10 +1,13 @@
 import json
 import numpy as np
 from matplotlib import pyplot as plt
+import time
 from problems import load_problems
 from analogy import get_analogies
 import transform
 import metrics
+
+start_time = time.time()
 
 raven_folder = "./problems/SPMpadded"
 raven_coordinates_file = "./problems/SPM coordinates.txt"
@@ -92,3 +95,8 @@ for problem in problems:
         outfile.close()
 
     metrics.save_jaccard_cache(problem.name)
+
+
+end_time = time.time()
+
+print(end_time - start_time)
