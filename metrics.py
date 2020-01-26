@@ -1,4 +1,66 @@
 import numpy as np
+from os.path import join
+
+cache_folder = "./precomputed-similarities/jaccard"
+jaccard_similarities = None
+jaccard_x = None
+jaccard_y = None
+jaccard_images = None
+jaccard_similarities_initial_size = 150
+jaccard_similarities_increment = 50
+
+
+def load_jaccard_cache(problem_name):
+
+    global jaccard_similarities
+    global jaccard_images
+    global jaccard_x
+    global jaccard_y
+    global jaccard_similarities_initial_size
+
+    cache_file_name = join(cache_folder, problem_name + ".npz")
+
+    try:
+        cache_file = np.load(cache_file_name, allow_pickle = True)
+    except FileNotFoundError:
+        cache_file = None
+
+    if cache_file is not None:
+        jaccard_similarities = cache_file["similarities"]
+        cache_file.files.remove("similarities")
+
+        jaccard_x = cache_file["jaccard_x"]
+        cache_file.files.remove("jaccard_x")
+
+        jaccard_y = cache_file["jaccard_y"]
+        cache_file.files.remove("jaccard_y")
+
+        jaccard_images = []
+        for img_n_str in cache_file.files:
+            jaccard_images.append(cache_file[img_n_str])
+    else:
+        jaccard_similarities = np.full((jaccard_similarities_initial_size, jaccard_similarities_initial_size),
+                                       np.nan, dtype = float)
+        jaccard_x = np.full((jaccard_similarities_initial_size, jaccard_similarities_initial_size),
+                            None, dtype = object)
+        jaccard_y = np.full((jaccard_similarities_initial_size, jaccard_similarities_initial_size),
+                            None, dtype = object)
+        jaccard_images = []
+
+
+def save_jaccard_cache(problem_name):
+
+    global jaccard_similarities
+    global jaccard_images
+    global jaccard_x
+    global jaccard_y
+
+    cache_file_name = join(cache_folder, problem_name + ".npz")
+    np.savez(cache_file_name,
+             similarities = jaccard_similarities,
+             jaccard_x = jaccard_x,
+             jaccard_y = jaccard_y,
+             *jaccard_images)
 
 
 def jaccard_coef_same_shape(A, B):
@@ -91,7 +153,20 @@ def jaccard_coef(A, B):
             B_x_max = B_x.max() + 1
             B_trimmed = B[B_y_min: B_y_max, B_x_min: B_x_max]
 
-    sim, x_trimmed, y_trimmed = jaccard_coef_naive(A_trimmed, B_trimmed)
+    A_id = image2index(A_trimmed)
+    B_id = image2index(B_trimmed)
+
+    sim = jaccard_similarities[A_id, B_id]
+
+    if np.isnan(sim):
+        sim, x_trimmed, y_trimmed = jaccard_coef_naive(A_trimmed, B_trimmed)
+        jaccard_similarities[A_id, B_id] = sim
+        jaccard_x[A_id, B_id] = x_trimmed
+        jaccard_y[A_id, B_id] = y_trimmed
+    else:
+        x_trimmed = jaccard_x[A_id, B_id]
+        y_trimmed = jaccard_y[A_id, B_id]
+
     x = x_trimmed - A_x_min + B_x_min
     y = y_trimmed - A_y_min + B_y_min
 
@@ -100,3 +175,37 @@ def jaccard_coef(A, B):
     else:
         smallest = np.argmin(abs(x) + abs(y))
         return sim, x[smallest], y[smallest]
+
+def image2index(img):
+    """
+    TODO need to be improved in the future using hash or creating indexing
+    :param img:
+    :return:
+    """
+    global jaccard_similarities
+    global jaccard_images
+    global jaccard_x
+    global jaccard_y
+    global jaccard_similarities_increment
+
+    img_packed = np.packbits(img, axis = -1)
+    for ii in range(len(jaccard_images)):
+        if (img_packed == jaccard_images[ii]).all():
+            return ii
+
+    jaccard_images.append(img_packed)
+
+    if len(jaccard_images) > jaccard_similarities.shape[0]:
+        jaccard_similarities = np.pad(jaccard_similarities,
+                                      ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
+                                      np.nan)
+        jaccard_x = np.pad(jaccard_x,
+                           ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
+                           None)
+        jaccard_y = np.pad(jaccard_y,
+                           ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
+                           None)
+
+    return ii + 1
+
+

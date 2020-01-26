@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from os.path import join
 from matplotlib import pyplot as plt
 from problems import load_problems
 from analogy import get_analogies
@@ -8,36 +9,37 @@ import metrics
 
 raven_folder = "./problems/SPMpadded"
 raven_coordinates_file = "./problems/SPM coordinates.txt"
+cache_folder = "./precomputed-similarities/jaccard"
 
-problems = load_problems(raven_folder,
-                         raven_coordinates_file)
+problems = load_problems(raven_folder, raven_coordinates_file)
 
 for problem in problems:
 
     print(problem.name)
 
-    groupA = problem.matrix.flatten()
-    groupB = problem.options
-    for ii in range(len(groupA)):
-        for jj in range(len(groupB)):
+    cache_file_name = join(cache_folder, problem.name + ".npz")
 
-            print(ii, jj)
+    try:
+        cache_file = np.load(cache_file_name, allow_pickle = True)
+    except FileNotFoundError:
+        cache_file = None
 
-            sim_naive, x_naive, y_naive = metrics.jaccard_coef0(groupA[ii], groupB[jj])
-            sim_fast, x_fast, y_fast = metrics.jaccard_coef2(groupA[ii], groupB[jj])
+    if cache_file is not None:
+        similarities = cache_file["similarities"]
+        cache_file.files.remove("similarities")
 
-            if sim_naive != sim_fast:
-                print(ii, jj, problem.name)
-                raise Exception("Crap!")
+        images = []
+        for img_name in cache_file.files:
+            images.append(cache_file[img_name])
+    else:
+        similarities = np.full((5, 5), -1)
+        images = []
 
-            if x_naive != x_fast:
-                print(ii, jj, problem.name)
-                raise Exception("Crap!")
+    similarities = np.full((3, 3), None, dtype = object)
+    similarities[0, 0] = np.arange(3)
+    for ii in range(len(problem.options)):
+        images.append(np.packbits(problem.options[ii], axis = -1))
+    np.savez(cache_file_name, similarities = similarities, *images)
 
-            if y_naive != y_fast:
-                print(ii, jj, problem.name)
-                raise Exception("Crap!")
-
-print("Yeah!")
 
 

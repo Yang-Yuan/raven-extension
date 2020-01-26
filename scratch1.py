@@ -16,6 +16,8 @@ for problem in problems:
 
     print(problem.name)
 
+    metrics.load_jaccard_cache(problem.name)
+
     analogies = get_analogies(problem)
 
     unary_analogies = analogies.get("unary_analogies")
@@ -89,3 +91,4 @@ for problem in problems:
         json.dump(problem_data, outfile)
         outfile.close()
 
+    metrics.save_jaccard_cache(problem.name)
