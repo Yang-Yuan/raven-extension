@@ -1,5 +1,6 @@
 import numpy as np
 from os.path import join
+from matplotlib import pyplot as plt
 
 cache_folder = "./precomputed-similarities/jaccard"
 jaccard_similarities = None
@@ -153,8 +154,8 @@ def jaccard_coef(A, B):
             B_x_max = B_x.max() + 1
             B_trimmed = B[B_y_min: B_y_max, B_x_min: B_x_max]
 
-    A_id = image2index(A_trimmed)
     B_id = image2index(B_trimmed)
+    A_id = image2index(A_trimmed)
 
     sim = jaccard_similarities[A_id, B_id]
 
@@ -189,8 +190,9 @@ def image2index(img):
     global jaccard_similarities_increment
 
     img_packed = np.packbits(img, axis = -1)
+    ii = -1
     for ii in range(len(jaccard_images)):
-        if (img_packed == jaccard_images[ii]).all():
+        if img_packed.shape == jaccard_images[ii].shape and (img_packed == jaccard_images[ii]).all():
             return ii
 
     jaccard_images.append(img_packed)

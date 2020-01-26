@@ -30,7 +30,7 @@ for problem in problems:
         u1_trans, u1_transformations = transform.unary_transform(u1)
         sim_u1_trans_u2 = []
         for u1_t in u1_trans:
-            sim, _, _ = metrics.jaccard_coef_naive(u1_t, u2)
+            sim, _, _ = metrics.jaccard_coef(u1_t, u2)
             sim_u1_trans_u2.append(sim)
 
         unary_tran = u1_transformations[np.argmax(sim_u1_trans_u2)]
@@ -38,7 +38,7 @@ for problem in problems:
 
         sim_u4_predicted_ops = []
         for op in problem.options:
-            sim, _, _ = metrics.jaccard_coef_naive(op, u4_predicted)
+            sim, _, _ = metrics.jaccard_coef(op, u4_predicted)
             sim_u4_predicted_ops.append(sim)
 
         unary_analogies_data[unary_analog_name] = {
@@ -60,7 +60,7 @@ for problem in problems:
         b1_b2_trans, b1_b2_transformations, b1_b2_align_x, b1_b2_align_y = transform.binary_transform(b1, b2)
         sim_b1_b2_trans_b3 = []
         for b1_b2_t in b1_b2_trans:
-            sim, _, _ = metrics.jaccard_coef_naive(b1_b2_t, b3)
+            sim, _, _ = metrics.jaccard_coef(b1_b2_t, b3)
             sim_b1_b2_trans_b3.append(sim)
 
         b1_b2_tran = b1_b2_transformations[np.argmax(sim_b1_b2_trans_b3)]
@@ -70,7 +70,7 @@ for problem in problems:
 
         sim_b6_predicted_ops = []
         for op in problem.options:
-            sim, _, _ = metrics.jaccard_coef_naive(op, b6_predicted)
+            sim, _, _ = metrics.jaccard_coef(op, b6_predicted)
             sim_b6_predicted_ops.append(sim)
 
         binary_analogies_data[binary_analog_name] = {
