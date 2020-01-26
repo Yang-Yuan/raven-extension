@@ -36,8 +36,8 @@ def load_jaccard_cache(problem_name):
         cache_file.files.remove("jaccard_y")
 
         jaccard_images = []
-        for img_n_str in cache_file.files:
-            jaccard_images.append(cache_file[img_n_str])
+        for img_arr_n in cache_file.files:
+            jaccard_images.append(cache_file[img_arr_n])
     else:
         jaccard_similarities = np.full((jaccard_similarities_initial_size, jaccard_similarities_initial_size),
                                        np.nan, dtype = float)
@@ -198,14 +198,12 @@ def image2index(img):
     if len(jaccard_images) > jaccard_similarities.shape[0]:
         jaccard_similarities = np.pad(jaccard_similarities,
                                       ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
-                                      np.nan)
+                                      constant_values = np.nan)
         jaccard_x = np.pad(jaccard_x,
                            ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
-                           None)
+                           constant_values = None)
         jaccard_y = np.pad(jaccard_y,
                            ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
-                           None)
+                           constant_values = None)
 
     return ii + 1
-
-
