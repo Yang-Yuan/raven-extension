@@ -191,8 +191,8 @@ def align(imgA, imgB, x, y):
 
     :param imgA:
     :param imgB:
-    :param x: the output of  metrics.jaccard_coef_shift_invariant(imgA, imgB)
-    :param y: he output of  metrics.jaccard_coef_shift_invariant(imgA, imgB)
+    :param x: the output of  metrics.jaccard_coef(imgA, imgB)
+    :param y: he output of  metrics.jaccard_coef(imgA, imgB)
     :return:
     """
     A_shape_y, A_shape_x = imgA.shape
@@ -221,7 +221,7 @@ def align(imgA, imgB, x, y):
 
 def binary_transform(imgA, imgB, show_me = False):
     # TODO this alignment must be enhanced in the future.
-    _, align_x, align_y = metrics.jaccard_coef_naive(imgA, imgB)
+    _, align_x, align_y = metrics.jaccard_coef(imgA, imgB)
 
     A_aligned, B_aligned = align(imgA, imgB, align_x, align_y)
 
