@@ -25,6 +25,7 @@ class RavenProgressiveMatrix:
         self.options = option_components
 
         self.analogies = None
+        self.data = None
 
     def plot_problem(self):
         if 2 == self.matrix_n:

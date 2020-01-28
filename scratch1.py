@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 import time
 from problems import load_problems
 from analogy import get_analogies
+from report import create_report
 import transform
 import metrics
 
@@ -90,12 +91,16 @@ for problem in problems:
         "binary_analogies_data" : binary_analogies_data
     }
 
+    problem.data = problem_data
+
     with open("./data/" + problem.name + ".json", 'w+') as outfile:
         json.dump(problem_data, outfile)
         outfile.close()
 
     metrics.save_jaccard_cache(problem.name)
 
+
+create_report(problems)
 
 end_time = time.time()
 
