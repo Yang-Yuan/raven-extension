@@ -6,6 +6,26 @@ import metrics
 
 THIS = modules[__name__]
 
+unary_transformations = [
+        [{"name": None}],
+        [{"name": "rot_binary", "args": {"angle": 90}}],
+        [{"name": "rot_binary", "args": {"angle": 180}}],
+        [{"name": "rot_binary", "args": {"angle": 270}}],
+        [{"name": "mirror_left_right"}],
+        [{"name": "mirror_left_right"},
+         {"name": "rot_binary", "args": {"angle": 90}}],
+        [{"name": "mirror_left_right"},
+         {"name": "rot_binary", "args": {"angle": 180}}],
+        [{"name": "mirror_left_right"},
+         {"name": "rot_binary", "args": {"angle": 270}}]
+    ]
+
+binary_transformations = [
+        [{"name": "unite"}],
+        [{"name": "intersect"}],
+        [{"name": "subtract"}],
+        [{"name": "backward_subtract"}],
+        [{"name": "xor"}]]
 
 def rot_binary(img, angle):
     """
