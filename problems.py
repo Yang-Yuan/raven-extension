@@ -7,8 +7,20 @@ import numpy as np
 import utils
 from RavenProgressiveMatrix import RavenProgressiveMatrix
 
+raven_folder = "./problems/SPMpadded"
+raven_coordinates_file = "./problems/SPM coordinates.txt"
 
-def load_problems(problem_folder, problem_coordinates_file, show_me = False):
+
+def load_problems(problem_folder = None, problem_coordinates_file = None, show_me = False):
+
+    global raven_folder
+    global raven_coordinates_file
+
+    if problem_folder is None:
+        problem_folder = raven_folder
+
+    if problem_coordinates_file is None:
+        problem_coordinates_file = raven_coordinates_file
 
     problem_filenames = natsorted([f for f in listdir(problem_folder) if isfile(join(problem_folder, f))])
 

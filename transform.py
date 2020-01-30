@@ -7,25 +7,32 @@ import metrics
 THIS = modules[__name__]
 
 unary_transformations = [
-        [{"name": None}],
-        [{"name": "rot_binary", "args": {"angle": 90}}],
-        [{"name": "rot_binary", "args": {"angle": 180}}],
-        [{"name": "rot_binary", "args": {"angle": 270}}],
-        [{"name": "mirror_left_right"}],
-        [{"name": "mirror_left_right"},
-         {"name": "rot_binary", "args": {"angle": 90}}],
-        [{"name": "mirror_left_right"},
-         {"name": "rot_binary", "args": {"angle": 180}}],
-        [{"name": "mirror_left_right"},
-         {"name": "rot_binary", "args": {"angle": 270}}]
-    ]
+    [{"name": None}],
+    [{"name": "rot_binary", "args": {"angle": 90}}],
+    [{"name": "rot_binary", "args": {"angle": 180}}],
+    [{"name": "rot_binary", "args": {"angle": 270}}],
+    [{"name": "mirror_left_right"}],
+    [{"name": "mirror_left_right"},
+     {"name": "rot_binary", "args": {"angle": 90}}],
+    [{"name": "mirror_left_right"},
+     {"name": "rot_binary", "args": {"angle": 180}}],
+    [{"name": "mirror_left_right"},
+     {"name": "rot_binary", "args": {"angle": 270}}],
+    [{"name": "extend"}],
+    [{"name": "backward_extend"}]
+]
 
 binary_transformations = [
-        [{"name": "unite"}],
-        [{"name": "intersect"}],
-        [{"name": "subtract"}],
-        [{"name": "backward_subtract"}],
-        [{"name": "xor"}]]
+    [{"name": "unite"}],
+    [{"name": "intersect"}],
+    [{"name": "subtract"}],
+    [{"name": "backward_subtract"}],
+    [{"name": "xor"}]]
+
+
+def extend(img):
+    return img
+
 
 def rot_binary(img, angle):
     """
@@ -119,14 +126,16 @@ def unary_transform(img, show_me = False):
         [{"name": "mirror_left_right"},
          {"name": "rot_binary", "args": {"angle": 180}}],
         [{"name": "mirror_left_right"},
-         {"name": "rot_binary", "args": {"angle": 270}}]
+         {"name": "rot_binary", "args": {"angle": 270}}],
+        [{"name": "extend"}],
+        [{"name": "backward_extend"}]
     ]
 
     return transformed_images, transformations
 
 
-def apply_unary_transformation(img, unary_transformations, show_me = False):
-    for tran in unary_transformations:
+def apply_unary_transformation(img, unary_trans, show_me = False):
+    for tran in unary_trans:
 
         name = tran.get("name")
 
@@ -147,14 +156,17 @@ def apply_unary_transformation(img, unary_transformations, show_me = False):
     return img
 
 
-def apply_binary_transformation(imgA, imgB,
-                                align_x, align_y,
-                                binary_transformations):
+def apply_binary_transformation(imgA, imgB, binary_trans,
+                                align_x = None, align_y = None):
+
+    if align_x is None or align_y is None:
+        _, align_x, align_y = metrics.jaccard_coef(imgA, imgB)
+
     imgA_aligned, imgB_aligned = align(imgA, imgB, align_x, align_y)
 
     img = None
 
-    for tran in binary_transformations:
+    for tran in binary_trans:
 
         name = tran.get("name")
 
@@ -168,7 +180,7 @@ def apply_binary_transformation(imgA, imgB,
         else:
             img = foo(imgA_aligned, imgB_aligned, **args)
 
-    return img
+    return img, align_x, align_y
 
 
 def unite(imgA, imgB):

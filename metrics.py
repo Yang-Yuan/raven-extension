@@ -10,6 +10,13 @@ jaccard_images = None
 jaccard_similarities_initial_size = 150
 jaccard_similarities_increment = 50
 
+asymmetric_jaccard_similarities = None
+asymmetric_jaccard_x = None
+asymmetric_jaccard_y = None
+asymmetric_jaccard_images = None
+asymmetric_jaccard_similarities_initial_size = 150
+asymmetric_jaccard_similarities_increment = 50
+
 
 def load_jaccard_cache(problem_name):
 
@@ -209,3 +216,51 @@ def image2index(img):
                            constant_values = None)
 
     return ii + 1
+
+
+def asymmetric_jaccard_coef_A_sub_B(A, B):
+    """
+    this measures how much A is a subset of B,
+    or A is inside of B,
+    or A is part of B.
+    :param A:
+    :param B:
+    :return:
+    """
+    A_y, A_x = np.where(A)
+    B_y, B_x = np.where(B)
+    if 0 == len(A_y):
+        if 0 == len(B_y):
+            return 1, 0, 0  # A and B are all white images.
+        else:
+            return 1, 0, 0  # A is all white, but B is not.
+    else:
+        if 0 == len(B_y):
+            return 0, 0, 0  # B is all white, but A is not.
+        else:
+            A_y_min = A_y.min()
+            A_x_min = A_x.min()
+            A_y_max = A_y.max() + 1
+            A_x_max = A_x.max() + 1
+            A_trimmed = A[A_y_min: A_y_max, A_x_min: A_x_max]
+
+            B_y_min = B_y.min()
+            B_x_min = B_x.min()
+            B_y_max = B_y.max() + 1
+            B_x_max = B_x.max() + 1
+            B_trimmed = B[B_y_min: B_y_max, B_x_min: B_x_max]
+
+
+
+
+
+def asymmetric_jaccard_coef_B_sub_A(A, B):
+    """
+    this measures how much B is a subset of A,
+    or B is inside of A,
+    or B is part of A.
+    :param A:
+    :param B:
+    :return:
+    """
+    pass
