@@ -2,7 +2,7 @@ import numpy as np
 from os.path import join
 from matplotlib import pyplot as plt
 
-cache_folder = "./precomputed-similarities/jaccard"
+jaccard_cache_folder = "./precomputed-similarities/jaccard"
 jaccard_similarities = None
 jaccard_x = None
 jaccard_y = None
@@ -10,23 +10,16 @@ jaccard_images = None
 jaccard_similarities_initial_size = 150
 jaccard_similarities_increment = 50
 
-asymmetric_jaccard_similarities = None
-asymmetric_jaccard_x = None
-asymmetric_jaccard_y = None
-asymmetric_jaccard_images = None
-asymmetric_jaccard_similarities_initial_size = 150
-asymmetric_jaccard_similarities_increment = 50
-
 
 def load_jaccard_cache(problem_name):
-
+    global jaccard_cache_folder
     global jaccard_similarities
     global jaccard_images
     global jaccard_x
     global jaccard_y
     global jaccard_similarities_initial_size
 
-    cache_file_name = join(cache_folder, problem_name + ".npz")
+    cache_file_name = join(jaccard_cache_folder, problem_name + ".npz")
 
     try:
         cache_file = np.load(cache_file_name, allow_pickle = True)
@@ -57,13 +50,13 @@ def load_jaccard_cache(problem_name):
 
 
 def save_jaccard_cache(problem_name):
-
+    global jaccard_cache_folder
     global jaccard_similarities
     global jaccard_images
     global jaccard_x
     global jaccard_y
 
-    cache_file_name = join(cache_folder, problem_name + ".npz")
+    cache_file_name = join(jaccard_cache_folder, problem_name + ".npz")
     np.savez(cache_file_name,
              similarities = jaccard_similarities,
              jaccard_x = jaccard_x,
@@ -119,10 +112,10 @@ def jaccard_coef_naive(A, B):
     j_coefs_max = np.max(j_coefs)
 
     max_id = np.array(cartesian_prod)[np.where(j_coefs == j_coefs_max)]
-    max_id_x = max_id[:, 0] - A_shape_x
-    max_id_y = max_id[:, 1] - A_shape_y
+    max_x = max_id[:, 0] - A_shape_x
+    max_y = max_id[:, 1] - A_shape_y
 
-    return j_coefs_max, max_id_x, max_id_y
+    return j_coefs_max, max_x, max_y
 
 
 def jaccard_coef(A, B):
@@ -161,8 +154,8 @@ def jaccard_coef(A, B):
             B_x_max = B_x.max() + 1
             B_trimmed = B[B_y_min: B_y_max, B_x_min: B_x_max]
 
-    B_id = image2index(B_trimmed)
-    A_id = image2index(A_trimmed)
+    B_id = jaccard_image2index(B_trimmed)
+    A_id = jaccard_image2index(A_trimmed)
 
     sim = jaccard_similarities[A_id, B_id]
 
@@ -184,7 +177,8 @@ def jaccard_coef(A, B):
         smallest = np.argmin(abs(x) + abs(y))
         return sim, x[smallest], y[smallest]
 
-def image2index(img):
+
+def jaccard_image2index(img):
     """
     TODO need to be improved in the future using hash or creating indexing
     :param img:
@@ -216,51 +210,3 @@ def image2index(img):
                            constant_values = None)
 
     return ii + 1
-
-
-def asymmetric_jaccard_coef_A_sub_B(A, B):
-    """
-    this measures how much A is a subset of B,
-    or A is inside of B,
-    or A is part of B.
-    :param A:
-    :param B:
-    :return:
-    """
-    A_y, A_x = np.where(A)
-    B_y, B_x = np.where(B)
-    if 0 == len(A_y):
-        if 0 == len(B_y):
-            return 1, 0, 0  # A and B are all white images.
-        else:
-            return 1, 0, 0  # A is all white, but B is not.
-    else:
-        if 0 == len(B_y):
-            return 0, 0, 0  # B is all white, but A is not.
-        else:
-            A_y_min = A_y.min()
-            A_x_min = A_x.min()
-            A_y_max = A_y.max() + 1
-            A_x_max = A_x.max() + 1
-            A_trimmed = A[A_y_min: A_y_max, A_x_min: A_x_max]
-
-            B_y_min = B_y.min()
-            B_x_min = B_x.min()
-            B_y_max = B_y.max() + 1
-            B_x_max = B_x.max() + 1
-            B_trimmed = B[B_y_min: B_y_max, B_x_min: B_x_max]
-
-
-
-
-
-def asymmetric_jaccard_coef_B_sub_A(A, B):
-    """
-    this measures how much B is a subset of A,
-    or B is inside of A,
-    or B is part of A.
-    :param A:
-    :param B:
-    :return:
-    """
-    pass

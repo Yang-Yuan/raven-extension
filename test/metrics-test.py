@@ -1,4 +1,4 @@
-import metrics
+import jaccard
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -11,7 +11,7 @@ B = np.full((5, 5), False)
 B[2 :, 2 :] = True
 plt.imshow(B)
 
-sim, x, y = metrics.jaccard_coef_naive(A, B)
+sim, x, y = jaccard.jaccard_coef_naive(A, B)
 
 A = np.full((5, 5), False)
 A[0, 2] = True
@@ -23,7 +23,7 @@ B[3, 1] = True
 B[4, :3] = True
 plt.imshow(B)
 
-sim, x, y = metrics.jaccard_coef_naive(A, B)
+sim, x, y = jaccard.jaccard_coef_naive(A, B)
 
 A = np.full((5, 5), False)
 A[0, 2] = True
@@ -34,4 +34,4 @@ B = np.full((5, 5), False)
 B[0, :3] = True
 plt.imshow(B)
 
-sim, x, y = metrics.jaccard_coef_naive(A, B)
+sim, x, y = jaccard.jaccard_coef_naive(A, B)

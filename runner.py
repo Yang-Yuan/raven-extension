@@ -5,7 +5,7 @@ import time
 from problems import load_problems
 from report import create_report
 import transform
-import metrics
+import jaccard
 
 problems = load_problems()
 
@@ -44,7 +44,7 @@ def run_raven_explanatory(analogies_groups, transformation_groups):
 
         print(problem.name)
 
-        metrics.load_jaccard_cache(problem.name)
+        jaccard.load_jaccard_cache(problem.name)
 
         if 2 == problem.matrix_n:
             unary_analogies = analogies_groups.get("2x2_unary_analogies")
@@ -64,7 +64,6 @@ def run_raven_explanatory(analogies_groups, transformation_groups):
         for unary_analog_name, unary_analog in unary_analogies.items():
             u1 = problem.matrix[unary_analog[0]]
             u2 = problem.matrix[unary_analog[1]]
-            u3 = problem.matrix[unary_analog[2]]
 
             sim_u1_trans_u2 = []
             u1_u2_align_x = []
@@ -72,20 +71,20 @@ def run_raven_explanatory(analogies_groups, transformation_groups):
             u1_u2_diff = []
             for unary_tran in unary_transformations:
                 if str(unary_tran) == "[{'name': 'extend'}]":
-                    sim, align_x, align_y, diff = metrics.asymmetric_jaccard_coef_A_sub_B(u1, u2)
+                    sim, align_x, align_y, diff = jaccard.asymmetric_jaccard_coef_A_sub_B(u1, u2)
                     sim_u1_trans_u2.append(sim)
                     u1_u2_align_x.append(align_x)
                     u1_u2_align_y.append(align_y)
                     u1_u2_diff.append(diff)
                 elif str(unary_tran) == "[{'name': 'backward_extend'}]":
-                    sim, align_x, align_y, diff = metrics.asymmetric_jaccard_coef_B_sub_A(u1, u2)
+                    sim, align_x, align_y, diff = jaccard.asymmetric_jaccard_coef_B_sub_A(u1, u2)
                     sim_u1_trans_u2.append(sim)
                     u1_u2_align_x.append(align_x)
                     u1_u2_align_y.append(align_y)
                     u1_u2_diff.append(diff)
                 else:
                     u1_t = transform.apply_unary_transformation(u1, unary_tran)
-                    sim, _, _ = metrics.jaccard_coef(u1_t, u2)
+                    sim, _, _ = jaccard.jaccard_coef(u1_t, u2)
                     sim_u1_trans_u2.append(sim)
                     u1_u2_align_x.append(None)  # only the weird extend transformation needs this
                     u1_u2_align_y.append(None)  # only the weird extend transformation needs this
@@ -105,15 +104,13 @@ def run_raven_explanatory(analogies_groups, transformation_groups):
             b1 = problem.matrix[binary_analog[0]]
             b2 = problem.matrix[binary_analog[1]]
             b3 = problem.matrix[binary_analog[2]]
-            b4 = problem.matrix[binary_analog[3]]
-            b5 = problem.matrix[binary_analog[4]]
 
             sim_b1_b2_trans_b3 = []
             b1_b2_align_x = []
             b1_b2_align_y = []
             for binary_tran in binary_transformations:
                 b1_b2_t, align_x, align_y = transform.apply_binary_transformation(b1, b2, binary_tran)
-                sim, _, _ = metrics.jaccard_coef(b1_b2_t, b3)
+                sim, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
                 sim_b1_b2_trans_b3.append(sim)
                 b1_b2_align_x.append(align_x)
                 b1_b2_align_y.append(align_y)
@@ -141,18 +138,29 @@ def run_raven_explanatory(analogies_groups, transformation_groups):
         if best_unary_sim > best_binary_sim:
             unary_analog_data = unary_analogies_data.get(best_unary_analog_name)
             best_unary_tran = unary_analog_data.get("best_unary_tran")
-            if str(unary_tran) == "[{'name': 'extend'}]":
+            best_u1_u2_align_x = unary_analog_data.get("best_u1_u2_align_x")
+            best_u1_u2_align_y = unary_analog_data.get("best_u1_u2_align_y")
+            best_u1_u2_diff = unary_analog_data.get("best_u1_u2_diff")
+            unary_analog = unary_analogies.get(best_unary_analog_name)
+            u3 = problem.matrix[unary_analog[2]]
+            if str(best_unary_tran) == "[{'name': 'extend'}]":
                 pass
-            elif str(unary_tran) == "[{'name': 'backward_extend'}]":
+            elif str(best_unary_tran) == "[{'name': 'backward_extend'}]":
                 pass
             else:
-                pass
+                u4_predicted = transform.apply_unary_transformation(u3, best_unary_tran)
         else:
             binary_analog_data = binary_analogies_data.get(best_binary_analog_name)
             best_binary_tran = binary_analog_data.get("best_binary_tran")
             best_b1_b2_align_x = binary_analog_data.get("best_b1_b2_align_x")
             best_b1_b2_align_y = binary_analog_data.get("best_b1_b2_align_y")
-            pass
+            binary_analog = binary_analogies.get(best_binary_analog_name)
+            b4 = problem.matrix[binary_analog[3]]
+            b5 = problem.matrix[binary_analog[4]]
+            b6_predicted = transform.apply_binary_transformation(b4, b5,
+                                                                 best_b1_b2_align_x, best_b1_b2_align_y,
+                                                                 best_binary_tran)
+
 
 
         problem_data = {
@@ -166,7 +174,7 @@ def run_raven_explanatory(analogies_groups, transformation_groups):
             json.dump(problem_data, outfile)
             outfile.close()
 
-        metrics.save_jaccard_cache(problem.name)
+        jaccard.save_jaccard_cache(problem.name)
 
     create_report(problems)
 
@@ -187,7 +195,7 @@ def run_raven_greedy(analogies, transformations):
 
         print(problem.name)
 
-        metrics.load_jaccard_cache(problem.name)
+        jaccard.load_jaccard_cache(problem.name)
 
         analogies = get_analogies(problem)
 
@@ -201,7 +209,7 @@ def run_raven_greedy(analogies, transformations):
             u1_trans, u1_transformations = transform.unary_transform(u1)
             sim_u1_trans_u2 = []
             for u1_t in u1_trans:
-                sim, _, _ = metrics.jaccard_coef(u1_t, u2)
+                sim, _, _ = jaccard.jaccard_coef(u1_t, u2)
                 sim_u1_trans_u2.append(sim)
 
             unary_tran = u1_transformations[np.argmax(sim_u1_trans_u2)]
@@ -209,7 +217,7 @@ def run_raven_greedy(analogies, transformations):
 
             sim_u4_predicted_ops = []
             for op in problem.options:
-                sim, _, _ = metrics.jaccard_coef(op, u4_predicted)
+                sim, _, _ = jaccard.jaccard_coef(op, u4_predicted)
                 sim_u4_predicted_ops.append(sim)
 
             unary_analogies_data[unary_analog_name] = {
@@ -231,7 +239,7 @@ def run_raven_greedy(analogies, transformations):
             b1_b2_trans, b1_b2_transformations, b1_b2_align_x, b1_b2_align_y = transform.binary_transform(b1, b2)
             sim_b1_b2_trans_b3 = []
             for b1_b2_t in b1_b2_trans:
-                sim, _, _ = metrics.jaccard_coef(b1_b2_t, b3)
+                sim, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
                 sim_b1_b2_trans_b3.append(sim)
 
             b1_b2_tran = b1_b2_transformations[np.argmax(sim_b1_b2_trans_b3)]
@@ -241,7 +249,7 @@ def run_raven_greedy(analogies, transformations):
 
             sim_b6_predicted_ops = []
             for op in problem.options:
-                sim, _, _ = metrics.jaccard_coef(op, b6_predicted)
+                sim, _, _ = jaccard.jaccard_coef(op, b6_predicted)
                 sim_b6_predicted_ops.append(sim)
 
             binary_analogies_data[binary_analog_name] = {
@@ -264,7 +272,7 @@ def run_raven_greedy(analogies, transformations):
             json.dump(problem_data, outfile)
             outfile.close()
 
-        metrics.save_jaccard_cache(problem.name)
+        jaccard.save_jaccard_cache(problem.name)
 
     create_report(problems)
 

@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from skimage.transform import rotate
 from sys import modules
 import numpy as np
-import metrics
+import jaccard
 
 THIS = modules[__name__]
 
@@ -160,7 +160,7 @@ def apply_binary_transformation(imgA, imgB, binary_trans,
                                 align_x = None, align_y = None):
 
     if align_x is None or align_y is None:
-        _, align_x, align_y = metrics.jaccard_coef(imgA, imgB)
+        _, align_x, align_y = jaccard.jaccard_coef(imgA, imgB)
 
     imgA_aligned, imgB_aligned = align(imgA, imgB, align_x, align_y)
 
@@ -253,7 +253,7 @@ def align(imgA, imgB, x, y):
 
 def binary_transform(imgA, imgB, show_me = False):
     # TODO this alignment must be enhanced in the future.
-    _, align_x, align_y = metrics.jaccard_coef(imgA, imgB)
+    _, align_x, align_y = jaccard.jaccard_coef(imgA, imgB)
 
     A_aligned, B_aligned = align(imgA, imgB, align_x, align_y)
 

@@ -5,7 +5,7 @@ from skimage.transform import rescale
 from RectSelector import RectSelector
 import utils
 import transform
-import metrics
+import jaccard
 
 # preprocessing
 raw_img = rescale(image = plt.imread("./problems/X1.gif"),
@@ -30,7 +30,7 @@ u1_trans, u1_transformations = transform.unary_transform(u1, show_me = True)
 
 sim_u1_u2 = []
 for img, ii in zip(u1_trans, np.arange(len(u1_trans))):
-    sim, _, _ = metrics.jaccard_coef_naive(img, u2)
+    sim, _, _ = jaccard.jaccard_coef_naive(img, u2)
     sim_u1_u2.append(sim)
 
 print("similarities between u1_trans and u2: " + str(sim_u1_u2))
@@ -48,7 +48,7 @@ options = imgs[4:]
 
 option_sims = []
 for img in options:
-    sim, _, _ = metrics.jaccard_coef_naive(img, guess)
+    sim, _, _ = jaccard.jaccard_coef_naive(img, guess)
     option_sims.append(sim)
 
 print("similarties between options and guess: " + str(option_sims))
