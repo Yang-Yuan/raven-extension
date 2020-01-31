@@ -44,16 +44,6 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
 
     for problem in problems:
 
-        if problem.name != "a4" and \
-                problem.name != "a12" and \
-                problem.name != "b4" and \
-                problem.name != "n12" and \
-                problem.name != "c3" and \
-                problem.name != "c9" and \
-                problem.name != "d3" and \
-                problem.name != "e1":
-            continue
-
         print(problem.name)
 
         jaccard.load_jaccard_cache(problem.name)
@@ -230,16 +220,6 @@ def run_raven_greedy(analogy_groups, transformation_groups):
     print("run raven in greedy mode.")
 
     for problem in problems:
-
-        if problem.name != "a4" and \
-                problem.name != "a12" and \
-                problem.name != "b4" and \
-                problem.name != "n12" and \
-                problem.name != "c3" and \
-                problem.name != "c9" and \
-                problem.name != "d3" and \
-                problem.name != "e1":
-            continue
 
         print(problem.name)
 
