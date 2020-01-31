@@ -72,13 +72,15 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             u1_u2_align_x = []
             u1_u2_align_y = []
             u1_u2_diff = []
+            u1_u2_diff_is_positive = []
             for unary_tran in unary_transformations:
                 if str(unary_tran) == "[{'name': 'add_diff'}]":
-                    sim, align_x, align_y, diff = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
+                    sim, align_x, align_y, diff, diff_is_positive = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
                     sim_u1_trans_u2.append(sim)
                     u1_u2_align_x.append(align_x)
                     u1_u2_align_y.append(align_y)
                     u1_u2_diff.append(diff)
+                    u1_u2_diff_is_positive.append(diff_is_positive)
                 else:
                     u1_t = transform.apply_unary_transformation(u1, unary_tran)
                     sim, _, _ = jaccard.jaccard_coef(u1_t, u2)
@@ -86,6 +88,7 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
                     u1_u2_align_x.append(None)  # only the weird extend transformation needs this
                     u1_u2_align_y.append(None)  # only the weird extend transformation needs this
                     u1_u2_diff.append(None)  # only the weird extend transformation needs this
+                    u1_u2_diff_is_positive.append(None)
 
             best_trans_id = int(np.argmax(sim_u1_trans_u2))
             unary_analogies_data[unary_analog_name] = {
@@ -93,7 +96,8 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
                 "best_sim_u1_trans_u2": sim_u1_trans_u2[best_trans_id],
                 "best_u1_u2_align_x": u1_u2_align_x[best_trans_id],
                 "best_u1_u2_align_y": u1_u2_align_y[best_trans_id],
-                "best_u1_u2_diff": u1_u2_diff[best_trans_id]
+                "best_u1_u2_diff": u1_u2_diff[best_trans_id],
+                "best_u1_u2_diff_is_positive": u1_u2_diff_is_positive[best_trans_id]
             }
 
         binary_analogies_data = {}
@@ -116,8 +120,8 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             binary_analogies_data[binary_analog_name] = {
                 "best_binary_tran": binary_transformations[best_trans_id],
                 "best_sim_b1_b2_trans_b3": sim_b1_b2_trans_b3[best_trans_id],
-                "best_b1_b2_align_x": b1_b2_align_x[best_trans_id],
-                "best_b1_b2_align_y": b1_b2_align_y[best_trans_id]
+                "best_b1_b2_align_x": int(b1_b2_align_x[best_trans_id]),
+                "best_b1_b2_align_y": int(b1_b2_align_y[best_trans_id])
             }
 
         best_unary_sim = -1
@@ -125,12 +129,14 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
         for unary_analog_name, unary_analog_data in unary_analogies_data.items():
             if best_unary_sim < unary_analog_data.get("best_sim_u1_trans_u2"):
                 best_unary_analog_name = unary_analog_name
+                best_unary_sim = unary_analog_data.get("best_sim_u1_trans_u2")
 
         best_binary_sim = -1
         best_binary_analog_name = None
         for binary_analog_name, binary_analog_data in binary_analogies_data.items():
             if best_binary_sim < binary_analog_data.get("best_sim_b1_b2_trans_b3"):
                 best_binary_analog_name = binary_analog_name
+                best_binary_sim = binary_analog_data.get("best_sim_b1_b2_trans_b3")
 
         if best_unary_sim > best_binary_sim:
             unary_analog_data = unary_analogies_data.get(best_unary_analog_name)
@@ -138,10 +144,12 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             best_u1_u2_align_x = unary_analog_data.get("best_u1_u2_align_x")
             best_u1_u2_align_y = unary_analog_data.get("best_u1_u2_align_y")
             best_u1_u2_diff = unary_analog_data.get("best_u1_u2_diff")
+            best_u1_u2_diff_is_positive = unary_analog_data.get("best_u1_u2_diff_is_positive")
             unary_analog = unary_analogies.get(best_unary_analog_name)
             u3 = problem.matrix[unary_analog[2]]
             if str(best_unary_tran) == "[{'name': 'add_diff'}]":
-                u4_predicted = transform.add_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff)
+                u4_predicted = transform.add_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff,
+                                                  best_u1_u2_diff_is_positive)
             else:
                 u4_predicted = transform.apply_unary_transformation(u3, best_unary_tran)
 
@@ -158,9 +166,8 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             binary_analog = binary_analogies.get(best_binary_analog_name)
             b4 = problem.matrix[binary_analog[3]]
             b5 = problem.matrix[binary_analog[4]]
-            b6_predicted = transform.apply_binary_transformation(b4, b5,
-                                                                 best_b1_b2_align_x, best_b1_b2_align_y,
-                                                                 best_binary_tran)
+            b6_predicted, _, _ = transform.apply_binary_transformation(b4, b5, best_binary_tran,
+                                                                       best_b1_b2_align_x, best_b1_b2_align_y)
 
             best_analog_name = best_binary_analog_name
             best_analog_type = "binary"
@@ -170,7 +177,7 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
 
         sim_predicted_ops = []
         for opt in problem.options:
-            sim, _, _ = jaccard.jaccard_coef(predicted, opt)
+            sim, _, _ = jaccard.jaccard_coef(opt, predicted)
             sim_predicted_ops.append(sim)
 
         problem_data = {
@@ -190,8 +197,8 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             json.dump(problem_data, outfile)
             outfile.close()
 
-        jaccard.save_jaccard_cache(problem.name)
-        asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
+        # jaccard.save_jaccard_cache(problem.name)
+        # asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
 
     report_explanatory.create_report_explanatory_mode(problems)
 
@@ -237,13 +244,15 @@ def run_raven_greedy(analogy_groups, transformation_groups):
             u1_u2_align_x = []
             u1_u2_align_y = []
             u1_u2_diff = []
+            u1_u2_diff_is_positive = []
             for unary_tran in unary_transformations:
                 if str(unary_tran) == "[{'name': 'add_diff'}]":
-                    sim, align_x, align_y, diff = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
+                    sim, align_x, align_y, diff, diff_is_positive = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
                     sim_u1_trans_u2.append(sim)
                     u1_u2_align_x.append(align_x)
                     u1_u2_align_y.append(align_y)
                     u1_u2_diff.append(diff)
+                    u1_u2_diff_is_positive.append(diff_is_positive)
                 else:
                     u1_t = transform.apply_unary_transformation(u1, unary_tran)
                     sim, _, _ = jaccard.jaccard_coef(u1_t, u2)
@@ -251,15 +260,17 @@ def run_raven_greedy(analogy_groups, transformation_groups):
                     u1_u2_align_x.append(None)  # only the weird extend transformation needs this
                     u1_u2_align_y.append(None)  # only the weird extend transformation needs this
                     u1_u2_diff.append(None)  # only the weird extend transformation needs this
+                    u1_u2_diff_is_positive.append(None)
 
             best_sim_u1_trans_u2 = int(np.argmax(sim_u1_trans_u2))
             best_unary_tran = unary_transformations[best_sim_u1_trans_u2]
             best_align_x = u1_u2_align_x[best_sim_u1_trans_u2]
             best_align_y = u1_u2_align_y[best_sim_u1_trans_u2]
             best_diff = u1_u2_diff[best_sim_u1_trans_u2]
+            best_diff_is_positive = u1_u2_diff_is_positive[best_sim_u1_trans_u2]
 
             if str(best_unary_tran) == "[{'name': 'add_diff'}]":
-                u4_predicted = transform.add_diff(u3, best_align_x, best_align_y, best_diff)
+                u4_predicted = transform.add_diff(u3, best_align_x, best_align_y, best_diff, best_diff_is_positive)
             else:
                 u4_predicted = transform.apply_unary_transformation(u3, best_unary_tran)
 
@@ -297,9 +308,8 @@ def run_raven_greedy(analogy_groups, transformation_groups):
             best_b1_b2_tran = binary_transformations[argmax_sim_b1_b2_trans_b3]
             best_b1_b2_align_x = b1_b2_align_x[argmax_sim_b1_b2_trans_b3]
             best_b1_b2_align_y = b1_b2_align_y[argmax_sim_b1_b2_trans_b3]
-            b6_predicted = transform.apply_binary_transformation(b4, b5,
-                                                                 best_b1_b2_align_x, best_b1_b2_align_y,
-                                                                 best_b1_b2_tran)
+            b6_predicted, _, _ = transform.apply_binary_transformation(b4, b5, best_b1_b2_tran,
+                                                                       best_b1_b2_align_x, best_b1_b2_align_y)
 
             sim_b6_predicted_ops = []
             for op in problem.options:
@@ -326,8 +336,8 @@ def run_raven_greedy(analogy_groups, transformation_groups):
             json.dump(problem_data, outfile)
             outfile.close()
 
-        jaccard.save_jaccard_cache(problem.name)
-        asymmetric_jaccard.load_asymmetric_jaccard_cache(problem.name)
+        # jaccard.save_jaccard_cache(problem.name)
+        # asymmetric_jaccard.load_asymmetric_jaccard_cache(problem.name)
 
     report_greedy.create_report_greedy_mode(problems)
 

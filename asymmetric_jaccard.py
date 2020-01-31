@@ -7,6 +7,7 @@ asymmetric_jaccard_similarities = None
 asymmetric_jaccard_x = None
 asymmetric_jaccard_y = None
 asymmetric_jaccard_diff = None
+asymmetric_jaccard_diff_is_positive = None
 asymmetric_jaccard_images = None
 asymmetric_jaccard_similarities_initial_size = 150
 asymmetric_jaccard_similarities_increment = 50
@@ -24,6 +25,7 @@ def load_asymmetric_jaccard_cache(problem_name):
     global asymmetric_jaccard_x
     global asymmetric_jaccard_y
     global asymmetric_jaccard_diff
+    global asymmetric_jaccard_diff_is_positive
     global asymmetric_jaccard_similarities_initial_size
 
     cache_file_name = join(asymmetric_jaccard_cache_folder, problem_name + ".npz")
@@ -46,6 +48,9 @@ def load_asymmetric_jaccard_cache(problem_name):
         asymmetric_jaccard_diff = cache_file["asymmetric_jaccard_diff"]
         cache_file.file.remove("asymmetric_jaccard_diff")
 
+        asymmetric_jaccard_diff_is_positive = cache_file["asymmetric_jaccard_diff_is_positive"]
+        cache_file.file.remove("asymmetric_jaccard_diff_is_positive")
+
         asymmetric_jaccard_images = []
         for img_arr_n in cache_file.files:
             asymmetric_jaccard_images.append(cache_file[img_arr_n])
@@ -62,6 +67,9 @@ def load_asymmetric_jaccard_cache(problem_name):
         asymmetric_jaccard_diff = np.full((asymmetric_jaccard_similarities_initial_size,
                                            asymmetric_jaccard_similarities_initial_size),
                                           None, dtype = object)
+        asymmetric_jaccard_diff_is_positive = np.full((asymmetric_jaccard_similarities_initial_size,
+                                                       asymmetric_jaccard_similarities_initial_size),
+                                                      None, dtype = object)
         asymmetric_jaccard_images = []
 
 
@@ -71,6 +79,7 @@ def save_asymmetric_jaccard_cache(problem_name):
     global asymmetric_jaccard_x
     global asymmetric_jaccard_y
     global asymmetric_jaccard_diff
+    global asymmetric_jaccard_diff_is_positive
     global asymmetric_jaccard_images
 
     cache_file_name = join(asymmetric_jaccard_cache_folder, problem_name + ".npz")
@@ -79,6 +88,7 @@ def save_asymmetric_jaccard_cache(problem_name):
              asymmetric_jaccard_x = asymmetric_jaccard_x,
              asymmetric_jaccard_y = asymmetric_jaccard_y,
              asymmetric_jaccard_diff = asymmetric_jaccard_diff,
+             asymmetric_jaccard_diff_is_positive = asymmetric_jaccard_diff_is_positive,
              *asymmetric_jaccard_images)
 
 
@@ -147,6 +157,7 @@ def asymmetric_jaccard_coef_naive(A, B):
     max_diff = []
     max_x = []
     max_y = []
+    max_diff_is_positive = []
     for ii in coef_argmax:
         x, y = cartesian_prod[ii]
         A_is_smaller = is_A_smaller[ii]
@@ -157,7 +168,7 @@ def asymmetric_jaccard_coef_naive(A, B):
         if A_is_smaller:
             diff = np.logical_and(B_expanded,
                                   np.logical_not(A_expanded))
-            diff_x, diff_y = np.where(diff)
+            diff_y, diff_x = np.where(diff)
             diff_x_min = diff_x.min()
             diff_x_max = diff_x.max() + 1
             diff_y_min = diff_y.min()
@@ -165,22 +176,25 @@ def asymmetric_jaccard_coef_naive(A, B):
             max_diff.append(diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max])
             max_x.append(diff_x_min - x)
             max_y.append(diff_y_min - y)
+            max_diff_is_positive.append(True)
         else:
             diff = np.logical_and(A_expanded,
                                   np.logical_not(B_expanded))
-            diff_x, diff_y = np.where(np.logical_not(diff))
+            diff_y, diff_x = np.where(diff)
             diff_x_min = diff_x.min()
             diff_x_max = diff_x.max() + 1
             diff_y_min = diff_y.min()
             diff_y_max = diff_y.max() + 1
-            max_diff.append(diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max])
+            # This negation is important
+            max_diff.append(np.logical_not(diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]))
             max_x.append(diff_x_min - x)
             max_y.append(diff_y_min - y)
+            max_diff_is_positive.append(False)
 
-    max_x = np.array(max_x)
-    max_y = np.array(max_y)
+    max_x = np.array(max_x)  # convert it to numpy array because want to broadcast
+    max_y = np.array(max_y)  # across the entries in the list
 
-    return a_j_coefs_max, max_x, max_y, max_diff
+    return a_j_coefs_max, max_x, max_y, max_diff, max_diff_is_positive
 
 
 def asymmetric_jaccard_coef(A, B):
@@ -220,24 +234,27 @@ def asymmetric_jaccard_coef(A, B):
     sim = asymmetric_jaccard_similarities[A_id, B_id]
 
     if np.isnan(sim):
-        sim, x_trimmed, y_trimmed, diff_trimmed = asymmetric_jaccard_coef_naive(A_trimmed, B_trimmed)
+        sim, x_trimmed, y_trimmed, diff_trimmed, diff_trimmed_is_positive = asymmetric_jaccard_coef_naive(A_trimmed,
+                                                                                                          B_trimmed)
         asymmetric_jaccard_similarities[A_id, B_id] = sim
         asymmetric_jaccard_x[A_id, B_id] = x_trimmed
         asymmetric_jaccard_y[A_id, B_id] = y_trimmed
         asymmetric_jaccard_diff[A_id, B_id] = diff_trimmed
+        asymmetric_jaccard_diff_is_positive[A_id, B_id] = diff_trimmed_is_positive
     else:
         x_trimmed = asymmetric_jaccard_x[A_id, B_id]
         y_trimmed = asymmetric_jaccard_y[A_id, B_id]
         diff_trimmed = asymmetric_jaccard_diff[A_id, B_id]
+        diff_trimmed_is_positive = asymmetric_jaccard_diff_is_positive[A_id, B_id]
 
-    x = x_trimmed - A_x_min  # the diff patch is relative to A's top-left corner
-    y = y_trimmed - A_y_min  # which is different from jaccard_coef
+    x = x_trimmed + A_x_min  # the diff patch is relative to A's top-left corner
+    y = y_trimmed + A_y_min  # which is different from jaccard_coef
 
     if 1 == len(x):
-        return sim, x[0], y[0], diff_trimmed[0]
+        return sim, x[0], y[0], diff_trimmed[0], diff_trimmed_is_positive[0]
     else:
         smallest = int(np.argmin(abs(x - A.shape[1] / 2) + abs(y - A.shape[0] / 2)))
-        return sim, x[smallest], y[smallest], diff_trimmed[smallest]
+        return sim, x[smallest], y[smallest], diff_trimmed[smallest], diff_trimmed_is_positive[smallest]
 
 
 def asymmetric_jaccard_image2index(img):
@@ -251,6 +268,7 @@ def asymmetric_jaccard_image2index(img):
     global asymmetric_jaccard_x
     global asymmetric_jaccard_y
     global asymmetric_jaccard_diff
+    global asymmetric_jaccard_diff_is_positive
     global asymmetric_jaccard_similarities_increment
 
     img_packed = np.packbits(img, axis = -1)
@@ -279,4 +297,9 @@ def asymmetric_jaccard_image2index(img):
                                          ((0, asymmetric_jaccard_similarities_increment),
                                           (0, asymmetric_jaccard_similarities_increment)),
                                          constant_values = None)
+        asymmetric_jaccard_diff_is_positive = np.pad(asymmetric_jaccard_diff_is_positive,
+                                                     ((0, asymmetric_jaccard_similarities_increment),
+                                                      (0, asymmetric_jaccard_similarities_increment)),
+                                                     constant_values = None)
+
     return ii + 1
