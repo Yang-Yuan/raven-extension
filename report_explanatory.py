@@ -105,6 +105,17 @@ def get_data_frame(problems):
     transformation_data_frame = []
 
     for prob in problems:
+
+        if prob.name != "a4" and \
+                prob.name != "a12" and \
+                prob.name != "b4" and \
+                prob.name != "n12" and \
+                prob.name != "c3" and \
+                prob.name != "c9" and \
+                prob.name != "d3" and \
+                prob.name != "e1":
+            continue
+
         prob_data = prob.data
 
         d_result = {"problem_name": prob.name}

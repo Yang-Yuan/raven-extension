@@ -44,6 +44,16 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
 
     for problem in problems:
 
+        if problem.name != "a4" and \
+                problem.name != "a12" and \
+                problem.name != "b4" and \
+                problem.name != "n12" and \
+                problem.name != "c3" and \
+                problem.name != "c9" and \
+                problem.name != "d3" and \
+                problem.name != "e1":
+            continue
+
         print(problem.name)
 
         jaccard.load_jaccard_cache(problem.name)
@@ -180,6 +190,12 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             sim, _, _ = jaccard.jaccard_coef(opt, predicted)
             sim_predicted_ops.append(sim)
 
+        for anlg_data in unary_analogies_data.values():
+            del anlg_data["best_u1_u2_diff"]
+            del anlg_data["best_u1_u2_diff_is_positive"]
+            del anlg_data["best_u1_u2_align_x"]
+            del anlg_data["best_u1_u2_align_y"]
+
         problem_data = {
             "unary_analogies_data": unary_analogies_data,
             "binary_analogies_data": binary_analogies_data,
@@ -197,8 +213,8 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             json.dump(problem_data, outfile)
             outfile.close()
 
-        # jaccard.save_jaccard_cache(problem.name)
-        # asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
+        jaccard.save_jaccard_cache(problem.name)
+        asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
 
     report_explanatory.create_report_explanatory_mode(problems)
 
@@ -214,6 +230,16 @@ def run_raven_greedy(analogy_groups, transformation_groups):
     print("run raven in greedy mode.")
 
     for problem in problems:
+
+        if problem.name != "a4" and \
+                problem.name != "a12" and \
+                problem.name != "b4" and \
+                problem.name != "n12" and \
+                problem.name != "c3" and \
+                problem.name != "c9" and \
+                problem.name != "d3" and \
+                problem.name != "e1":
+            continue
 
         print(problem.name)
 
@@ -336,8 +362,8 @@ def run_raven_greedy(analogy_groups, transformation_groups):
             json.dump(problem_data, outfile)
             outfile.close()
 
-        # jaccard.save_jaccard_cache(problem.name)
-        # asymmetric_jaccard.load_asymmetric_jaccard_cache(problem.name)
+        jaccard.save_jaccard_cache(problem.name)
+        asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
 
     report_greedy.create_report_greedy_mode(problems)
 

@@ -11,7 +11,7 @@ report_folder = "./reports/greedy"
 
 
 def create_report_greedy_mode(problems):
-    file_name = "raven_greedy" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + ".xlsx"
+    file_name = "raven_greedy_" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + ".xlsx"
     workbook = xlsxwriter.Workbook(join(report_folder, file_name))
 
     problem_data_frame, analogy_data_frame, transformation_data_frame = get_data_frame(problems)
@@ -105,6 +105,17 @@ def get_data_frame(problems):
     transformation_data_frame = []
 
     for prob in problems:
+
+        if prob.name != "a4" and \
+                prob.name != "a12" and \
+                prob.name != "b4" and \
+                prob.name != "n12" and \
+                prob.name != "c3" and \
+                prob.name != "c9" and \
+                prob.name != "d3" and \
+                prob.name != "e1":
+            continue
+
         prob_data = prob.data
 
         d_result = {"problem_name": prob.name}

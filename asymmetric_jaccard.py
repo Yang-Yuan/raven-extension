@@ -37,7 +37,7 @@ def load_asymmetric_jaccard_cache(problem_name):
 
     if cache_file is not None:
         asymmetric_jaccard_similarities = cache_file["asymmetric_jaccard_similarities"]
-        cache_file.files.remove("asymmetric_similarities")
+        cache_file.files.remove("asymmetric_jaccard_similarities")
 
         asymmetric_jaccard_x = cache_file["asymmetric_jaccard_x"]
         cache_file.files.remove("asymmetric_jaccard_x")
@@ -46,10 +46,10 @@ def load_asymmetric_jaccard_cache(problem_name):
         cache_file.files.remove("asymmetric_jaccard_y")
 
         asymmetric_jaccard_diff = cache_file["asymmetric_jaccard_diff"]
-        cache_file.file.remove("asymmetric_jaccard_diff")
+        cache_file.files.remove("asymmetric_jaccard_diff")
 
         asymmetric_jaccard_diff_is_positive = cache_file["asymmetric_jaccard_diff_is_positive"]
-        cache_file.file.remove("asymmetric_jaccard_diff_is_positive")
+        cache_file.files.remove("asymmetric_jaccard_diff_is_positive")
 
         asymmetric_jaccard_images = []
         for img_arr_n in cache_file.files:
@@ -84,7 +84,7 @@ def save_asymmetric_jaccard_cache(problem_name):
 
     cache_file_name = join(asymmetric_jaccard_cache_folder, problem_name + ".npz")
     np.savez(cache_file_name,
-             asymmetric_similarities = asymmetric_jaccard_similarities,
+             asymmetric_jaccard_similarities = asymmetric_jaccard_similarities,
              asymmetric_jaccard_x = asymmetric_jaccard_x,
              asymmetric_jaccard_y = asymmetric_jaccard_y,
              asymmetric_jaccard_diff = asymmetric_jaccard_diff,
