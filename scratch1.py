@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import time
 from problems import load_problems
 from analogy import get_analogies
-from report import create_report
+from report_explanatory import create_report
 import transform
 import jaccard
 

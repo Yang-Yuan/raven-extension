@@ -3,7 +3,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 from problems import load_problems
-import report
+import report_explanatory
+import report_greedy
 import transform
 import jaccard
 import asymmetric_jaccard
@@ -192,7 +193,7 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
         jaccard.save_jaccard_cache(problem.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
 
-    report.create_report_explanatory_mode(problems)
+    report_explanatory.create_report_explanatory_mode(problems)
 
     end_time = time.time()
     print(end_time - start_time)
@@ -328,7 +329,7 @@ def run_raven_greedy(analogy_groups, transformation_groups):
         jaccard.save_jaccard_cache(problem.name)
         asymmetric_jaccard.load_asymmetric_jaccard_cache(problem.name)
 
-    report.create_report_greedy_mode(problems)
+    report_greedy.create_report_greedy_mode(problems)
 
     end_time = time.time()
 

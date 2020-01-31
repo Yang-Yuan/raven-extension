@@ -4,16 +4,13 @@ from os.path import join
 from analogy import unary_analogies_2by2, unary_analogies_3by3, binary_analogies_3by3
 from transform import unary_transformations, binary_transformations
 
-report_folder = "./reports"
+report_folder = "./reports/explanatory"
 
 
-# TODO improve this part with pandas
+# TODO improve this part with pandas or other framework
+
 
 def create_report_explanatory_mode(problems):
-    pass
-
-
-def create_report_greedy_mode(problems):
     file_name = "raven_" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + ".xlsx"
     workbook = xlsxwriter.Workbook(join(report_folder, file_name))
 
