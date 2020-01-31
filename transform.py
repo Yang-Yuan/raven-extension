@@ -18,8 +18,7 @@ unary_transformations = [
      {"name": "rot_binary", "args": {"angle": 180}}],
     [{"name": "mirror_left_right"},
      {"name": "rot_binary", "args": {"angle": 270}}],
-    [{"name": "extend"}],
-    [{"name": "backward_extend"}]
+    [{"name": "add_diff"}]
 ]
 
 binary_transformations = [
@@ -30,7 +29,10 @@ binary_transformations = [
     [{"name": "xor"}]]
 
 
-def extend(img):
+def add_diff(img, align_x, align_y, diff):
+    diff_y, diff_x = diff.shape
+    img_add_to = img[align_y: align_y + diff_y, align_x: align_x + diff_x]
+    img[align_y: align_y + diff_y, align_x: align_x + diff_x] = np.logical_and(img_add_to, diff)
     return img
 
 
@@ -94,44 +96,44 @@ def mirror(img, mode):
         pass
 
 
-def unary_transform(img, show_me = False):
-    """
-
-    :param show_me:
-    :param img:
-    :return:
-    """
-    transformed_images = []
-    for angle in np.arange(0, 360, 90):
-        transformed_images.append(rot_binary(img, angle))
-
-    tmp = mirror_left_right(img)
-    for angle in np.arange(0, 360, 90):
-        transformed_images.append(rot_binary(tmp, angle))
-
-    if show_me:
-        fig, axs = plt.subplots(2, 4)
-        for img, ax in zip(transformed_images, axs.flatten()):
-            ax.imshow(img, cmap = "binary")
-        plt.show()
-
-    transformations = [
-        [{"name": None}],
-        [{"name": "rot_binary", "args": {"angle": 90}}],
-        [{"name": "rot_binary", "args": {"angle": 180}}],
-        [{"name": "rot_binary", "args": {"angle": 270}}],
-        [{"name": "mirror_left_right"}],
-        [{"name": "mirror_left_right"},
-         {"name": "rot_binary", "args": {"angle": 90}}],
-        [{"name": "mirror_left_right"},
-         {"name": "rot_binary", "args": {"angle": 180}}],
-        [{"name": "mirror_left_right"},
-         {"name": "rot_binary", "args": {"angle": 270}}],
-        [{"name": "extend"}],
-        [{"name": "backward_extend"}]
-    ]
-
-    return transformed_images, transformations
+# def unary_transform(img, show_me = False):
+#     """
+#
+#     :param show_me:
+#     :param img:
+#     :return:
+#     """
+#     transformed_images = []
+#     for angle in np.arange(0, 360, 90):
+#         transformed_images.append(rot_binary(img, angle))
+#
+#     tmp = mirror_left_right(img)
+#     for angle in np.arange(0, 360, 90):
+#         transformed_images.append(rot_binary(tmp, angle))
+#
+#     if show_me:
+#         fig, axs = plt.subplots(2, 4)
+#         for img, ax in zip(transformed_images, axs.flatten()):
+#             ax.imshow(img, cmap = "binary")
+#         plt.show()
+#
+#     transformations = [
+#         [{"name": None}],
+#         [{"name": "rot_binary", "args": {"angle": 90}}],
+#         [{"name": "rot_binary", "args": {"angle": 180}}],
+#         [{"name": "rot_binary", "args": {"angle": 270}}],
+#         [{"name": "mirror_left_right"}],
+#         [{"name": "mirror_left_right"},
+#          {"name": "rot_binary", "args": {"angle": 90}}],
+#         [{"name": "mirror_left_right"},
+#          {"name": "rot_binary", "args": {"angle": 180}}],
+#         [{"name": "mirror_left_right"},
+#          {"name": "rot_binary", "args": {"angle": 270}}],
+#         [{"name": "extend"}],
+#         [{"name": "backward_extend"}]
+#     ]
+#
+#     return transformed_images, transformations
 
 
 def apply_unary_transformation(img, unary_trans, show_me = False):
@@ -158,7 +160,6 @@ def apply_unary_transformation(img, unary_trans, show_me = False):
 
 def apply_binary_transformation(imgA, imgB, binary_trans,
                                 align_x = None, align_y = None):
-
     if align_x is None or align_y is None:
         _, align_x, align_y = jaccard.jaccard_coef(imgA, imgB)
 
@@ -250,43 +251,42 @@ def align(imgA, imgB, x, y):
 
     return A_aligned, B_aligned
 
+# def binary_transform(imgA, imgB, show_me = False):
+#     # TODO this alignment must be enhanced in the future.
+#     _, align_x, align_y = jaccard.jaccard_coef(imgA, imgB)
+#
+#     A_aligned, B_aligned = align(imgA, imgB, align_x, align_y)
+#
+#     transformed_images = [unite(A_aligned, B_aligned),
+#                           intersect(A_aligned, B_aligned),
+#                           subtract(A_aligned, B_aligned),
+#                           backward_subtract(A_aligned, B_aligned),
+#                           xor(A_aligned, B_aligned)]
+#
+#     transformations = [
+#         [{"name": "unite"}],
+#         [{"name": "intersect"}],
+#         [{"name": "subtract"}],
+#         [{"name": "backward_subtract"}],
+#         [{"name": "xor"}]]
+#
+#     if show_me:
+#         fig, axs = plt.subplots(1, 5)
+#         for img, ax in zip(transformed_images, axs):
+#             ax.imshow(img, cmap = "binary")
+#         plt.show()
+#
+#     return transformed_images, transformations, align_x, align_y
 
-def binary_transform(imgA, imgB, show_me = False):
-    # TODO this alignment must be enhanced in the future.
-    _, align_x, align_y = jaccard.jaccard_coef(imgA, imgB)
 
-    A_aligned, B_aligned = align(imgA, imgB, align_x, align_y)
-
-    transformed_images = [unite(A_aligned, B_aligned),
-                          intersect(A_aligned, B_aligned),
-                          subtract(A_aligned, B_aligned),
-                          backward_subtract(A_aligned, B_aligned),
-                          xor(A_aligned, B_aligned)]
-
-    transformations = [
-        [{"name": "unite"}],
-        [{"name": "intersect"}],
-        [{"name": "subtract"}],
-        [{"name": "backward_subtract"}],
-        [{"name": "xor"}]]
-
-    if show_me:
-        fig, axs = plt.subplots(1, 5)
-        for img, ax in zip(transformed_images, axs):
-            ax.imshow(img, cmap = "binary")
-        plt.show()
-
-    return transformed_images, transformations, align_x, align_y
-
-
-def argmax_binary_sim(similarities, default = None):
-    tran_n = np.argmax(similarities)
-    switch = {
-        # code : [mirror_left_right, degree to rotate]
-        0: ["unite"],
-        1: ["intersect"],
-        2: ["subtract"],
-        3: [False, 270],
-        4: [True, 0],
-    }
-    return switch.get(tran_n, default)
+# def argmax_binary_sim(similarities, default = None):
+#     tran_n = np.argmax(similarities)
+#     switch = {
+#         # code : [mirror_left_right, degree to rotate]
+#         0: ["unite"],
+#         1: ["intersect"],
+#         2: ["subtract"],
+#         3: [False, 270],
+#         4: [True, 0],
+#     }
+#     return switch.get(tran_n, default)

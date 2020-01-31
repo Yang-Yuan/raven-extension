@@ -65,7 +65,7 @@ def load_asymmetric_jaccard_cache(problem_name):
         asymmetric_jaccard_images = []
 
 
-def save_jaccard_cache(problem_name):
+def save_asymmetric_jaccard_cache(problem_name):
     global asymmetric_jaccard_cache_folder
     global asymmetric_jaccard_similarities
     global asymmetric_jaccard_x
@@ -78,28 +78,40 @@ def save_jaccard_cache(problem_name):
              asymmetric_similarities = asymmetric_jaccard_similarities,
              asymmetric_jaccard_x = asymmetric_jaccard_x,
              asymmetric_jaccard_y = asymmetric_jaccard_y,
-             asymmetric_jaccard_diff = asymmetric_jaccard_diff
-                                       * asymmetric_jaccard_images)
+             asymmetric_jaccard_diff = asymmetric_jaccard_diff,
+             *asymmetric_jaccard_images)
 
 
 def asymmetric_jaccard_coef_same_shape(A, B):
     """
-    calculate the asymmetric jaccard coefficient from A to B .
+    calculate the asymmetric jaccard coefficient.
+    sim_A = |A intersect B| / |A|
+    sim_B = |A intersect B| / |B|
+    sim= = max(sim_A, sim_B)
     A and B should be of the same shape.
+    A and B can't be all white simultaneously.
     :param A: binary image
     :param B: binary image
-    :return: jaccard coefficient
+    :return: asymmetric_jaccard coefficient, A_sum < B_sum
     """
 
     if A.shape != B.shape:
-        raise Exception("A and B should have the same shape")
+        raise Exception("A and B should have the same shape.")
 
     A_sum = A.sum()
+    B_sum = B.sum()
 
-    if 0 == A_sum:
-        return 1
+    if 0 == A_sum or 0 == B_sum:
+        raise Exception("A and B can't be all white simultaneously.")
+    elif 0 == A_sum and 0 != B_sum:
+        return 1, True
+    elif 0 != A_sum and 0 == B_sum:
+        return 1, False
     else:
-        return np.logical_and(A, B).sum() / A_sum
+        if A_sum < B_sum:
+            return np.logical_and(A, B).sum() / A_sum, True
+        else:
+            return np.logical_and(A, B).sum() / B_sum, False
 
 
 def asymmetric_jaccard_coef_naive(A, B):
@@ -109,6 +121,7 @@ def asymmetric_jaccard_coef_naive(A, B):
     :param B:
     :return: a_j_coefs_max, max_x, max_y, max_diff
     """
+
     A_shape_y, A_shape_x = A.shape[: 2]
     B_shape_y, B_shape_x = B.shape[: 2]
 
@@ -122,30 +135,48 @@ def asymmetric_jaccard_coef_naive(A, B):
                       for y in np.arange(1, A_shape_y + B_shape_y)]
 
     a_j_coefs = np.zeros(len(cartesian_prod))
+    is_A_smaller = np.full(len(cartesian_prod), False)
     for (x, y), ii in zip(cartesian_prod, np.arange(len(a_j_coefs))):
         A_expanded.fill(False)
         A_expanded[y: y + A_shape_y, x: x + A_shape_x] = A
-        a_j_coefs[ii] = asymmetric_jaccard_coef_same_shape(A_expanded, B_expanded)
+        a_j_coefs[ii], is_A_smaller[ii] = asymmetric_jaccard_coef_same_shape(A_expanded, B_expanded)
 
     a_j_coefs_max = np.max(a_j_coefs)
+    coef_argmax = np.where(a_j_coefs == a_j_coefs_max)[0]
 
     max_diff = []
     max_x = []
     max_y = []
-    for [x, y] in np.array(cartesian_prod)[np.where(a_j_coefs == a_j_coefs_max)]:
+    for ii in coef_argmax:
+        x, y = cartesian_prod[ii]
+        A_is_smaller = is_A_smaller[ii]
+
         A_expanded.fill(False)
         A_expanded[y: y + A_shape_y, x: x + A_shape_x] = A
-        diff = np.logical_and(B_expanded,
-                              np.logical_not(A_expanded))
-        # The caller should guarantee some intersection exists between A and B
-        diff_x, diff_y = np.where(diff)
-        diff_x_min = diff_x.min()
-        diff_x_max = diff_x.max() + 1
-        diff_y_min = diff_y.min()
-        diff_y_max = diff_y.max() + 1
-        max_diff.append(diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max])
-        max_x.append(diff_x_min - x)
-        max_y.append(diff_y_min - y)
+
+        if A_is_smaller:
+            diff = np.logical_and(B_expanded,
+                                  np.logical_not(A_expanded))
+            diff_x, diff_y = np.where(diff)
+            diff_x_min = diff_x.min()
+            diff_x_max = diff_x.max() + 1
+            diff_y_min = diff_y.min()
+            diff_y_max = diff_y.max() + 1
+            max_diff.append(diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max])
+            max_x.append(diff_x_min - x)
+            max_y.append(diff_y_min - y)
+        else:
+            diff = np.logical_and(A_expanded,
+                                  np.logical_not(B_expanded))
+            diff_x, diff_y = np.where(np.logical_not(diff))
+            diff_x_min = diff_x.min()
+            diff_x_max = diff_x.max() + 1
+            diff_y_min = diff_y.min()
+            diff_y_max = diff_y.max() + 1
+            max_diff.append(diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max])
+            max_x.append(diff_x_min - x)
+            max_y.append(diff_y_min - y)
+
     max_x = np.array(max_x)
     max_y = np.array(max_y)
 

@@ -9,8 +9,11 @@ report_folder = "./reports"
 
 # TODO improve this part with pandas
 
+def create_report_explanatory_mode(problems):
+    pass
 
-def create_report(problems):
+
+def create_report_greedy_mode(problems):
     file_name = "raven_" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + ".xlsx"
     workbook = xlsxwriter.Workbook(join(report_folder, file_name))
 
@@ -131,7 +134,7 @@ def get_data_frame(problems):
                 prediction = argmax_sim_u4_predicted_ops + 1
                 winning_anlg = anlg_name
                 win_with_sim_anlg = sim_u4_predicted_ops[argmax_sim_u4_predicted_ops]
-                winning_tran = str(anlg.get("unary_tran"))
+                winning_tran = str(anlg.get("best_unary_tran"))
                 win_with_sim_tran = max(anlg.get("sim_u1_trans_u2"))
                 win_unary_or_binary = "unary"
 
@@ -144,7 +147,7 @@ def get_data_frame(problems):
                 prediction = argmax_sim_b6_predicted_ops + 1
                 winning_anlg = anlg_name
                 win_with_sim_anlg = sim_b6_predicted_ops[argmax_sim_b6_predicted_ops]
-                winning_tran = str(anlg.get("b1_b2_tran"))
+                winning_tran = str(anlg.get("best_b1_b2_tran"))
                 win_with_sim_tran = max(anlg.get("sim_b1_b2_trans_b3"))
                 win_unary_or_binary = "binary"
 
