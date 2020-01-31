@@ -11,7 +11,7 @@ report_folder = "./reports/greedy"
 
 
 def create_report_greedy_mode(problems):
-    file_name = "raven_" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + ".xlsx"
+    file_name = "raven_greedy" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + ".xlsx"
     workbook = xlsxwriter.Workbook(join(report_folder, file_name))
 
     problem_data_frame, analogy_data_frame, transformation_data_frame = get_data_frame(problems)
@@ -28,9 +28,10 @@ def create_report_greedy_mode(problems):
 def create_problem_worksheet(workbook, problem_data_frame):
     prob_worksheet = workbook.add_worksheet("Problems")
 
-    col_names = ["Problem", "Prediction", "Truth", "Matrix Type", "Winning Analogy Type",
-                 "Winning Analogy", "Win-With Similarity (Analogy)",
-                 "Winning Transformation", "Win-With Similarity (Transformation)"]
+    col_names = ["Problem", "Truth", "Prediction", "Prediction Similarity",
+                 "Matrix Type", "Winning Analogy Type",
+                 "Winning Analogy", "Winning Transformation",
+                 "Win-With Similarity (Transformation)"]
     col_widths = [15, 15, 15, 15, 15, 15, 15, 32, 15]
 
     bold = workbook.add_format({'bold': True, 'text_wrap': True})
@@ -41,12 +42,12 @@ def create_problem_worksheet(workbook, problem_data_frame):
 
     for ii, prob_d in zip(range(len(problem_data_frame)), problem_data_frame):
         prob_worksheet.write(ii + 1, 0, prob_d.get("problem_name"))
-        prob_worksheet.write(ii + 1, 1, prob_d.get("prediction"))
-        prob_worksheet.write(ii + 1, 2, prob_d.get("truth"))
-        prob_worksheet.write(ii + 1, 3, prob_d.get("matrix_type"))
-        prob_worksheet.write(ii + 1, 4, prob_d.get("win_unary_or_binary"))
-        prob_worksheet.write(ii + 1, 5, prob_d.get("winning_anlg"))
-        prob_worksheet.write(ii + 1, 6, prob_d.get("win_with_sim_anlg"))
+        prob_worksheet.write(ii + 1, 1, prob_d.get("truth"))
+        prob_worksheet.write(ii + 1, 2, prob_d.get("prediction"))
+        prob_worksheet.write(ii + 1, 3, prob_d.get("win_with_sim_anlg"))
+        prob_worksheet.write(ii + 1, 4, prob_d.get("matrix_type"))
+        prob_worksheet.write(ii + 1, 5, prob_d.get("win_unary_or_binary"))
+        prob_worksheet.write(ii + 1, 6, prob_d.get("winning_anlg"))
         prob_worksheet.write(ii + 1, 7, prob_d.get("winning_tran"))
         prob_worksheet.write(ii + 1, 8, prob_d.get("win_with_sim_tran"))
 

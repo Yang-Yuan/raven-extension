@@ -187,13 +187,13 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             "best_analog_type": best_analog_type,
             "best_tran": best_tran,
             "best_sim": best_sim,
-            "sim_predicted_ops": sim_predicted_ops,
-            "argmax_sim_predicted_ops": int(np.argmax(sim_predicted_ops)) + 1
+            "sim_predicted": float(np.max(sim_predicted_ops)),
+            "argmax_sim_predicted_ops": int(np.argmax(sim_predicted_ops)) + 1,
         }
 
         problem.data = problem_data
 
-        with open("./data/" + problem.name + ".json", 'w+') as outfile:
+        with open("./data/explanatory_" + problem.name + ".json", 'w+') as outfile:
             json.dump(problem_data, outfile)
             outfile.close()
 
@@ -332,7 +332,7 @@ def run_raven_greedy(analogy_groups, transformation_groups):
 
         problem.data = problem_data
 
-        with open("./data/" + problem.name + ".json", 'w+') as outfile:
+        with open("./data/greedy_" + problem.name + ".json", 'w+') as outfile:
             json.dump(problem_data, outfile)
             outfile.close()
 
