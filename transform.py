@@ -18,7 +18,7 @@ unary_transformations = [
      {"name": "rot_binary", "args": {"angle": 180}}],
     [{"name": "mirror_left_right"},
      {"name": "rot_binary", "args": {"angle": 270}}],
-    [{"name": "add_diff"}]
+    # [{"name": "add_diff"}]
 ]
 
 binary_transformations = [
