@@ -68,8 +68,8 @@ def create_analogy_worksheet(workbook, analogy_data_frame):
 
     col_names = ["Analogy", "Analogy Type", "Matrix Type", "Num of Optimal Choices",
                  "Num of Optimal Choices for 2x2 Prob", "Num of Optimal Choices for 3x3 Prob",
-                 "Problems"]
-    col_widths = [15, 15, 15, 15, 15, 15, 50]
+                 "Correctly Answered", "Incorrectly Answered", "Correct v.s. Incorrect"]
+    col_widths = [15, 15, 15, 15, 15, 15, 30, 30, 15]
 
     bold = workbook.add_format({'bold': True, 'text_wrap': True})
 
@@ -84,7 +84,9 @@ def create_analogy_worksheet(workbook, analogy_data_frame):
         anlg_worksheet.write(ii + 1, 3, anlg_d.get("n_optimal"))
         anlg_worksheet.write(ii + 1, 4, anlg_d.get("n_optimal_2x2"))
         anlg_worksheet.write(ii + 1, 5, anlg_d.get("n_optimal_3x3"))
-        anlg_worksheet.write(ii + 1, 6, anlg_d.get("problems"))
+        anlg_worksheet.write(ii + 1, 6, anlg_d.get("problems_correct"))
+        anlg_worksheet.write(ii + 1, 7, anlg_d.get("problems_incorrect"))
+        anlg_worksheet.write(ii + 1, 8, str(anlg_d.get("n_problems_correct")) + '/' + str(anlg_d.get("n_problems_incorrect")))
 
 
 def create_transformation_worksheet(workbook, transformation_data_frame):
@@ -92,8 +94,8 @@ def create_transformation_worksheet(workbook, transformation_data_frame):
 
     col_names = ["Transformation", "Transformation Type", "Num of Optimal Choices",
                  "Num of Optimal Choices for 2x2 Prob", "Num of Optimal Choices for 3x3 Prob",
-                 "Problems"]
-    col_widths = [15, 15, 15, 15, 15, 50]
+                 "Correctly Answered", "Incorrectly Answered", "Correct v.s. Incorrect"]
+    col_widths = [15, 15, 15, 15, 15, 30, 30, 15]
 
     bold = workbook.add_format({'bold': True, 'text_wrap': True})
 
@@ -107,7 +109,9 @@ def create_transformation_worksheet(workbook, transformation_data_frame):
         tran_worksheet.write(ii + 1, 2, tran_d.get("n_optimal"))
         tran_worksheet.write(ii + 1, 3, tran_d.get("n_optimal_2x2"))
         tran_worksheet.write(ii + 1, 4, tran_d.get("n_optimal_3x3"))
-        tran_worksheet.write(ii + 1, 5, tran_d.get("problems"))
+        tran_worksheet.write(ii + 1, 5, tran_d.get("problems_correct"))
+        tran_worksheet.write(ii + 1, 6, tran_d.get("problems_incorrect"))
+        tran_worksheet.write(ii + 1, 7, str(tran_d.get("n_problems_correct")) + '/' + str(tran_d.get("n_problems_incorrect")))
 
 
 def get_data_frame(problems):
@@ -151,10 +155,12 @@ def get_data_frame(problems):
              "n_optimal": 0,
              "n_optimal_2x2": 0,
              "n_optimal_3x3": 0,
-             "problems": ""}
+             "problems_correct": "",
+             "problems_incorrect": "",
+             "n_problems_correct": 0,
+             "n_problems_incorrect": 0}
         for prob_d in problem_data_frame:
             if prob_d.get("winning_anlg") == anlg_name:
-                d["problems"] = d["problems"] + " " + prob_d.get("problem_name")
                 d["n_optimal"] = d["n_optimal"] + 1
                 if "2x2" == prob_d.get("matrix_type"):
                     d["n_optimal_2x2"] = d["n_optimal_2x2"] + 1
@@ -162,6 +168,12 @@ def get_data_frame(problems):
                     d["n_optimal_3x3"] = d["n_optimal_3x3"] + 1
                 else:
                     raise Exception("Crap!")
+                if prob_d.get("truth") == prob_d.get("prediction"):
+                    d["problems_correct"] = d["problems_correct"] + " " + prob_d.get("problem_name")
+                    d["n_problems_correct"] = d["n_problems_correct"] + 1
+                else:
+                    d["problems_incorrect"] = d["problems_incorrect"] + " " + prob_d.get("problem_name")
+                    d["n_problems_incorrect"] = d["n_problems_incorrect"] + 1
         analogy_data_frame.append(d)
 
     for anlg_name in unary_analogies_3by3:
@@ -171,10 +183,12 @@ def get_data_frame(problems):
              "n_optimal": 0,
              "n_optimal_2x2": 0,
              "n_optimal_3x3": 0,
-             "problems": ""}
+             "problems_correct": "",
+             "problems_incorrect": "",
+             "n_problems_correct": 0,
+             "n_problems_incorrect": 0}
         for prob_d in problem_data_frame:
             if prob_d.get("winning_anlg") == anlg_name:
-                d["problems"] = d["problems"] + " " + prob_d.get("problem_name")
                 d["n_optimal"] = d["n_optimal"] + 1
                 if "2x2" == prob_d.get("matrix_type"):
                     d["n_optimal_2x2"] = d["n_optimal_2x2"] + 1
@@ -182,6 +196,12 @@ def get_data_frame(problems):
                     d["n_optimal_3x3"] = d["n_optimal_3x3"] + 1
                 else:
                     raise Exception("Crap!")
+                if prob_d.get("truth") == prob_d.get("prediction"):
+                    d["problems_correct"] = d["problems_correct"] + " " + prob_d.get("problem_name")
+                    d["n_problems_correct"] = d["n_problems_correct"] + 1
+                else:
+                    d["problems_incorrect"] = d["problems_incorrect"] + " " + prob_d.get("problem_name")
+                    d["n_problems_incorrect"] = d["n_problems_incorrect"] + 1
         analogy_data_frame.append(d)
 
     for anlg_name in binary_analogies_3by3:
@@ -191,10 +211,12 @@ def get_data_frame(problems):
              "n_optimal": 0,
              "n_optimal_2x2": 0,
              "n_optimal_3x3": 0,
-             "problems": ""}
+             "problems_correct": "",
+             "problems_incorrect": "",
+             "n_problems_correct": 0,
+             "n_problems_incorrect": 0}
         for prob_d in problem_data_frame:
             if prob_d.get("winning_anlg") == anlg_name:
-                d["problems"] = d["problems"] + " " + prob_d.get("problem_name")
                 d["n_optimal"] = d["n_optimal"] + 1
                 if "2x2" == prob_d.get("matrix_type"):
                     d["n_optimal_2x2"] = d["n_optimal_2x2"] + 1
@@ -202,6 +224,13 @@ def get_data_frame(problems):
                     d["n_optimal_3x3"] = d["n_optimal_3x3"] + 1
                 else:
                     raise Exception("Crap!")
+                if prob_d.get("truth") == prob_d.get("prediction"):
+                    d["problems_correct"] = d["problems_correct"] + " " + prob_d.get("problem_name")
+                    d["n_problems_correct"] = d["n_problems_correct"] + 1
+                else:
+                    d["problems_incorrect"] = d["problems_incorrect"] + " " + prob_d.get("problem_name")
+                    d["n_problems_incorrect"] = d["n_problems_incorrect"] + 1
+
         analogy_data_frame.append(d)
 
     for tran in unary_transformations:
@@ -210,10 +239,12 @@ def get_data_frame(problems):
              "n_optimal": 0,
              "n_optimal_2x2": 0,
              "n_optimal_3x3": 0,
-             "problems": ""}
+             "problems_correct": "",
+             "problems_incorrect": "",
+             "n_problems_correct": 0,
+             "n_problems_incorrect": 0}
         for prob_d in problem_data_frame:
             if prob_d.get("winning_tran") == str(tran):
-                d["problems"] = d["problems"] + " " + prob_d.get("problem_name")
                 d["n_optimal"] = d["n_optimal"] + 1
                 if "2x2" == prob_d.get("matrix_type"):
                     d["n_optimal_2x2"] = d["n_optimal_2x2"] + 1
@@ -221,6 +252,13 @@ def get_data_frame(problems):
                     d["n_optimal_3x3"] = d["n_optimal_3x3"] + 1
                 else:
                     raise Exception("Crap!")
+                if prob_d.get("truth") == prob_d.get("prediction"):
+                    d["problems_correct"] = d["problems_correct"] + " " + prob_d.get("problem_name")
+                    d["n_problems_correct"] = d["n_problems_correct"] + 1
+                else:
+                    d["problems_incorrect"] = d["problems_incorrect"] + " " + prob_d.get("problem_name")
+                    d["n_problems_incorrect"] = d["n_problems_incorrect"] + 1
+
         transformation_data_frame.append(d)
 
     for tran in binary_transformations:
@@ -229,10 +267,12 @@ def get_data_frame(problems):
              "n_optimal": 0,
              "n_optimal_2x2": 0,
              "n_optimal_3x3": 0,
-             "problems": ""}
+             "problems_correct": "",
+             "problems_incorrect": "",
+             "n_problems_incorrect": 0,
+             "n_problems_correct": 0}
         for prob_d in problem_data_frame:
             if prob_d.get("winning_tran") == str(tran):
-                d["problems"] = d["problems"] + " " + prob_d.get("problem_name")
                 d["n_optimal"] = d["n_optimal"] + 1
                 if "2x2" == prob_d.get("matrix_type"):
                     d["n_optimal_2x2"] = d["n_optimal_2x2"] + 1
@@ -240,6 +280,12 @@ def get_data_frame(problems):
                     d["n_optimal_3x3"] = d["n_optimal_3x3"] + 1
                 else:
                     raise Exception("Crap!")
+                if prob_d.get("truth") == prob_d.get("prediction"):
+                    d["problems_correct"] = d["problems_correct"] + " " + prob_d.get("problem_name")
+                    d["n_problems_correct"] = d["n_problems_correct"] + 1
+                else:
+                    d["problems_incorrect"] = d["problems_incorrect"] + " " + prob_d.get("problem_name")
+                    d["n_problems_incorrect"] = d["n_problems_incorrect"] + 1
         transformation_data_frame.append(d)
 
     return problem_data_frame, analogy_data_frame, transformation_data_frame
