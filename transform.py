@@ -18,6 +18,10 @@ unary_transformations = [
      {"name": "rot_binary", "args": {"angle": 180}}],
     [{"name": "mirror_left_right"},
      {"name": "rot_binary", "args": {"angle": 270}}],
+    [{"name": "rescale", "args": {"scale": 0.25}}],
+    [{"name": "rescale", "args": {"scale": 0.5}}],
+    [{"name": "rescale", "args": {"scale": 2}}],
+    [{"name": "rescale", "args": {"scale": 4}}],
     [{"name": "add_diff"}]
 ]
 
@@ -30,8 +34,86 @@ binary_transformations = [
 ]
 
 
-def add_diff(img, align_x, align_y, diff, diff_is_positive):
+def rescale(img, scale):
+    """
 
+    :param img:
+    :param scale:
+    :return:
+    """
+    y_shape, x_shape = img.shape
+    if scale == 0.25:
+        y_before = 0
+        y_after = 0
+        x_before = 0
+        x_after = 0
+        y_reminder = y_shape % 4
+        x_reminder = x_shape % 4
+        if 0 != y_reminder:
+            y_pad = 4 - y_reminder
+            y_before = int(y_pad / 2)
+            y_after = y_pad - y_before
+
+        if 0 != x_reminder:
+            x_pad = 4 - x_reminder
+            x_before = int(x_pad / 2)
+            x_after = x_pad - x_before
+
+        img_padded = np.pad(img, ((y_before, y_after), (x_before, x_after)), constant_values = False)
+        y_padded_shape, x_padded_shape = img_padded.shape
+        img_scaled = np.full((y_padded_shape / 4, x_padded_shape / 4), False)
+        for yy in range(img_scaled.shape[0]):
+            for xx in range(img_scaled.shape[1]):
+                yy_padded = 4 * yy
+                xx_padded = 4 * xx
+                img_scaled[yy, xx] = img_padded[yy_padded : yy_padded + 4, xx_padded : xx_padded + 4].sum() > 8
+
+        return img_scaled
+
+    elif 0.5 == scale:
+        y_before = 0
+        x_before = 0
+        y_after = y_shape % 2
+        x_after = x_shape % 2
+        img_padded = np.pad(img, ((y_before, y_after), (x_before, x_after)), constant_values = False)
+        y_padded_shape, x_padded_shape = img_padded.shape
+        img_scaled = np.full((y_padded_shape / 2, x_padded_shape / 2), False)
+        for yy in range(img_scaled.shape[0]):
+            for xx in range(img_scaled.shape[1]):
+                yy_padded = 2 * yy
+                xx_padded = 2 * xx
+                img_scaled[yy, xx] = img_padded[yy_padded: yy_padded + 2, xx_padded: xx_padded + 2].sum() > 2
+
+        return img_scaled
+
+    elif 2 == scale:
+        img_scaled = np.full((y_shape * 2, x_shape * 2), False)
+        for yy in range(y_shape):
+            for xx in range(x_shape):
+                yy_scaled = yy * 2
+                xx_scaled = xx * 2
+                img_scaled[yy_scaled : yy_scaled + 2, xx_scaled : xx_scaled + 2] = img[yy, xx]
+
+        return img_scaled
+
+    elif 4 == scale:
+        img_scaled = np.full((y_shape * 4, x_shape * 4), False)
+        for yy in range(y_shape):
+            for xx in range(x_shape):
+                yy_scaled = yy * 4
+                xx_scaled = xx * 4
+                img_scaled[yy_scaled: yy_scaled + 4, xx_scaled: xx_scaled + 4] = img[yy, xx]
+
+        return img_scaled
+
+    else:
+        raise Exception("Ryan")
+
+
+
+
+
+def add_diff(img, align_x, align_y, diff, diff_is_positive):
     # if diff is negative, then align again.
     if not diff_is_positive:
         _, align_x, align_y = jaccard.jaccard_coef(np.logical_not(diff), img)
@@ -67,14 +149,14 @@ def add_diff(img, align_x, align_y, diff, diff_is_positive):
         diff_x_max = diff_x
         img_x_max = align_x + diff_x
 
-    img_bounded = img[img_y_min : img_y_max, img_x_min : img_x_max]
-    diff_bounded = diff[diff_y_min : diff_y_max, diff_x_min : diff_x_max]
+    img_bounded = img[img_y_min: img_y_max, img_x_min: img_x_max]
+    diff_bounded = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
 
     result = np.copy(img)
     if diff_is_positive:
-        result[img_y_min : img_y_max, img_x_min : img_x_max] = np.logical_or(img_bounded, diff_bounded)
+        result[img_y_min: img_y_max, img_x_min: img_x_max] = np.logical_or(img_bounded, diff_bounded)
     else:
-        result[img_y_min : img_y_max, img_x_min : img_x_max] = np.logical_and(img_bounded, diff_bounded)
+        result[img_y_min: img_y_max, img_x_min: img_x_max] = np.logical_and(img_bounded, diff_bounded)
 
     return result
 
