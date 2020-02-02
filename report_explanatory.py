@@ -35,15 +35,24 @@ def create_problem_worksheet(workbook, problem_data_frame):
     col_widths = [15, 15, 15, 15, 15, 15, 15, 32, 15]
 
     bold = workbook.add_format({'bold': True, 'text_wrap': True})
+    red_text = workbook.add_format({"color": "#FF0000"})
 
     for jj, col_name, width in zip(range(len(col_names)), col_names, col_widths):
         prob_worksheet.set_column(jj, jj, width)
         prob_worksheet.write(0, jj, col_name, bold)
 
+    accuracy = 0
     for ii, prob_d in zip(range(len(problem_data_frame)), problem_data_frame):
         prob_worksheet.write(ii + 1, 0, prob_d.get("problem_name"))
-        prob_worksheet.write(ii + 1, 1, prob_d.get("truth"))
-        prob_worksheet.write(ii + 1, 2, prob_d.get("prediction"))
+        truth = prob_d.get("truth")
+        prediction = prob_d.get("prediction")
+        if truth == prediction:
+            prob_worksheet.write(ii + 1, 1, truth)
+            prob_worksheet.write(ii + 1, 2, prediction)
+            accuracy += 1
+        else:
+            prob_worksheet.write(ii + 1, 1, truth, red_text)
+            prob_worksheet.write(ii + 1, 2, prediction, red_text)
         prob_worksheet.write(ii + 1, 3, prob_d.get("prediction_sim"))
         prob_worksheet.write(ii + 1, 4, prob_d.get("matrix_type"))
         prob_worksheet.write(ii + 1, 5, prob_d.get("win_unary_or_binary"))
@@ -51,6 +60,8 @@ def create_problem_worksheet(workbook, problem_data_frame):
         prob_worksheet.write(ii + 1, 7, prob_d.get("winning_tran"))
         prob_worksheet.write(ii + 1, 8, prob_d.get("win_with_sim"))
 
+    prob_worksheet.write(62, 0, "Accuracy:", bold)
+    prob_worksheet.write(62, 1, str(accuracy) + "/60", bold)
 
 def create_analogy_worksheet(workbook, analogy_data_frame):
     anlg_worksheet = workbook.add_worksheet("Analogies")
@@ -108,7 +119,7 @@ def get_data_frame(problems):
 
         prob_data = prob.data
 
-        d_result = {"problem_name": prob.name}
+        d_result = {"problem_name": prob.name, "truth": prob.answer}
 
         if (3, 3) == prob.matrix.shape:
             d_result["matrix_type"] = "3x3"

@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 class RavenProgressiveMatrix:
 
-    def __init__(self, name, matrix_components, option_components):
+    def __init__(self, name, matrix_components, option_components, answer):
 
         self.name = name
 
@@ -26,6 +26,7 @@ class RavenProgressiveMatrix:
 
         self.analogies = None
         self.data = None
+        self.answer = answer
 
     def plot_problem(self):
         if 2 == self.matrix_n:

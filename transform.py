@@ -18,7 +18,7 @@ unary_transformations = [
      {"name": "rot_binary", "args": {"angle": 180}}],
     [{"name": "mirror_left_right"},
      {"name": "rot_binary", "args": {"angle": 270}}],
-    # [{"name": "add_diff"}]
+    [{"name": "add_diff"}]
 ]
 
 binary_transformations = [
@@ -31,6 +31,11 @@ binary_transformations = [
 
 
 def add_diff(img, align_x, align_y, diff, diff_is_positive):
+
+    # if diff is negative, then align again.
+    if not diff_is_positive:
+        _, align_x, align_y = jaccard.jaccard_coef(np.logical_not(diff), img)
+
     diff_y, diff_x = diff.shape
     img_y, img_x = img.shape
 

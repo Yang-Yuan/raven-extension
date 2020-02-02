@@ -12,7 +12,6 @@ raven_coordinates_file = "./problems/SPM coordinates.txt"
 
 
 def load_problems(problem_folder = None, problem_coordinates_file = None, show_me = False):
-
     global raven_folder
     global raven_coordinates_file
 
@@ -41,8 +40,13 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
             else:
                 coordinates.append(rect_coords)
 
+    with open("./problems/stuff.txt", "r") as f:
+        answers = []
+        for line in f:
+            answers.append(int(line))
+
     problems = []
-    for img, coords, problem_name in zip(raw_images, problem_coordinates, problem_names):
+    for img, coords, problem_name, answer in zip(raw_images, problem_coordinates, problem_names, answers):
         coms = utils.extract_components(img, coords)
         smaller_coms = [rescale(image = com, scale = (0.5, 0.5)) for com in coms]
         binary_smaller_coms = [utils.grey_to_binary(com, 1, 0.2) for com in smaller_coms]
@@ -51,9 +55,11 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
         # trimmed_coms = [utils.trim_binary_image(com) for com in coms]
 
         if 10 == len(coms):
-            problems.append(RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 4], binary_smaller_coms[4:]))
+            problems.append(
+                RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 4], binary_smaller_coms[4:], answer))
         elif 17 == len(coms):
-            problems.append(RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 9], binary_smaller_coms[9:]))
+            problems.append(
+                RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 9], binary_smaller_coms[9:], answer))
         else:
             raise Exception("Crap!")
 

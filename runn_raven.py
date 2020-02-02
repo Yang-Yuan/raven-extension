@@ -12,23 +12,26 @@ import asymmetric_jaccard
 problems = load_problems()
 
 
-def run_raven(mode, analogy_groups, transformation_groups):
+def run_raven(mode, analogy_groups, transformation_groups, show_me = False):
     """
 
+    :param show_me:
     :param mode: {"explanatory", "greedy"}
     :param analogy_groups:
     :param transformation_groups:
     :return:
     """
     if "explanatory" == mode:
-        run_raven_explanatory(analogy_groups, transformation_groups)
+        run_raven_explanatory(analogy_groups, transformation_groups, show_me)
     elif "greedy" == mode:
-        run_raven_greedy(analogy_groups, transformation_groups)
+        run_raven_greedy(analogy_groups, transformation_groups, show_me)
+    elif "brutal" == mode:
+        run_rave_brutal(analogy_groups, transformation_groups, show_me)
     else:
         raise Exception("Ryan!")
 
 
-def run_raven_explanatory(analogy_groups, transformation_groups):
+def run_raven_explanatory(analogy_groups, transformation_groups, show_me = False):
     """
 
     :param analogy_groups: analogies grouped by the size of matrix and whether it is unary or binary
@@ -197,6 +200,12 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
             "argmax_sim_predicted_ops": int(np.argmax(sim_predicted_ops)) + 1,
         }
 
+        if show_me:
+            plt.figure()
+            plt.imshow(predicted)
+            plt.figure()
+            plt.imshow(problem.options[int(np.argmax(sim_predicted_ops))])
+
         problem.data = problem_data
 
         with open("./data/explanatory_" + problem.name + ".json", 'w+') as outfile:
@@ -212,7 +221,7 @@ def run_raven_explanatory(analogy_groups, transformation_groups):
     print(end_time - start_time)
 
 
-def run_raven_greedy(analogy_groups, transformation_groups):
+def run_raven_greedy(analogy_groups, transformation_groups, show_me = False):
     global problems
 
     start_time = time.time()
@@ -289,7 +298,8 @@ def run_raven_greedy(analogy_groups, transformation_groups):
                 "sim_u1_trans_u2": sim_u1_trans_u2,
                 "best_unary_tran": best_unary_tran,
                 "sim_u4_predicted_ops": sim_u4_predicted_ops,
-                "argmax_sim_u4_predicted_ops": int(np.argmax(sim_u4_predicted_ops)) + 1
+                "argmax_sim_u4_predicted_ops": int(np.argmax(sim_u4_predicted_ops)) + 1,
+                "u4_predicted": u4_predicted
             }
 
         binary_analogies_data = {}
@@ -328,12 +338,57 @@ def run_raven_greedy(analogy_groups, transformation_groups):
                 "best_b1_b2_align_x": int(best_b1_b2_align_x),
                 "best_b1_b2_align_y": int(best_b1_b2_align_y),
                 "sim_b6_predicted_ops": sim_b6_predicted_ops,
-                "argmax_sim_b6_predicted_ops": int(np.argmax(sim_b6_predicted_ops)) + 1
+                "argmax_sim_b6_predicted_ops": int(np.argmax(sim_b6_predicted_ops)) + 1,
+                "b6_predicted": b6_predicted
             }
+
+        best_sim = None
+        best_analog_name = None
+        best_analog_type = None
+        best_tran = None
+        sim_predicted = -1
+        argmax_sim_predicted_ops = None
+        predicted = None
+        for anlg_name, anlg in unary_analogies_data.items():
+            max_sim_u4_predicted_ops = max(anlg.get("sim_u4_predicted_ops"))
+            if sim_predicted < max_sim_u4_predicted_ops:
+                best_sim = max(anlg.get("sim_u1_trans_u2"))
+                best_analog_name = anlg_name
+                best_analog_type = "unary"
+                best_tran = anlg.get("best_unary_tran")
+                sim_predicted = max_sim_u4_predicted_ops
+                argmax_sim_predicted_ops = anlg.get("argmax_sim_u4_predicted_ops")
+                predicted = anlg.get("u4_predicted")
+            del anlg["u4_predicted"]
+
+        for anlg_name, anlg in binary_analogies_data.items():
+            max_sim_b6_predicted_ops = max(anlg.get("sim_b6_predicted_ops"))
+            if sim_predicted < max_sim_b6_predicted_ops:
+                best_sim = max(anlg.get("sim_b1_b2_trans_b3"))
+                best_analog_name = anlg_name
+                best_analog_type = "binary"
+                best_tran = anlg.get("best_b1_b2_tran")
+                sim_predicted = max_sim_b6_predicted_ops
+                argmax_sim_predicted_ops = anlg.get("argmax_sim_b6_predicted_ops")
+                predicted = anlg.get("b6_predicted")
+            del anlg["b6_predicted"]
+
+        if show_me:
+            plt.figure()
+            plt.imshow(predicted)
+            plt.figure()
+            plt.imshow(problem.options[argmax_sim_predicted_ops - 1])
+            plt.show()
 
         problem_data = {
             "unary_analogies_data": unary_analogies_data,
-            "binary_analogies_data": binary_analogies_data
+            "binary_analogies_data": binary_analogies_data,
+            "best_analog_name": best_analog_name,
+            "best_analog_type": best_analog_type,
+            "best_tran": best_tran,
+            "best_sim": best_sim,
+            "sim_predicted": sim_predicted,
+            "argmax_sim_predicted_ops": argmax_sim_predicted_ops
         }
 
         problem.data = problem_data
@@ -350,3 +405,7 @@ def run_raven_greedy(analogy_groups, transformation_groups):
     end_time = time.time()
 
     print(end_time - start_time)
+
+
+def run_rave_brutal(analogy_groups, transformation_groups, show_me = False):
+    pass
