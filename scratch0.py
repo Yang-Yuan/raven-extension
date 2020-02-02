@@ -17,14 +17,14 @@ transformation_groups = {
     "3x3_binary_transformations": transform.binary_transformations
 }
 
-runn_raven.run_raven(mode = "explanatory",
-                     analogy_groups = analogy_groups,
-                     transformation_groups = transformation_groups)
-
-runn_raven.run_raven(mode = "greedy",
-                     analogy_groups = analogy_groups,
-                     transformation_groups = transformation_groups)
-
-# runn_raven.run_raven(mode = "brutal",
+# runn_raven.run_raven(mode = "explanatory",
 #                      analogy_groups = analogy_groups,
 #                      transformation_groups = transformation_groups)
+#
+# runn_raven.run_raven(mode = "greedy",
+#                      analogy_groups = analogy_groups,
+#                      transformation_groups = transformation_groups)
+
+runn_raven.run_raven(mode = "brutal",
+                     analogy_groups = analogy_groups,
+                     transformation_groups = transformation_groups)

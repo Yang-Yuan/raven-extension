@@ -5,6 +5,7 @@ import time
 from problems import load_problems
 import report_explanatory
 import report_greedy
+import report_brutal
 import transform
 import jaccard
 import asymmetric_jaccard
@@ -408,4 +409,147 @@ def run_raven_greedy(analogy_groups, transformation_groups, show_me = False):
 
 
 def run_rave_brutal(analogy_groups, transformation_groups, show_me = False):
-    pass
+    global problems
+
+    start_time = time.time()
+
+    print("run raven in greedy mode.")
+
+    for problem in problems:
+
+        # if problem.name not in ["a1", "a2", "c1"]:
+        #     continue
+
+        print(problem.name)
+
+        jaccard.load_jaccard_cache(problem.name)
+        asymmetric_jaccard.load_asymmetric_jaccard_cache(problem.name)
+
+        if 2 == problem.matrix_n:
+            unary_analogies = analogy_groups.get("2x2_unary_analogies")
+            binary_analogies = {}
+            unary_transformations = transformation_groups.get("2x2_unary_transformations")
+            binary_transformations = {}
+
+        elif 3 == problem.matrix_n:
+            unary_analogies = analogy_groups.get("3x3_unary_analogies")
+            binary_analogies = analogy_groups.get("3x3_binary_analogies")
+            unary_transformations = transformation_groups.get("3x3_unary_transformations")
+            binary_transformations = transformation_groups.get("3x3_binary_transformations")
+        else:
+            raise Exception("Ryan!")
+
+        unary_analogies_data = {}
+        for unary_analog_name, unary_analog in unary_analogies.items():
+            u1 = problem.matrix[unary_analog[0]]
+            u2 = problem.matrix[unary_analog[1]]
+            u3 = problem.matrix[unary_analog[2]]
+
+            unary_analogies_data[unary_analog_name] = {}
+            for unary_tran in unary_transformations:
+                if str(unary_tran) == "[{'name': 'add_diff'}]":
+                    _, align_x, align_y, diff, diff_is_positive = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
+                    u4_predicted = transform.add_diff(u3, align_x, align_y, diff, diff_is_positive)
+                    sim_u4_predicted_ops = []
+                    for op in problem.options:
+                        sim, _, _ = jaccard.jaccard_coef(op, u4_predicted)
+                        sim_u4_predicted_ops.append(sim)
+                else:
+                    u4_predicted = transform.apply_unary_transformation(u3, unary_tran)
+                    sim_u4_predicted_ops = []
+                    for op in problem.options:
+                        sim, _, _ = jaccard.jaccard_coef(op, u4_predicted)
+                        sim_u4_predicted_ops.append(sim)
+                unary_analogies_data[unary_analog_name][str(unary_tran)] = {
+                    "sim_u4_predicted_ops": sim_u4_predicted_ops,
+                    "max_sim_u4_predicted_ops": max(sim_u4_predicted_ops),
+                    "argmax_sim_u4_predicted_ops": int(np.argmax(sim_u4_predicted_ops)) + 1,
+                    "u4_predicted": u4_predicted
+                }
+
+        binary_analogies_data = {}
+        for binary_analog_name, binary_analog in binary_analogies.items():
+            b1 = problem.matrix[binary_analog[0]]
+            b2 = problem.matrix[binary_analog[1]]
+            b4 = problem.matrix[binary_analog[3]]
+            b5 = problem.matrix[binary_analog[4]]
+
+            binary_analogies_data[binary_analog_name] = {}
+            for binary_tran in binary_transformations:
+                _, align_x, align_y = transform.apply_binary_transformation(b1, b2, binary_tran)
+                b6_predicted, _, _ = transform.apply_binary_transformation(b4, b5, binary_tran,
+                                                                           align_x, align_y)
+                sim_b6_predicted_ops = []
+                for op in problem.options:
+                    sim, _, _ = jaccard.jaccard_coef(op, b6_predicted)
+                    sim_b6_predicted_ops.append(sim)
+                binary_analogies_data[binary_analog_name][str(binary_tran)] = {
+                    "sim_b6_predicted_ops": sim_b6_predicted_ops,
+                    "max_sim_b6_predicted_ops": max(sim_b6_predicted_ops),
+                    "argmax_sim_b6_predicted_ops": int(np.argmax(sim_b6_predicted_ops)) + 1,
+                    "b6_predicted": b6_predicted
+                }
+
+        best_sim = None
+        best_analog_name = None
+        best_analog_type = None
+        best_tran = None
+        sim_predicted = -1
+        argmax_sim_predicted_ops = None
+        predicted = None
+        for anlg_name, anlg in unary_analogies_data.items():
+            for tran_name, tran in anlg.items():
+                max_sim_u4_predicted_ops = tran.get("max_sim_u4_predicted_ops")
+                if sim_predicted < max_sim_u4_predicted_ops:
+                    best_analog_name = anlg_name
+                    best_analog_type = "unary"
+                    best_tran = tran_name
+                    sim_predicted = max_sim_u4_predicted_ops
+                    argmax_sim_predicted_ops = tran.get("argmax_sim_u4_predicted_ops")
+                    predicted = tran.get("u4_predicted")
+                del tran["u4_predicted"]
+
+        for anlg_name, anlg in binary_analogies_data.items():
+            for tran_name, tran in anlg.items():
+                max_sim_b6_predicted_ops = tran.get("max_sim_b6_predicted_ops")
+                if sim_predicted < max_sim_b6_predicted_ops:
+                    best_analog_name = anlg_name
+                    best_analog_type = "binary"
+                    best_tran = tran_name
+                    sim_predicted = max_sim_b6_predicted_ops
+                    argmax_sim_predicted_ops = tran.get("argmax_sim_b6_predicted_ops")
+                    predicted = tran.get("b6_predicted")
+                del tran["b6_predicted"]
+
+        if show_me:
+            plt.figure()
+            plt.imshow(predicted)
+            plt.figure()
+            plt.imshow(problem.options[argmax_sim_predicted_ops - 1])
+            plt.show()
+
+        problem_data = {
+            "unary_analogies_data": unary_analogies_data,
+            "binary_analogies_data": binary_analogies_data,
+            "best_analog_name": best_analog_name,
+            "best_analog_type": best_analog_type,
+            "best_tran": best_tran,
+            "best_sim": best_sim,
+            "sim_predicted": sim_predicted,
+            "argmax_sim_predicted_ops": argmax_sim_predicted_ops
+        }
+
+        problem.data = problem_data
+
+        with open("./data/brutal_" + problem.name + ".json", 'w+') as outfile:
+            json.dump(problem_data, outfile)
+            outfile.close()
+
+        jaccard.save_jaccard_cache(problem.name)
+        asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
+
+    report_brutal.create_report_brutal_mode(problems)
+
+    end_time = time.time()
+
+    print(end_time - start_time)
