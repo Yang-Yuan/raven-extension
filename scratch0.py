@@ -25,6 +25,6 @@ runn_raven.run_raven(mode = "greedy",
                      analogy_groups = analogy_groups,
                      transformation_groups = transformation_groups)
 
-# runn_raven.run_raven(mode = "brutal",
-#                      analogy_groups = analogy_groups,
-#                      transformation_groups = transformation_groups)
+runn_raven.run_raven(mode = "brutal",
+                     analogy_groups = analogy_groups,
+                     transformation_groups = transformation_groups)
