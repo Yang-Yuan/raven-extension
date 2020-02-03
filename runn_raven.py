@@ -413,7 +413,7 @@ def run_rave_brutal(analogy_groups, transformation_groups, show_me = False):
 
     start_time = time.time()
 
-    print("run raven in greedy mode.")
+    print("run raven in brutal mode.")
 
     for problem in problems:
 

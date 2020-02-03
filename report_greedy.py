@@ -187,7 +187,6 @@ def get_data_frame(problems):
              "n_problems_correct": 0}
         for prob_d in problem_data_frame:
             if prob_d.get("winning_anlg") == anlg_name:
-                d["problems"] = d["problems"] + " " + prob_d.get("problem_name")
                 d["n_optimal"] = d["n_optimal"] + 1
                 if "2x2" == prob_d.get("matrix_type"):
                     d["n_optimal_2x2"] = d["n_optimal_2x2"] + 1
@@ -216,7 +215,6 @@ def get_data_frame(problems):
              "n_problems_correct": 0}
         for prob_d in problem_data_frame:
             if prob_d.get("winning_anlg") == anlg_name:
-                d["problems"] = d["problems"] + " " + prob_d.get("problem_name")
                 d["n_optimal"] = d["n_optimal"] + 1
                 if "2x2" == prob_d.get("matrix_type"):
                     d["n_optimal_2x2"] = d["n_optimal_2x2"] + 1

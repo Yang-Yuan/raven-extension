@@ -18,10 +18,10 @@ unary_transformations = [
      {"name": "rot_binary", "args": {"angle": 180}}],
     [{"name": "mirror_left_right"},
      {"name": "rot_binary", "args": {"angle": 270}}],
-    [{"name": "rescale", "args": {"scale": 0.25}}],
+    # [{"name": "rescale", "args": {"scale": 0.25}}],
     [{"name": "rescale", "args": {"scale": 0.5}}],
     [{"name": "rescale", "args": {"scale": 2}}],
-    [{"name": "rescale", "args": {"scale": 4}}],
+    # [{"name": "rescale", "args": {"scale": 4}}],
     [{"name": "add_diff"}]
 ]
 
@@ -61,7 +61,7 @@ def rescale(img, scale):
 
         img_padded = np.pad(img, ((y_before, y_after), (x_before, x_after)), constant_values = False)
         y_padded_shape, x_padded_shape = img_padded.shape
-        img_scaled = np.full((y_padded_shape / 4, x_padded_shape / 4), False)
+        img_scaled = np.full((int(y_padded_shape / 4), int(x_padded_shape / 4)), False)
         for yy in range(img_scaled.shape[0]):
             for xx in range(img_scaled.shape[1]):
                 yy_padded = 4 * yy
@@ -77,7 +77,7 @@ def rescale(img, scale):
         x_after = x_shape % 2
         img_padded = np.pad(img, ((y_before, y_after), (x_before, x_after)), constant_values = False)
         y_padded_shape, x_padded_shape = img_padded.shape
-        img_scaled = np.full((y_padded_shape / 2, x_padded_shape / 2), False)
+        img_scaled = np.full((int(y_padded_shape / 2), int(x_padded_shape / 2)), False)
         for yy in range(img_scaled.shape[0]):
             for xx in range(img_scaled.shape[1]):
                 yy_padded = 2 * yy
@@ -87,7 +87,7 @@ def rescale(img, scale):
         return img_scaled
 
     elif 2 == scale:
-        img_scaled = np.full((y_shape * 2, x_shape * 2), False)
+        img_scaled = np.full((int(y_shape * 2), int(x_shape * 2)), False)
         for yy in range(y_shape):
             for xx in range(x_shape):
                 yy_scaled = yy * 2
@@ -97,7 +97,7 @@ def rescale(img, scale):
         return img_scaled
 
     elif 4 == scale:
-        img_scaled = np.full((y_shape * 4, x_shape * 4), False)
+        img_scaled = np.full((int(y_shape * 4), int(x_shape * 4)), False)
         for yy in range(y_shape):
             for xx in range(x_shape):
                 yy_scaled = yy * 4
@@ -108,9 +108,6 @@ def rescale(img, scale):
 
     else:
         raise Exception("Ryan")
-
-
-
 
 
 def add_diff(img, align_x, align_y, diff, diff_is_positive):

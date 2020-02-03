@@ -147,7 +147,7 @@ def get_data_frame(problems):
         d_result["win_unary_or_binary"] = win_unary_or_binary
         d_result["winning_anlg"] = winning_anlg
         d_result["winning_tran"] = winning_tran
-        d_result["win_with_sim"] = win_with_sim
+        d_result["win_with_sim"] = "No data for brutal mode"
 
         problem_data_frame.append(d_result)
 
