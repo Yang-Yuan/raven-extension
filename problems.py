@@ -52,7 +52,7 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
         binary_smaller_coms = [utils.grey_to_binary(com, 1, 0.2) for com in smaller_coms]
 
         # shouldn't trim components. It's gonna mess up the alignment.
-        # trimmed_coms = [utils.trim_binary_image(com) for com in coms]
+        trimmed_coms = [utils.trim_binary_image(com) for com in coms]
 
         if 10 == len(coms):
             problems.append(

@@ -19,11 +19,12 @@ unary_transformations = [
     [{"name": "mirror_left_right"},
      {"name": "rot_binary", "args": {"angle": 270}}],
     # [{"name": "rescale", "args": {"scale": 0.25}}],
-    [{"name": "rescale", "args": {"scale": 0.5}}],
-    [{"name": "rescale", "args": {"scale": 2}}],
+    # [{"name": "rescale", "args": {"scale": 0.5}}],
+    # [{"name": "rescale", "args": {"scale": 2}}],
     # [{"name": "rescale", "args": {"scale": 4}}],
     [{"name": "add_diff"}]
 ]
+
 
 binary_transformations = [
     [{"name": "unite"}],

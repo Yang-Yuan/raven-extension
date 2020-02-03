@@ -10,11 +10,11 @@ report_folder = "./reports/explanatory"
 # TODO improve this part with pandas or other framework
 
 
-def create_report_explanatory_mode(problems):
+def create_report_explanatory_mode(problems, test_problems = None):
     file_name = "raven_explanatory_" + datetime.now().strftime("%d_%m_%Y_%H_%M_%S") + ".xlsx"
     workbook = xlsxwriter.Workbook(join(report_folder, file_name))
 
-    problem_data_frame, analogy_data_frame, transformation_data_frame = get_data_frame(problems)
+    problem_data_frame, analogy_data_frame, transformation_data_frame = get_data_frame(problems, test_problems)
 
     create_problem_worksheet(workbook, problem_data_frame)
 
@@ -114,12 +114,15 @@ def create_transformation_worksheet(workbook, transformation_data_frame):
         tran_worksheet.write(ii + 1, 7, str(tran_d.get("n_problems_correct")) + '/' + str(tran_d.get("n_problems_incorrect")))
 
 
-def get_data_frame(problems):
+def get_data_frame(problems, test_problems = None):
     problem_data_frame = []
     analogy_data_frame = []
     transformation_data_frame = []
 
     for prob in problems:
+
+        if test_problems is not None and prob.name not in test_problems:
+            continue
 
         prob_data = prob.data
 

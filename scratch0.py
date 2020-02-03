@@ -19,7 +19,8 @@ transformation_groups = {
 
 runn_raven.run_raven(mode = "explanatory",
                      analogy_groups = analogy_groups,
-                     transformation_groups = transformation_groups)
+                     transformation_groups = transformation_groups,
+                     test_problems = ["c4"])
 
 # runn_raven.run_raven(mode = "greedy",
 #                      analogy_groups = analogy_groups,

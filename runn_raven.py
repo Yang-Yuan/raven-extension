@@ -13,9 +13,10 @@ import asymmetric_jaccard
 problems = load_problems()
 
 
-def run_raven(mode, analogy_groups, transformation_groups, show_me = False):
+def run_raven(mode, analogy_groups, transformation_groups, show_me = False, test_problems = None):
     """
 
+    :param test_problems:
     :param show_me:
     :param mode: {"explanatory", "greedy"}
     :param analogy_groups:
@@ -23,18 +24,20 @@ def run_raven(mode, analogy_groups, transformation_groups, show_me = False):
     :return:
     """
     if "explanatory" == mode:
-        run_raven_explanatory(analogy_groups, transformation_groups, show_me)
+        run_raven_explanatory(analogy_groups, transformation_groups, show_me, test_problems)
     elif "greedy" == mode:
-        run_raven_greedy(analogy_groups, transformation_groups, show_me)
+        run_raven_greedy(analogy_groups, transformation_groups, show_me, test_problems)
     elif "brutal" == mode:
-        run_rave_brutal(analogy_groups, transformation_groups, show_me)
+        run_rave_brutal(analogy_groups, transformation_groups, show_me, test_problems)
     else:
         raise Exception("Ryan!")
 
 
-def run_raven_explanatory(analogy_groups, transformation_groups, show_me = False):
+def run_raven_explanatory(analogy_groups, transformation_groups, show_me = False, test_problems = None):
     """
 
+    :param test_problems:
+    :param show_me:
     :param analogy_groups: analogies grouped by the size of matrix and whether it is unary or binary
     :param transformation_groups: transformations grouped by the size of matrix and whether it is unary or binary
     :return:
@@ -47,6 +50,9 @@ def run_raven_explanatory(analogy_groups, transformation_groups, show_me = False
     print("run raven in explanatory mode.")
 
     for problem in problems:
+
+        if test_problems is not None and problem.name not in test_problems:
+            continue
 
         print(problem.name)
 
@@ -216,13 +222,13 @@ def run_raven_explanatory(analogy_groups, transformation_groups, show_me = False
         jaccard.save_jaccard_cache(problem.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
 
-    report_explanatory.create_report_explanatory_mode(problems)
+    report_explanatory.create_report_explanatory_mode(problems, test_problems)
 
     end_time = time.time()
     print(end_time - start_time)
 
 
-def run_raven_greedy(analogy_groups, transformation_groups, show_me = False):
+def run_raven_greedy(analogy_groups, transformation_groups, show_me = False, test_problems = None):
     global problems
 
     start_time = time.time()
@@ -230,6 +236,9 @@ def run_raven_greedy(analogy_groups, transformation_groups, show_me = False):
     print("run raven in greedy mode.")
 
     for problem in problems:
+
+        if test_problems is not None and problem.name not in test_problems:
+            continue
 
         print(problem.name)
 
@@ -401,14 +410,14 @@ def run_raven_greedy(analogy_groups, transformation_groups, show_me = False):
         jaccard.save_jaccard_cache(problem.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
 
-    report_greedy.create_report_greedy_mode(problems)
+    report_greedy.create_report_greedy_mode(problems, test_problems)
 
     end_time = time.time()
 
     print(end_time - start_time)
 
 
-def run_rave_brutal(analogy_groups, transformation_groups, show_me = False):
+def run_rave_brutal(analogy_groups, transformation_groups, show_me = False, test_problems = None):
     global problems
 
     start_time = time.time()
@@ -417,8 +426,8 @@ def run_rave_brutal(analogy_groups, transformation_groups, show_me = False):
 
     for problem in problems:
 
-        # if problem.name not in ["a1", "a2", "c1"]:
-        #     continue
+        if test_problems is not None and problem.name not in test_problems:
+            continue
 
         print(problem.name)
 
@@ -548,7 +557,7 @@ def run_rave_brutal(analogy_groups, transformation_groups, show_me = False):
         jaccard.save_jaccard_cache(problem.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
 
-    report_brutal.create_report_brutal_mode(problems)
+    report_brutal.create_report_brutal_mode(problems, test_problems)
 
     end_time = time.time()
 
