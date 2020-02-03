@@ -176,8 +176,7 @@ def run_raven_explanatory(analogy_groups, transformation_groups, show_me = False
             binary_analog = binary_analogies.get(best_binary_analog_name)
             b4 = problem.matrix[binary_analog[3]]
             b5 = problem.matrix[binary_analog[4]]
-            b6_predicted, _, _ = transform.apply_binary_transformation(b4, b5, best_binary_tran,
-                                                                       best_b1_b2_align_x, best_b1_b2_align_y)
+            b6_predicted, _, _ = transform.apply_binary_transformation(b4, b5, best_binary_tran)
 
             best_analog_name = best_binary_analog_name
             best_analog_type = "binary"
@@ -212,6 +211,16 @@ def run_raven_explanatory(analogy_groups, transformation_groups, show_me = False
             plt.imshow(predicted)
             plt.figure()
             plt.imshow(problem.options[int(np.argmax(sim_predicted_ops))])
+            plt.show()
+        else:
+            plt.figure()
+            plt.imshow(predicted)
+            plt.savefig("./data/explanatory_" + problem.name + "_predicted.png")
+            plt.close()
+            plt.figure()
+            plt.imshow(problem.options[int(np.argmax(sim_predicted_ops))])
+            plt.savefig("./data/explanatory_" + problem.name + "_selected.png")
+            plt.close()
 
         problem.data = problem_data
 

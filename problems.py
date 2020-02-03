@@ -51,8 +51,10 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
         smaller_coms = [rescale(image = com, scale = (0.5, 0.5)) for com in coms]
         binary_smaller_coms = [utils.grey_to_binary(com, 1, 0.2) for com in smaller_coms]
 
+        binary_smaller_coms = [utils.erase_noise_point(com, 4) for com in binary_smaller_coms]
+
         # shouldn't trim components. It's gonna mess up the alignment.
-        trimmed_coms = [utils.trim_binary_image(com) for com in coms]
+        binary_smaller_coms = [utils.trim_binary_image(com) for com in binary_smaller_coms]
 
         if 10 == len(coms):
             problems.append(

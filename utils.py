@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
+from skimage import measure
 
 
 def rgb_to_binary(img, bg_color, tolerance):
@@ -15,6 +16,7 @@ def rgb_to_binary(img, bg_color, tolerance):
 
     return np.logical_not(np.average(abs(rgb - bg_color), axis = -1) < tolerance)
 
+
 def grey_to_binary(img, bg_color, tolerance):
     """
     convert img to a binary image (0, 1)
@@ -25,6 +27,7 @@ def grey_to_binary(img, bg_color, tolerance):
     """
 
     return np.logical_not(abs(img - bg_color) < tolerance)
+
 
 def cut(img, rectangles, show_me = False):
     """
@@ -81,6 +84,7 @@ def extract_components(img, coords):
     return [img[y: y + delta_y, x: x + delta_x]
             for x, y, delta_x, delta_y in coords]
 
+
 def trim_binary_image(img):
     if 2 != len(img.shape):
         raise Exception("Crap!")
@@ -94,4 +98,13 @@ def trim_binary_image(img):
     x_max = x.max() + 1
     y_min = y.min()
 
-    return img[y_min : y_max, x_min :x_max]
+    return img[y_min: y_max, x_min:x_max]
+
+
+def erase_noise_point(img, noise_point_size):
+    labels, label_num = measure.label(input = img, background = False, return_num = True, connectivity = 2)
+    sizes = [(labels == label).sum() for label in range(1, label_num + 1)]
+    for size, label in zip(sizes, range(1, label_num + 1)):
+        if size < noise_point_size:
+            img[labels == label] = False
+    return img

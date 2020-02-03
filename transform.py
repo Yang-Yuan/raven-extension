@@ -18,10 +18,10 @@ unary_transformations = [
      {"name": "rot_binary", "args": {"angle": 180}}],
     [{"name": "mirror_left_right"},
      {"name": "rot_binary", "args": {"angle": 270}}],
-    # [{"name": "rescale", "args": {"scale": 0.25}}],
-    # [{"name": "rescale", "args": {"scale": 0.5}}],
-    # [{"name": "rescale", "args": {"scale": 2}}],
-    # [{"name": "rescale", "args": {"scale": 4}}],
+    [{"name": "rescale", "args": {"scale": 0.25}}],
+    [{"name": "rescale", "args": {"scale": 0.5}}],
+    [{"name": "rescale", "args": {"scale": 2}}],
+    [{"name": "rescale", "args": {"scale": 4}}],
     [{"name": "add_diff"}]
 ]
 
@@ -112,48 +112,49 @@ def rescale(img, scale):
 
 
 def add_diff(img, align_x, align_y, diff, diff_is_positive):
-    # if diff is negative, then align again.
-    if not diff_is_positive:
-        _, align_x, align_y = jaccard.jaccard_coef(np.logical_not(diff), img)
 
-    diff_y, diff_x = diff.shape
-    img_y, img_x = img.shape
-
-    if align_y < 0:
-        diff_y_min = -align_y
-        img_y_min = 0
-    else:
-        diff_y_min = 0
-        img_y_min = align_y
-
-    if align_x < 0:
-        diff_x_min = -align_x
-        img_x_min = 0
-    else:
-        diff_x_min = 0
-        img_x_min = align_x
-
-    if align_y + diff_y > img_y:
-        diff_y_max = img_y - (align_y + diff_y)
-        img_y_max = img_y
-    else:
-        diff_y_max = diff_y
-        img_y_max = align_y + diff_y
-
-    if align_x + diff_x > img_x:
-        diff_x_max = img_x - (align_x + diff_x)
-        img_x_max = img_x
-    else:
-        diff_x_max = diff_x
-        img_x_max = align_x + diff_x
-
-    img_bounded = img[img_y_min: img_y_max, img_x_min: img_x_max]
-    diff_bounded = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
-
-    result = np.copy(img)
     if diff_is_positive:
-        result[img_y_min: img_y_max, img_x_min: img_x_max] = np.logical_or(img_bounded, diff_bounded)
+        diff_aligned, img_aligned = align(diff, img, align_x, align_y)
+        result = np.logical_or(diff_aligned, img_aligned)
     else:
+        if not diff_is_positive:
+            _, align_x, align_y = jaccard.jaccard_coef(np.logical_not(diff), img)
+
+        diff_y, diff_x = diff.shape
+        img_y, img_x = img.shape
+
+        if align_y < 0:
+            diff_y_min = -align_y
+            img_y_min = 0
+        else:
+            diff_y_min = 0
+            img_y_min = align_y
+
+        if align_x < 0:
+            diff_x_min = -align_x
+            img_x_min = 0
+        else:
+            diff_x_min = 0
+            img_x_min = align_x
+
+        if align_y + diff_y > img_y:
+            diff_y_max = img_y - (align_y + diff_y)
+            img_y_max = img_y
+        else:
+            diff_y_max = diff_y
+            img_y_max = align_y + diff_y
+
+        if align_x + diff_x > img_x:
+            diff_x_max = img_x - (align_x + diff_x)
+            img_x_max = img_x
+        else:
+            diff_x_max = diff_x
+            img_x_max = align_x + diff_x
+
+        img_bounded = img[img_y_min: img_y_max, img_x_min: img_x_max]
+        diff_bounded = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
+
+        result = np.copy(img)
         result[img_y_min: img_y_max, img_x_min: img_x_max] = np.logical_and(img_bounded, diff_bounded)
 
     return result
