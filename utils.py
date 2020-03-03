@@ -108,3 +108,14 @@ def erase_noise_point(img, noise_point_size):
         if size < noise_point_size:
             img[labels == label] = False
     return img
+
+
+def trim(img):
+    y, x = np.where(img)
+    y_max = y.max() + 1
+    x_min = x.min()
+    y_min = y.min()
+    x_max = x.max() + 1
+
+    return img[y_min: y_max, x_min: x_max]
+

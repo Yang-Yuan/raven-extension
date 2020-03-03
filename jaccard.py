@@ -43,9 +43,9 @@ def load_jaccard_cache(problem_name):
         jaccard_similarities = np.full((jaccard_similarities_initial_size, jaccard_similarities_initial_size),
                                        np.nan, dtype = float)
         jaccard_x = np.full((jaccard_similarities_initial_size, jaccard_similarities_initial_size),
-                            None, dtype = object)
+                            np.nan, dtype = int)
         jaccard_y = np.full((jaccard_similarities_initial_size, jaccard_similarities_initial_size),
-                            None, dtype = object)
+                            np.nan, dtype = int)
         jaccard_images = []
 
 
@@ -76,12 +76,12 @@ def jaccard_coef_same_shape(A, B):
     if A.shape != B.shape:
         raise Exception("A and B should have the same shape")
 
-    union = np.logical_or(A, B).sum()
+    A_B_sum = np.logical_or(A, B).sum()
 
-    if 0 == union:
+    if 0 == A_B_sum:
         return 1
     else:
-        return np.logical_and(A, B).sum() / union
+        return np.logical_and(A, B).sum() / A_B_sum
 
 
 def jaccard_coef_naive(A, B):
@@ -89,7 +89,7 @@ def jaccard_coef_naive(A, B):
 
     :param A:
     :param B:
-    :return: as jaccard_coef, but return all the translations of A
+    :return: j_coef, A_to_B_x, A_to_B_y
     """
     A_shape_y, A_shape_x = A.shape[: 2]
     B_shape_y, B_shape_x = B.shape[: 2]
@@ -109,13 +109,31 @@ def jaccard_coef_naive(A, B):
         A_expanded[y: y + A_shape_y, x: x + A_shape_x] = A
         j_coefs[ii] = jaccard_coef_same_shape(A_expanded, B_expanded)
 
-    j_coefs_max = np.max(j_coefs)
+    j_coef = np.max(j_coefs)
+    coef_argmax = np.where(j_coefs == j_coef)[0]
 
-    max_id = np.array(cartesian_prod)[np.where(j_coefs == j_coefs_max)]
-    max_x = max_id[:, 0] - A_shape_x
-    max_y = max_id[:, 1] - A_shape_y
+    if 1 == len(coef_argmax):
+        ii = coef_argmax[0]
+        x, y = cartesian_prod[ii]
+    else:
+        center_y = (A_shape_y * 2 + B_shape_y) / 2
+        center_x = (A_shape_x * 2 + B_shape_x) / 2
 
-    return j_coefs_max, max_x, max_y
+        most_centered_ii = -1
+        smallest_dist2center = np.inf
+        for ii in coef_argmax:
+            x_tmp, y_tmp = cartesian_prod[ii]
+            dist2center = abs(x_tmp + A_shape_x / 2 - center_x) + abs(y_tmp + A_shape_y / 2 - center_y)
+            if dist2center < smallest_dist2center:
+                smallest_dist2center = dist2center
+                most_centered_ii = ii
+
+        x, y = cartesian_prod[most_centered_ii]
+
+    A_to_B_x = x - A_shape_x
+    A_to_B_y = y - A_shape_y
+
+    return j_coef, int(A_to_B_x), int(A_to_B_y)
 
 
 def jaccard_coef(A, B):
@@ -130,6 +148,10 @@ def jaccard_coef(A, B):
              the smallest translation.
              x is the second dim and y is the first dim
     """
+
+    global jaccard_similarities
+    global jaccard_x
+    global jaccard_y
 
     A_y, A_x = np.where(A)
     B_y, B_x = np.where(B)
@@ -160,22 +182,18 @@ def jaccard_coef(A, B):
     sim = jaccard_similarities[A_id, B_id]
 
     if np.isnan(sim):
-        sim, x_trimmed, y_trimmed = jaccard_coef_naive(A_trimmed, B_trimmed)
+        sim, A_to_B_trimmed_x, A_to_B_trimmed_y = jaccard_coef_naive(A_trimmed, B_trimmed)
         jaccard_similarities[A_id, B_id] = sim
-        jaccard_x[A_id, B_id] = x_trimmed
-        jaccard_y[A_id, B_id] = y_trimmed
+        jaccard_x[A_id, B_id] = A_to_B_trimmed_x
+        jaccard_y[A_id, B_id] = A_to_B_trimmed_y
     else:
-        x_trimmed = jaccard_x[A_id, B_id]
-        y_trimmed = jaccard_y[A_id, B_id]
+        A_to_B_trimmed_x = jaccard_x[A_id, B_id]
+        A_to_B_trimmed_y = jaccard_y[A_id, B_id]
 
-    x = x_trimmed - A_x_min + B_x_min
-    y = y_trimmed - A_y_min + B_y_min
+    A_to_B_x = A_to_B_trimmed_x - A_x_min + B_x_min
+    A_to_B_y = A_to_B_trimmed_y - A_y_min + B_y_min
 
-    if 1 == len(x):
-        return sim, x[0], y[0]
-    else:
-        smallest = np.argmin(abs(x) + abs(y))
-        return sim, x[smallest], y[smallest]
+    return sim, A_to_B_x, A_to_B_y
 
 
 def jaccard_image2index(img):
@@ -204,9 +222,9 @@ def jaccard_image2index(img):
                                       constant_values = np.nan)
         jaccard_x = np.pad(jaccard_x,
                            ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
-                           constant_values = None)
+                           constant_values = np.nan)
         jaccard_y = np.pad(jaccard_y,
                            ((0, jaccard_similarities_increment), (0, jaccard_similarities_increment)),
-                           constant_values = None)
+                           constant_values = np.nan)
 
     return ii + 1

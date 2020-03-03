@@ -3,36 +3,42 @@ from skimage.transform import rotate
 from sys import modules
 import numpy as np
 import jaccard
+import utils
 
 THIS = modules[__name__]
 
 unary_transformations = [
-    [{"name": None}],
-    [{"name": "rot_binary", "args": {"angle": 90}}],
-    [{"name": "rot_binary", "args": {"angle": 180}}],
-    [{"name": "rot_binary", "args": {"angle": 270}}],
-    [{"name": "mirror_left_right"}],
-    [{"name": "mirror_left_right"},
-     {"name": "rot_binary", "args": {"angle": 90}}],
-    [{"name": "mirror_left_right"},
-     {"name": "rot_binary", "args": {"angle": 180}}],
-    [{"name": "mirror_left_right"},
-     {"name": "rot_binary", "args": {"angle": 270}}],
-    [{"name": "rescale", "args": {"scale": 0.25}}],
-    [{"name": "rescale", "args": {"scale": 0.5}}],
-    [{"name": "rescale", "args": {"scale": 2}}],
-    [{"name": "rescale", "args": {"scale": 4}}],
-    [{"name": "add_diff"}]
+    {"name": "identity", "value": [{"name": None}]},
+    # {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}]},
+    # {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}]},
+    # {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}]},
+    {"name": "mirror", "value": [{"name": "mirror_left_right"}]},
+    # {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}]},
+    # {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}]},
+    # {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}]},
+    # {"name": "rescale1", "value": [{"name": "rescale", "args": {"scale": 0.25}}]},
+    # {"name": "rescale2", "value": [{"name": "rescale", "args": {"scale": 0.5}}]},
+    # {"name": "rescale3", "value": [{"name": "rescale", "args": {"scale": 2}}]},
+    # {"name": "rescale4", "value": [{"name": "rescale", "args": {"scale": 4}}]},
+    {"name": "add_diff", "value": [{"name": "add_diff"}]},
+    {"name": "subtract_diff", "value": [{"name": "subtract_diff"}]}
 ]
-
 
 binary_transformations = [
-    [{"name": "unite"}],
-    [{"name": "intersect"}],
-    [{"name": "subtract"}],
-    [{"name": "backward_subtract"}],
-    [{"name": "xor"}]
+    {"name": "unite", "value": [{"name": "unite"}]},
+    {"name": "intersect", "value": [{"name": "intersect"}]},
+    # {"name": "subtract", "value": [{"name": "subtract"}]},
+    # {"name": "backward_subtract", "value": [{"name": "backward_subtract"}]},
+    # {"name": "xor", "value": [{"name": "xor"}]}
 ]
+
+all_trans = unary_transformations + binary_transformations
+
+
+def get_tran(tran_name):
+    for tran in all_trans:
+        if tran_name == tran.get("name"):
+            return tran
 
 
 def rescale(img, scale):
@@ -67,7 +73,7 @@ def rescale(img, scale):
             for xx in range(img_scaled.shape[1]):
                 yy_padded = 4 * yy
                 xx_padded = 4 * xx
-                img_scaled[yy, xx] = img_padded[yy_padded : yy_padded + 4, xx_padded : xx_padded + 4].sum() > 8
+                img_scaled[yy, xx] = img_padded[yy_padded: yy_padded + 4, xx_padded: xx_padded + 4].sum() > 8
 
         return img_scaled
 
@@ -93,7 +99,7 @@ def rescale(img, scale):
             for xx in range(x_shape):
                 yy_scaled = yy * 2
                 xx_scaled = xx * 2
-                img_scaled[yy_scaled : yy_scaled + 2, xx_scaled : xx_scaled + 2] = img[yy, xx]
+                img_scaled[yy_scaled: yy_scaled + 2, xx_scaled: xx_scaled + 2] = img[yy, xx]
 
         return img_scaled
 
@@ -111,53 +117,81 @@ def rescale(img, scale):
         raise Exception("Ryan")
 
 
-def add_diff(img, align_x, align_y, diff, diff_is_positive):
+def subtract_diff(img, align_x, align_y, diff):
+    """
+    Subtract diff from img.
+    The top-left corner of diff is at the (align_x, align_y)
+    with the top-left corner of img as the origin
+    :param img:
+    :param align_x:
+    :param align_y:
+    :param diff:
+    :return: trimmed result
+    """
+    diff_aligned, img_aligned = align(diff, img, align_x, align_y)
+    return utils.trim(np.logical_and(img_aligned, np.logical_not(diff_aligned)))
 
-    if diff_is_positive:
-        diff_aligned, img_aligned = align(diff, img, align_x, align_y)
-        result = np.logical_or(diff_aligned, img_aligned)
-    else:
-        if not diff_is_positive:
-            _, align_x, align_y = jaccard.jaccard_coef(np.logical_not(diff), img)
 
-        diff_y, diff_x = diff.shape
-        img_y, img_x = img.shape
+def add_diff(img, align_x, align_y, diff):
+    """
+    add diff to img.
+    The top-left corner of diff is at the (align_x, align_y)
+    with the top-left corner of img as the origin
+    :param img:
+    :param align_x:
+    :param align_y:
+    :param diff:
+    :return: trimmed result
+    """
+    diff_aligned, img_aligned = align(diff, img, align_x, align_y)
+    return utils.trim(np.logical_or(img_aligned, diff_aligned))
 
-        if align_y < 0:
-            diff_y_min = -align_y
-            img_y_min = 0
-        else:
-            diff_y_min = 0
-            img_y_min = align_y
 
-        if align_x < 0:
-            diff_x_min = -align_x
-            img_x_min = 0
-        else:
-            diff_x_min = 0
-            img_x_min = align_x
-
-        if align_y + diff_y > img_y:
-            diff_y_max = img_y - (align_y + diff_y)
-            img_y_max = img_y
-        else:
-            diff_y_max = diff_y
-            img_y_max = align_y + diff_y
-
-        if align_x + diff_x > img_x:
-            diff_x_max = img_x - (align_x + diff_x)
-            img_x_max = img_x
-        else:
-            diff_x_max = diff_x
-            img_x_max = align_x + diff_x
-
-        img_bounded = img[img_y_min: img_y_max, img_x_min: img_x_max]
-        diff_bounded = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
-
-        result = np.copy(img)
-        result[img_y_min: img_y_max, img_x_min: img_x_max] = np.logical_and(img_bounded, diff_bounded)
-
-    return result
+# def add_diff(img, align_x, align_y, diff, diff_is_positive):
+#     if diff_is_positive:
+#         diff_aligned, img_aligned = align(diff, img, align_x, align_y)
+#         result = np.logical_or(diff_aligned, img_aligned)
+#     else:
+#         _, align_x, align_y = jaccard.jaccard_coef(np.logical_not(diff), img)
+#
+#         diff_y, diff_x = diff.shape
+#         img_y, img_x = img.shape
+#
+#         if align_y < 0:
+#             diff_y_min = -align_y
+#             img_y_min = 0
+#         else:
+#             diff_y_min = 0
+#             img_y_min = align_y
+#
+#         if align_x < 0:
+#             diff_x_min = -align_x
+#             img_x_min = 0
+#         else:
+#             diff_x_min = 0
+#             img_x_min = align_x
+#
+#         if align_y + diff_y > img_y:
+#             diff_y_max = img_y - (align_y + diff_y)
+#             img_y_max = img_y
+#         else:
+#             diff_y_max = diff_y
+#             img_y_max = align_y + diff_y
+#
+#         if align_x + diff_x > img_x:
+#             diff_x_max = img_x - (align_x + diff_x)
+#             img_x_max = img_x
+#         else:
+#             diff_x_max = diff_x
+#             img_x_max = align_x + diff_x
+#
+#         img_bounded = img[img_y_min: img_y_max, img_x_min: img_x_max]
+#         diff_bounded = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
+#
+#         result = np.copy(img)
+#         result[img_y_min: img_y_max, img_x_min: img_x_max] = np.logical_and(img_bounded, diff_bounded)
+#
+#     return result
 
 
 def rot_binary(img, angle):
@@ -260,13 +294,15 @@ def mirror(img, mode):
 #     return transformed_images, transformations
 
 
-def apply_unary_transformation(img, unary_trans, show_me = False):
+def apply_unary_transformation(img, tran, show_me = False):
+    unary_trans = tran.get("value")
     for tran in unary_trans:
 
         name = tran.get("name")
 
         if name is None:
             continue
+
         foo = getattr(THIS, name)
 
         args = tran.get("args")
@@ -282,14 +318,16 @@ def apply_unary_transformation(img, unary_trans, show_me = False):
     return img
 
 
-def apply_binary_transformation(imgA, imgB, binary_trans,
-                                align_x = None, align_y = None):
-    if align_x is None or align_y is None:
-        _, align_x, align_y = jaccard.jaccard_coef(imgA, imgB)
+def apply_binary_transformation(imgA, imgB, tran,
+                                imgA_to_imgB_x = None, imgA_to_imgB_y = None):
+    if imgA_to_imgB_x is None or imgA_to_imgB_y is None:
+        _, imgA_to_imgB_x, imgA_to_imgB_y = jaccard.jaccard_coef(imgA, imgB)
 
-    imgA_aligned, imgB_aligned = align(imgA, imgB, align_x, align_y)
+    imgA_aligned, imgB_aligned = align(imgA, imgB, imgA_to_imgB_x, imgA_to_imgB_y)
 
     img = None
+
+    binary_trans = tran.get("value")
 
     for tran in binary_trans:
 
@@ -305,7 +343,7 @@ def apply_binary_transformation(imgA, imgB, binary_trans,
         else:
             img = foo(imgA_aligned, imgB_aligned, **args)
 
-    return img, align_x, align_y
+    return img, int(imgA_to_imgB_x), int(imgA_to_imgB_y)
 
 
 def unite(imgA, imgB):
@@ -345,35 +383,38 @@ def xor(imgA, imgB):
 
 def align(imgA, imgB, x, y):
     """
-
+    Align imgA to imgB.
+    Consider the top-left corner of imgB as the origin
+    the top-left corner of imgA should be as (x, y) using this origin.
+    Output A_aligned and B_aligned trimmed to the smallest shape
+    such that if you superimpose A_aligned on B_aligned
+    no true pixels will fall out of the boundary.
     :param imgA:
     :param imgB:
-    :param x: the output of  metrics.jaccard_coef(imgA, imgB)
-    :param y: he output of  metrics.jaccard_coef(imgA, imgB)
-    :return:
+    :param x:
+    :param y:
+    :return: A_aligned, B_aligned
     """
     A_shape_y, A_shape_x = imgA.shape
-    B_shape_y, B_shape_x = imgB.shape
 
-    AB_expanded = np.pad(imgB,
-                         ((A_shape_y, A_shape_y), (A_shape_x, A_shape_x)),
-                         constant_values = False)
-    AB_expanded[y + A_shape_y: y + 2 * A_shape_y, x + A_shape_x: x + 2 * A_shape_x] = imgA
+    B_expanded = np.pad(imgB, ((A_shape_y, A_shape_y), (A_shape_x, A_shape_x)), constant_values = False)
+    A_expanded = np.full_like(B_expanded, False)
+    A_expanded[y + A_shape_y: y + A_shape_y * 2, x + A_shape_x: x + A_shape_x * 2] = imgA
+    AB_expanded = np.logical_or(A_expanded, B_expanded)
+
     y_AB, x_AB = np.where(AB_expanded)
+    y_AB_min = y_AB.min()
     y_AB_max = y_AB.max() + 1
     x_AB_min = x_AB.min()
-    y_AB_min = y_AB.min()
     x_AB_max = x_AB.max() + 1
-
-    A_expanded = np.full_like(AB_expanded, False)
-    B_expanded = np.full_like(AB_expanded, False)
-    A_expanded[y + A_shape_y: y + 2 * A_shape_y, x + A_shape_x: x + 2 * A_shape_x] = imgA
-    B_expanded[A_shape_y: A_shape_y + B_shape_y, A_shape_x: A_shape_x + B_shape_x] = imgB
 
     A_aligned = A_expanded[y_AB_min: y_AB_max, x_AB_min: x_AB_max]
     B_aligned = B_expanded[y_AB_min: y_AB_max, x_AB_min: x_AB_max]
 
     return A_aligned, B_aligned
+
+
+
 
 # def binary_transform(imgA, imgB, show_me = False):
 #     # TODO this alignment must be enhanced in the future.
