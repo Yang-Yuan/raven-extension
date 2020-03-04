@@ -17,16 +17,14 @@ def rgb_to_binary(img, bg_color, tolerance):
     return np.logical_not(np.average(abs(rgb - bg_color), axis = -1) < tolerance)
 
 
-def grey_to_binary(img, bg_color, tolerance):
+def grey_to_binary(img, threshold):
     """
     convert img to a binary image (0, 1)
     :param img: image to be converted
-    :param bg_color: background color
-    :param tolerance:  tolerance
+    :param threshold:
     :return: binary image
     """
-
-    return np.logical_not(abs(img - bg_color) < tolerance)
+    return img < threshold
 
 
 def cut(img, rectangles, show_me = False):

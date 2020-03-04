@@ -37,31 +37,31 @@ def run_raven_explanatory(show_me = False, test_problems = None):
 
         anlgs = prob_anlg_tran.get_anlgs(prob)
 
-        tran_data = []
+        anlg_tran_data = []
         anlg_data = []
         for anlg in anlgs:
             # score all transformations given an analogy
-            anlg_tran_data = run_prob_anlg(prob, anlg)
-            tran_data.extend(anlg_tran_data)
+            tran_data = run_prob_anlg(prob, anlg)
+            anlg_tran_data.extend(tran_data)
 
-            # optimize w.r.t. transformations for this analogy
-            anlg_tran_d = find_best(anlg_tran_data, "pat_score")
+            # optimize w.r.t. transformations (pat_score) for this analogy
+            anlg_tran_d = find_best(tran_data, "pat_score")
             anlg_data.append(anlg_tran_d)
 
-        # optimize w.r.t analogies for a problem
+        # optimize w.r.t analogies (pat_score)
         anlg_d = find_best(anlg_data, "pat_score")
 
-        # predict for the problem
+        # predict with the best analogy and score all options with the prediction
         pred_data = predict(prob, anlg_d)
 
-        # optimize w.r.t. options
-        pred_d = find_best(pred_data, "pato_score")
+        # optimize w.r.t.options (pato_score)
+        pred_d = find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
         save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], show_me)
 
         # data aggregation progression, TODO maybe save them as images
-        for d in tran_data:
+        for d in anlg_tran_data:
             del d["diff"]
         for d in anlg_data:
             del d["diff"]
@@ -71,7 +71,7 @@ def run_raven_explanatory(show_me = False, test_problems = None):
         del pred_d["diff"]
         del pred_d["pred"]
         aggregation_progression = {
-            "tran_data": tran_data,
+            "anlg_tran_data": anlg_tran_data,
             "anlg_data": anlg_data,
             "pred_data": pred_data,
             "pred_d": pred_d
@@ -109,34 +109,31 @@ def run_raven_greedy(show_me = False, test_problems = None):
 
         anlgs = prob_anlg_tran.get_anlgs(prob)
 
-        tran_data = []
+        anlg_tran_data = []
         anlg_data = []
         for anlg in anlgs:
             # score all transformations given an analogy
-            anlg_tran_data = run_prob_anlg(prob, anlg)
-            tran_data.extend(anlg_tran_data)
+            tran_data = run_prob_anlg(prob, anlg)
+            anlg_tran_data.extend(tran_data)
 
             # optimize w.r.t. transformations for this analogy
-            anlg_tran_d = find_best(anlg_tran_data, "pat_score")
+            anlg_tran_d = find_best(tran_data, "pat_score")
             anlg_data.append(anlg_tran_d)
 
         pred_data = []
         for anlg_d in anlg_data:
-            # predict for an analogy, and score all options with the prediction
+            # predict with an analogy, and score all options with the prediction
             anlg_pred_data = predict(prob, anlg_d)
+            pred_data.extend(anlg_pred_data)
 
-            # optimize w.r.t. options for this analogy
-            pred_d = find_best(anlg_pred_data, "pato_score")
-            pred_data.append(pred_d)
-
-        # optimize w.r.t. analogies
-        pred_d = find_best(pred_data, "pato_score")
+        # optimize w.r.t. options
+        pred_d = find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
         save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], show_me)
 
         # data aggregation progression, TODO maybe save them as images
-        for d in tran_data:
+        for d in anlg_tran_data:
             del d["diff"]
         for d in anlg_data:
             del d["diff"]
@@ -146,12 +143,12 @@ def run_raven_greedy(show_me = False, test_problems = None):
         del pred_d["diff"]
         del pred_d["pred"]
         aggregation_progression = {
-            "tran_data": tran_data,
+            "anlg_tran_data": anlg_tran_data,
             "anlg_data": anlg_data,
             "pred_data": pred_data,
             "pred_d": pred_d
         }
-        with open("./data/explanatory_" + prob.name + ".json", 'w+') as outfile:
+        with open("./data/greedy_" + prob.name + ".json", 'w+') as outfile:
             json.dump(aggregation_progression, outfile)
             outfile.close()
 
@@ -163,140 +160,63 @@ def run_raven_greedy(show_me = False, test_problems = None):
     print(end_time - start_time)
 
 
-
-def run_rave_brutal(analogy_groups, transformation_groups, show_me = False, test_problems = None):
-    global problems
+def run_rave_brutal(show_me = False, test_problems = None):
 
     start_time = time.time()
 
-    print("run raven in brutal mode.")
+    print("run raven in greedy mode.")
 
-    for problem in problems:
+    probs = prob_anlg_tran.get_probs(test_problems)
 
-        if test_problems is not None and problem.name not in test_problems:
-            continue
+    for prob in probs:
 
-        print(problem.name)
+        print(prob.name)
 
-        jaccard.load_jaccard_cache(problem.name)
-        asymmetric_jaccard.load_asymmetric_jaccard_cache(problem.name)
+        jaccard.load_jaccard_cache(prob.name)
+        asymmetric_jaccard.load_asymmetric_jaccard_cache(prob.name)
 
-        unary_analogies, binary_analogies, unary_transformations, binary_transformations = get_anlgs_trans(
-            problem, analogy_groups, transformation_groups)
+        anlgs = prob_anlg_tran.get_anlgs(prob)
 
-        unary_analogies_data = {}
-        for unary_analog_name, unary_analog in unary_analogies.items():
-            u1 = problem.matrix[unary_analog[0]]
-            u2 = problem.matrix[unary_analog[1]]
-            u3 = problem.matrix[unary_analog[2]]
+        anlg_tran_data = []
+        for anlg in anlgs:
+            # score all transformations given an analogy
+            tran_data = run_prob_anlg(prob, anlg)
+            anlg_tran_data.extend(tran_data)
 
-            unary_analogies_data[unary_analog_name] = {}
-            for unary_tran in unary_transformations:
-                if str(unary_tran) == "[{'name': 'add_diff'}]":
-                    _, align_x, align_y, diff, diff_is_positive = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
-                    u4_predicted = transform.add_diff(u3, align_x, align_y, diff, diff_is_positive)
-                    sim_u4_predicted_ops = []
-                    for op in problem.options:
-                        sim, _, _ = jaccard.jaccard_coef(op, u4_predicted)
-                        sim_u4_predicted_ops.append(sim)
-                else:
-                    u4_predicted = transform.apply_unary_transformation(u3, unary_tran)
-                    sim_u4_predicted_ops = []
-                    for op in problem.options:
-                        sim, _, _ = jaccard.jaccard_coef(op, u4_predicted)
-                        sim_u4_predicted_ops.append(sim)
-                unary_analogies_data[unary_analog_name][str(unary_tran)] = {
-                    "sim_u4_predicted_ops": sim_u4_predicted_ops,
-                    "max_sim_u4_predicted_ops": max(sim_u4_predicted_ops),
-                    "argmax_sim_u4_predicted_ops": int(np.argmax(sim_u4_predicted_ops)) + 1,
-                    "u4_predicted": u4_predicted
-                }
+        pred_data = []
+        for anlg_tran_d in anlg_tran_data:
+            # predict with an analogy and a transformation, and score all options with the prediction
+            anlg_tran_pred_data = predict(prob, anlg_tran_d)
+            pred_data.extend(anlg_tran_pred_data)
 
-        binary_analogies_data = {}
-        for binary_analog_name, binary_analog in binary_analogies.items():
-            b1 = problem.matrix[binary_analog[0]]
-            b2 = problem.matrix[binary_analog[1]]
-            b4 = problem.matrix[binary_analog[3]]
-            b5 = problem.matrix[binary_analog[4]]
+        # optimize w.r.t. options
+        pred_d = find_best(pred_data, "pat_score", "pato_score")
 
-            binary_analogies_data[binary_analog_name] = {}
-            for binary_tran in binary_transformations:
-                _, align_x, align_y = transform.apply_binary_transformation(b1, b2, binary_tran)
-                b6_predicted, _, _ = transform.apply_binary_transformation(b4, b5, binary_tran,
-                                                                           align_x, align_y)
-                sim_b6_predicted_ops = []
-                for op in problem.options:
-                    sim, _, _ = jaccard.jaccard_coef(op, b6_predicted)
-                    sim_b6_predicted_ops.append(sim)
-                binary_analogies_data[binary_analog_name][str(binary_tran)] = {
-                    "sim_b6_predicted_ops": sim_b6_predicted_ops,
-                    "max_sim_b6_predicted_ops": max(sim_b6_predicted_ops),
-                    "argmax_sim_b6_predicted_ops": int(np.argmax(sim_b6_predicted_ops)) + 1,
-                    "b6_predicted": b6_predicted
-                }
+        # imaging
+        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], show_me)
 
-        best_sim = None
-        best_analog_name = None
-        best_analog_type = None
-        best_tran = None
-        sim_predicted = -1
-        argmax_sim_predicted_ops = None
-        predicted = None
-        for anlg_name, anlg in unary_analogies_data.items():
-            for tran_name, tran in anlg.items():
-                max_sim_u4_predicted_ops = tran.get("max_sim_u4_predicted_ops")
-                if sim_predicted < max_sim_u4_predicted_ops:
-                    best_analog_name = anlg_name
-                    best_analog_type = "unary"
-                    best_tran = tran_name
-                    sim_predicted = max_sim_u4_predicted_ops
-                    argmax_sim_predicted_ops = tran.get("argmax_sim_u4_predicted_ops")
-                    predicted = tran.get("u4_predicted")
-                del tran["u4_predicted"]
-
-        for anlg_name, anlg in binary_analogies_data.items():
-            for tran_name, tran in anlg.items():
-                max_sim_b6_predicted_ops = tran.get("max_sim_b6_predicted_ops")
-                if sim_predicted < max_sim_b6_predicted_ops:
-                    best_analog_name = anlg_name
-                    best_analog_type = "binary"
-                    best_tran = tran_name
-                    sim_predicted = max_sim_b6_predicted_ops
-                    argmax_sim_predicted_ops = tran.get("argmax_sim_b6_predicted_ops")
-                    predicted = tran.get("b6_predicted")
-                del tran["b6_predicted"]
-
-        if show_me:
-            plt.figure()
-            plt.imshow(predicted)
-            plt.figure()
-            plt.imshow(problem.options[argmax_sim_predicted_ops - 1])
-            plt.show()
-
-        problem_data = {
-            "unary_analogies_data": unary_analogies_data,
-            "binary_analogies_data": binary_analogies_data,
-            "best_analog_name": best_analog_name,
-            "best_analog_type": best_analog_type,
-            "best_tran": best_tran,
-            "best_sim": best_sim,
-            "sim_predicted": sim_predicted,
-            "argmax_sim_predicted_ops": argmax_sim_predicted_ops
+        # data aggregation progression, TODO maybe save them as images
+        for d in anlg_tran_data:
+            del d["diff"]
+        for d in pred_data:
+            del d["diff"]
+            del d["pred"]
+        del pred_d["diff"]
+        del pred_d["pred"]
+        aggregation_progression = {
+            "anlg_tran_data": anlg_tran_data,
+            "pred_data": pred_data,
+            "pred_d": pred_d
         }
-
-        problem.data = problem_data
-
-        with open("./data/brutal_" + problem.name + ".json", 'w+') as outfile:
-            json.dump(problem_data, outfile)
+        with open("./data/brutal_" + prob.name + ".json", 'w+') as outfile:
+            json.dump(aggregation_progression, outfile)
             outfile.close()
 
-        jaccard.save_jaccard_cache(problem.name)
-        asymmetric_jaccard.save_asymmetric_jaccard_cache(problem.name)
-
-    report_brutal.create_report_brutal_mode(problems, test_problems)
+        # update cache
+        jaccard.save_jaccard_cache(prob.name)
+        asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
 
     end_time = time.time()
-
     print(end_time - start_time)
 
 
@@ -388,13 +308,16 @@ def save_image(prob, prediction, selection, show_me = False):
         plt.close()
 
 
-def find_best(data, by_which):
+def find_best(data, *score_names):
     best_score = -1
     best_ii = None
     for ii, d in enumerate(data):
-        if best_score < d.get(by_which):
+        score = 0
+        for score_name in score_names:
+            score += d.get(score_name)
+        if best_score < score:
             best_ii = ii
-            best_score = d.get(by_which)
+            best_score = score
 
     return copy.copy(data[best_ii])
 
@@ -424,7 +347,6 @@ def predict(prob, d):
         b5 = prob.matrix[anlg.get("value")[4]]
         prediction, _, _ = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
 
-        return prediction
     else:
         raise Exception("Ryan!")
 

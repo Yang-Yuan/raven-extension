@@ -28,6 +28,7 @@ class RavenProgressiveMatrix:
         self.data = None
         self.answer = answer
 
+
     def plot_problem(self):
         if 2 == self.matrix_n:
             fig, axs = plt.subplots(nrows = 3,

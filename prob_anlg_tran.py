@@ -1,8 +1,8 @@
-import problems
+import problem
 import analogy
 import transform
 
-problems = problems.load_problems()
+problems = problem.load_problems()
 
 analogy_groups = {
     "2x2_unary_analogies": analogy.unary_analogies_2by2,
