@@ -11,13 +11,13 @@ THIS = modules[__name__]
 
 unary_transformations = [
     {"name": "identity", "value": [{"name": None}]},
-    # {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}]},
-    # {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}]},
-    # {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}]},
+    {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}]},
+    {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}]},
+    {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}]},
     {"name": "mirror", "value": [{"name": "mirror_left_right"}]},
-    # {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}]},
-    # {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}]},
-    # {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}]},
+    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}]},
+    {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}]},
+    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}]},
     {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "x_factor": 1.4}}]},
     {"name": "add_diff", "value": [{"name": "add_diff"}]},
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}]}
@@ -26,9 +26,9 @@ unary_transformations = [
 binary_transformations = [
     {"name": "unite", "value": [{"name": "unite"}]},
     {"name": "intersect", "value": [{"name": "intersect"}]},
-    # {"name": "subtract", "value": [{"name": "subtract"}]},
-    # {"name": "backward_subtract", "value": [{"name": "backward_subtract"}]},
-    # {"name": "xor", "value": [{"name": "xor"}]}
+    {"name": "subtract", "value": [{"name": "subtract"}]},
+    {"name": "backward_subtract", "value": [{"name": "backward_subtract"}]},
+    {"name": "xor", "value": [{"name": "xor"}]}
 ]
 
 all_trans = unary_transformations + binary_transformations

@@ -85,8 +85,8 @@ def run_raven_explanatory(show_me = False, test_problems = None):
         asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
 
         # output report
-        # prob.data = aggregation_progression
-        # report_explanatory.create_report_explanatory_mode(aggregation_progression)
+        prob.data = aggregation_progression
+        report_explanatory.create_report_explanatory_mode(aggregation_progression)
 
     end_time = time.time()
     print(end_time - start_time)
@@ -156,6 +156,10 @@ def run_raven_greedy(show_me = False, test_problems = None):
         jaccard.save_jaccard_cache(prob.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
 
+        # output report
+        prob.data = aggregation_progression
+        report_explanatory.create_report_explanatory_mode(aggregation_progression)
+
     end_time = time.time()
     print(end_time - start_time)
 
@@ -215,6 +219,11 @@ def run_rave_brutal(show_me = False, test_problems = None):
         # update cache
         jaccard.save_jaccard_cache(prob.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
+
+        # output report
+        prob.data = aggregation_progression
+
+    report_explanatory.create_report_explanatory_mode(aggregation_progression)
 
     end_time = time.time()
     print(end_time - start_time)
