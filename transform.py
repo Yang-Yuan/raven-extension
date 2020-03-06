@@ -10,25 +10,25 @@ import utils
 THIS = modules[__name__]
 
 unary_transformations = [
-    {"name": "identity", "value": [{"name": None}]},
-    {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}]},
-    {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}]},
-    {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}]},
-    {"name": "mirror", "value": [{"name": "mirror_left_right"}]},
-    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}]},
-    {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}]},
-    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}]},
-    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "x_factor": 1.4}}]},
-    {"name": "add_diff", "value": [{"name": "add_diff"}]},
-    {"name": "subtract_diff", "value": [{"name": "subtract_diff"}]}
+    # {"name": "identity", "value": [{"name": None}], "type": "unary"},
+    # {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    # {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
+    # {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    {"name": "mirror", "value": [{"name": "mirror_left_right"}], "type": "unary"},
+    # {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    # {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
+    # {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary"},
+    {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary"},
+    {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary"}
 ]
 
 binary_transformations = [
-    {"name": "unite", "value": [{"name": "unite"}]},
-    {"name": "intersect", "value": [{"name": "intersect"}]},
-    {"name": "subtract", "value": [{"name": "subtract"}]},
-    {"name": "backward_subtract", "value": [{"name": "backward_subtract"}]},
-    {"name": "xor", "value": [{"name": "xor"}]}
+    {"name": "unite", "value": [{"name": "unite"}], "type": "binary"},
+    {"name": "intersect", "value": [{"name": "intersect"}], "type": "binary"},
+    # {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
+    # {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
+    # {"name": "xor", "value": [{"name": "xor"}], "type": "binary"}
 ]
 
 all_trans = unary_transformations + binary_transformations
@@ -59,7 +59,7 @@ def subtract_diff(img, align_x, align_y, diff):
     :return: trimmed result
     """
     diff_aligned, img_aligned = align(diff, img, align_x, align_y)
-    return utils.trim(np.logical_and(img_aligned, np.logical_not(diff_aligned)))
+    return utils.trim_binary_image(np.logical_and(img_aligned, np.logical_not(diff_aligned)))
 
 
 def add_diff(img, align_x, align_y, diff):
@@ -74,7 +74,7 @@ def add_diff(img, align_x, align_y, diff):
     :return: trimmed result
     """
     diff_aligned, img_aligned = align(diff, img, align_x, align_y)
-    return utils.trim(np.logical_or(img_aligned, diff_aligned))
+    return utils.trim_binary_image(np.logical_or(img_aligned, diff_aligned))
 
 
 # def add_diff(img, align_x, align_y, diff, diff_is_positive):

@@ -10,8 +10,10 @@ class RavenProgressiveMatrix:
 
         if 4 == len(matrix_components):
             self.matrix_n = 2
+            self.type = "2x2"
         elif 9 == len(matrix_components):
             self.matrix_n = 3
+            self.type = "3x3"
         else:
             raise Exception("Crap!")
 

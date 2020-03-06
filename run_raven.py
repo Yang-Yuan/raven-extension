@@ -86,7 +86,6 @@ def run_raven_explanatory(show_me = False, test_problems = None):
 
         # output report
         prob.data = aggregation_progression
-        report_explanatory.create_report_explanatory_mode(aggregation_progression)
 
     end_time = time.time()
     print(end_time - start_time)
@@ -158,7 +157,8 @@ def run_raven_greedy(show_me = False, test_problems = None):
 
         # output report
         prob.data = aggregation_progression
-        report_explanatory.create_report_explanatory_mode(aggregation_progression)
+
+    np.savez("test_report.npz", probs = probs)
 
     end_time = time.time()
     print(end_time - start_time)
@@ -222,8 +222,6 @@ def run_rave_brutal(show_me = False, test_problems = None):
 
         # output report
         prob.data = aggregation_progression
-
-    report_explanatory.create_report_explanatory_mode(aggregation_progression)
 
     end_time = time.time()
     print(end_time - start_time)
@@ -291,6 +289,10 @@ def run_prob_anlg_tran(prob, anlg, tran):
         "anlg_name": anlg.get("name"),
         "tran_name": tran.get("name"),
         "pat_score": score,  # pat = prob + anlg + tran
+        "prob_ansr": prob.answer,
+        "prob_type": prob.type,
+        "anlg_type": anlg.get("type"),
+        "tran_type": tran.get("type"),
         "diff_to_u1_x": diff_to_u1_x,
         "diff_to_u1_y": diff_to_u1_y,
         "diff": diff,
