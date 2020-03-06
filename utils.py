@@ -100,7 +100,7 @@ def trim_binary_image(img):
 
 
 def erase_noise_point(img, noise_point_size):
-    labels, label_num = measure.label(input = img, background = False, return_num = True, connectivity = 2)
+    labels, label_num = measure.label(input = img, background = False, return_num = True, connectivity = 1)
     sizes = [(labels == label).sum() for label in range(1, label_num + 1)]
     for size, label in zip(sizes, range(1, label_num + 1)):
         if size < noise_point_size:
@@ -108,12 +108,4 @@ def erase_noise_point(img, noise_point_size):
     return img
 
 
-def trim(img):
-    y, x = np.where(img)
-    y_max = y.max() + 1
-    x_min = x.min()
-    y_min = y.min()
-    x_max = x.max() + 1
-
-    return img[y_min: y_max, x_min: x_max]
 

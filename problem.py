@@ -3,6 +3,7 @@ from os.path import isfile, join
 from matplotlib import pyplot as plt
 from natsort import natsorted
 from skimage.transform import rescale
+from skimage.filters import gaussian
 import numpy as np
 import utils
 from RavenProgressiveMatrix import RavenProgressiveMatrix
@@ -51,18 +52,15 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
 
         smaller_coms = [rescale(image = com, scale = (0.5, 0.5)) for com in coms]
 
-        # for tmp in smaller_coms:
-        #     plt.figure()
-        #     plt.imshow(tmp)
-        #     plt.show()
+        binary_smaller_coms = [utils.grey_to_binary(com, 0.7) for com in smaller_coms]
 
-        binary_smaller_coms = [utils.grey_to_binary(com, 0.99) for com in smaller_coms]
         binary_smaller_coms = [utils.erase_noise_point(com, 4) for com in binary_smaller_coms]
 
-        for tmp in binary_smaller_coms:
-            plt.figure()
-            plt.imshow(tmp)
-            plt.show()
+        # let's try it first. Although somebody doesn't agree on this, but I think it won't hurt the alignment.
+        # because even if the alignment is not what it is in the original images, it will still give the correct
+        # answer.
+        # and it will definitely accelerate the computation.
+        binary_smaller_coms = [utils.trim_binary_image(com) for com in binary_smaller_coms]
 
         if 10 == len(coms):
             problems.append(

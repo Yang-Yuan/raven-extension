@@ -1,5 +1,7 @@
 from matplotlib import pyplot as plt
 from skimage.transform import rotate
+from skimage.transform import rescale as rs
+from skimage.transform import resize
 from sys import modules
 import numpy as np
 import jaccard
@@ -16,10 +18,7 @@ unary_transformations = [
     # {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}]},
     # {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}]},
     # {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}]},
-    # {"name": "rescale1", "value": [{"name": "rescale", "args": {"scale": 0.25}}]},
-    # {"name": "rescale2", "value": [{"name": "rescale", "args": {"scale": 0.5}}]},
-    # {"name": "rescale3", "value": [{"name": "rescale", "args": {"scale": 2}}]},
-    # {"name": "rescale4", "value": [{"name": "rescale", "args": {"scale": 4}}]},
+    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "x_factor": 1.4}}]},
     {"name": "add_diff", "value": [{"name": "add_diff"}]},
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}]}
 ]
@@ -41,80 +40,11 @@ def get_tran(tran_name):
             return tran
 
 
-def rescale(img, scale):
-    """
+def rescale(img, x_factor, y_factor):
 
-    :param img:
-    :param scale:
-    :return:
-    """
-    y_shape, x_shape = img.shape
-    if scale == 0.25:
-        y_before = 0
-        y_after = 0
-        x_before = 0
-        x_after = 0
-        y_reminder = y_shape % 4
-        x_reminder = x_shape % 4
-        if 0 != y_reminder:
-            y_pad = 4 - y_reminder
-            y_before = int(y_pad / 2)
-            y_after = y_pad - y_before
+    return utils.grey_to_binary(rs(np.logical_not(img), (y_factor, x_factor), order = 0), 0.7)
 
-        if 0 != x_reminder:
-            x_pad = 4 - x_reminder
-            x_before = int(x_pad / 2)
-            x_after = x_pad - x_before
-
-        img_padded = np.pad(img, ((y_before, y_after), (x_before, x_after)), constant_values = False)
-        y_padded_shape, x_padded_shape = img_padded.shape
-        img_scaled = np.full((int(y_padded_shape / 4), int(x_padded_shape / 4)), False)
-        for yy in range(img_scaled.shape[0]):
-            for xx in range(img_scaled.shape[1]):
-                yy_padded = 4 * yy
-                xx_padded = 4 * xx
-                img_scaled[yy, xx] = img_padded[yy_padded: yy_padded + 4, xx_padded: xx_padded + 4].sum() > 8
-
-        return img_scaled
-
-    elif 0.5 == scale:
-        y_before = 0
-        x_before = 0
-        y_after = y_shape % 2
-        x_after = x_shape % 2
-        img_padded = np.pad(img, ((y_before, y_after), (x_before, x_after)), constant_values = False)
-        y_padded_shape, x_padded_shape = img_padded.shape
-        img_scaled = np.full((int(y_padded_shape / 2), int(x_padded_shape / 2)), False)
-        for yy in range(img_scaled.shape[0]):
-            for xx in range(img_scaled.shape[1]):
-                yy_padded = 2 * yy
-                xx_padded = 2 * xx
-                img_scaled[yy, xx] = img_padded[yy_padded: yy_padded + 2, xx_padded: xx_padded + 2].sum() > 2
-
-        return img_scaled
-
-    elif 2 == scale:
-        img_scaled = np.full((int(y_shape * 2), int(x_shape * 2)), False)
-        for yy in range(y_shape):
-            for xx in range(x_shape):
-                yy_scaled = yy * 2
-                xx_scaled = xx * 2
-                img_scaled[yy_scaled: yy_scaled + 2, xx_scaled: xx_scaled + 2] = img[yy, xx]
-
-        return img_scaled
-
-    elif 4 == scale:
-        img_scaled = np.full((int(y_shape * 4), int(x_shape * 4)), False)
-        for yy in range(y_shape):
-            for xx in range(x_shape):
-                yy_scaled = yy * 4
-                xx_scaled = xx * 4
-                img_scaled[yy_scaled: yy_scaled + 4, xx_scaled: xx_scaled + 4] = img[yy, xx]
-
-        return img_scaled
-
-    else:
-        raise Exception("Ryan")
+    # return utils.grey_to_binary(resize(np.logical_not(img), shape, order = 0), 0.7)
 
 
 def subtract_diff(img, align_x, align_y, diff):
