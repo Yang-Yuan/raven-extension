@@ -10,14 +10,14 @@ import utils
 THIS = modules[__name__]
 
 unary_transformations = [
-    # {"name": "identity", "value": [{"name": None}], "type": "unary"},
-    # {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
-    # {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    # {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    {"name": "identity", "value": [{"name": None}], "type": "unary"},
+    {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
+    {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
     {"name": "mirror", "value": [{"name": "mirror_left_right"}], "type": "unary"},
-    # {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
-    # {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    # {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
+    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
     {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary"},
     {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary"},
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary"}
@@ -26,9 +26,9 @@ unary_transformations = [
 binary_transformations = [
     {"name": "unite", "value": [{"name": "unite"}], "type": "binary"},
     {"name": "intersect", "value": [{"name": "intersect"}], "type": "binary"},
-    # {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
-    # {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
-    # {"name": "xor", "value": [{"name": "xor"}], "type": "binary"}
+    {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
+    {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
+    {"name": "xor", "value": [{"name": "xor"}], "type": "binary"}
 ]
 
 all_trans = unary_transformations + binary_transformations
@@ -47,33 +47,41 @@ def rescale(img, x_factor, y_factor):
     # return utils.grey_to_binary(resize(np.logical_not(img), shape, order = 0), 0.7)
 
 
-def subtract_diff(img, align_x, align_y, diff):
+def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     """
-    Subtract diff from img.
-    The top-left corner of diff is at the (align_x, align_y)
-    with the top-left corner of img as the origin
+
     :param img:
-    :param align_x:
-    :param align_y:
+    :param diff_to_ref_x:
+    :param diff_to_ref_y:
     :param diff:
-    :return: trimmed result
+    :param ref:
+    :return:
     """
-    diff_aligned, img_aligned = align(diff, img, align_x, align_y)
+
+    _, img_to_ref_x, img_to_ref_y = jaccard.jaccard_coef(img, ref)
+    diff_to_img_x = diff_to_ref_x - img_to_ref_x
+    diff_to_img_y = diff_to_ref_y - img_to_ref_y
+
+    diff_aligned, img_aligned = align(diff, img, diff_to_img_x, diff_to_img_y)
     return utils.trim_binary_image(np.logical_and(img_aligned, np.logical_not(diff_aligned)))
 
 
-def add_diff(img, align_x, align_y, diff):
+def add_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     """
-    add diff to img.
-    The top-left corner of diff is at the (align_x, align_y)
-    with the top-left corner of img as the origin
+
     :param img:
-    :param align_x:
-    :param align_y:
+    :param diff_to_ref_x:
+    :param diff_to_ref_y:
     :param diff:
-    :return: trimmed result
+    :param ref:
+    :return:
     """
-    diff_aligned, img_aligned = align(diff, img, align_x, align_y)
+
+    _, img_to_ref_x, img_to_ref_y = jaccard.jaccard_coef(img, ref)
+    diff_to_img_x = diff_to_ref_x - img_to_ref_x
+    diff_to_img_y = diff_to_ref_y - img_to_ref_y
+
+    diff_aligned, img_aligned = align(diff, img, diff_to_img_x, diff_to_img_y)
     return utils.trim_binary_image(np.logical_or(img_aligned, diff_aligned))
 
 
@@ -326,20 +334,18 @@ def align(imgA, imgB, x, y):
     :return: A_aligned, B_aligned
     """
     A_shape_y, A_shape_x = imgA.shape
+    B_shape_y, B_shape_x = imgB.shape
 
-    B_expanded = np.pad(imgB, ((A_shape_y, A_shape_y), (A_shape_x, A_shape_x)), constant_values = False)
-    A_expanded = np.full_like(B_expanded, False)
-    A_expanded[y + A_shape_y: y + A_shape_y * 2, x + A_shape_x: x + A_shape_x * 2] = imgA
-    AB_expanded = np.logical_or(A_expanded, B_expanded)
+    min_x = min(x, 0)
+    min_y = min(y, 0)
+    max_x = max(B_shape_x, x + A_shape_x)
+    max_y = max(B_shape_y, y + A_shape_y)
 
-    y_AB, x_AB = np.where(AB_expanded)
-    y_AB_min = y_AB.min()
-    y_AB_max = y_AB.max() + 1
-    x_AB_min = x_AB.min()
-    x_AB_max = x_AB.max() + 1
+    A_aligned = np.full((max_y - min_y, max_x - min_x), False)
+    B_aligned = np.full((max_y - min_y, max_x - min_x), False)
 
-    A_aligned = A_expanded[y_AB_min: y_AB_max, x_AB_min: x_AB_max]
-    B_aligned = B_expanded[y_AB_min: y_AB_max, x_AB_min: x_AB_max]
+    A_aligned[y - min_y: y - min_y + A_shape_y, x - min_x: x - min_x + A_shape_x] = imgA
+    B_aligned[- min_y: - min_y + B_shape_y, - min_x: - min_x + B_shape_x] = imgB
 
     return A_aligned, B_aligned
 

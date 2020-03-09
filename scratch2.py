@@ -15,3 +15,11 @@ probs[3].data.get("pred_d")["prob_name"] = "e3"
 
 report.create_report(probs, "mode_")
 
+x = [{"a": "a1", "b": 1, "c": 1},
+{"a": "a2", "b": 1, "c": 1},
+{"a": "a3", "b": 1, "c": 1},
+{"a": "a4", "b": 1, "c": 1},
+{"a": "a5", "b": 1, "c": 1},
+{"a": "a11", "b": 1, "c": 1},
+]
+

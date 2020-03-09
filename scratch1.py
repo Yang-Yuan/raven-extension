@@ -7,20 +7,11 @@ from transform import rescale
 
 problems = problem.load_problems()
 
-c2 = problems[25]
+d1 = problems[36]
 
-shapes = np.empty_like(c2.matrix, dtype = tuple)
-for ii in range(3):
-    for jj in range(3):
-        shapes[ii, jj] = c2.matrix[ii, jj].shape
+mtrx = d1.matrix
 
-tmp = rescale(c2.matrix[1, 1], 1.3, 1.4)
-plt.figure()
-plt.imshow(tmp)
-plt.figure()
-plt.imshow(c2.matrix[1, 2])
-plt.show()
-
-
-print(shapes)
-
+k = 0
+(mtrx[k, 0] == mtrx[k, 1]).all()
+(mtrx[k, 0] == mtrx[k, 2]).all()
+(mtrx[k, 1] == mtrx[k, 2]).all()

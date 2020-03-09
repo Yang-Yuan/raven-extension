@@ -178,16 +178,24 @@ def asymmetric_jaccard_coef_naive(A, B):
 
     diff = np.logical_and(B_expanded,
                           np.logical_not(A_expanded))
-    diff_y, diff_x = np.where(diff)
-    diff_x_min = diff_x.min()
-    diff_x_max = diff_x.max() + 1
-    diff_y_min = diff_y.min()
-    diff_y_max = diff_y.max() + 1
-    diff = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
-    diff_to_A_x = diff_x_min - x
-    diff_to_A_y = diff_y_min - y
-    diff_to_B_x = diff_x_min - A_shape_x
-    diff_to_B_y = diff_y_min - A_shape_y
+
+    if diff.any():
+        diff_y, diff_x = np.where(diff)
+        diff_x_min = diff_x.min()
+        diff_x_max = diff_x.max() + 1
+        diff_y_min = diff_y.min()
+        diff_y_max = diff_y.max() + 1
+        diff = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
+        diff_to_A_x = diff_x_min - x
+        diff_to_A_y = diff_y_min - y
+        diff_to_B_x = diff_x_min - A_shape_x
+        diff_to_B_y = diff_y_min - A_shape_y
+    else:  # diff is all white, i.e. B is completely covered by A
+        diff_to_A_x = 0
+        diff_to_A_y = 0
+        diff_to_B_x = x - A_shape_x
+        diff_to_B_y = y - A_shape_y
+        diff = diff[y: y + A_shape_y, x: x + A_shape_x]
 
     return a_j_coef, diff_to_A_x, diff_to_A_y, diff_to_B_x, diff_to_B_y, diff
 

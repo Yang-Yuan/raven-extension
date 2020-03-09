@@ -46,23 +46,18 @@ def create_report(probs, prefix):
 
     _, _, _, sltn_df, sltn_anlg_df, sltn_tran_df = extract_data(probs)
 
-    with pd.ExcelWriter(file_name) as writer:
-        sltn_df.to_excel(writer, sheet_name = 'sltn_sheet', header = sltn_hdrs, index = False)
-        sltn_sheet = writer.sheets["sltn_sheet"]
-        for jj, w in enumerate(sltn_col_widths):
-            sltn_sheet.set_column(jj, jj, w)
+    with pd.ExcelWriter(join(report_folder, file_name)) as writer:
 
-        sltn_anlg_df.to_excel(writer, sheet_name = 'sltn_anlg_sheet', index_label = sltn_anlg_hdrs[0],
-                              header = sltn_anlg_hdrs[1:])
-        sltn_anlg_sheet = writer.sheets["sltn_anlg_sheet"]
-        for jj, w in enumerate(sltn_col_widths):
-            sltn_anlg_sheet.set_column(jj, jj, w)
+        create_sheet(writer, "Problems", sltn_df, sltn_col_widths, sltn_hdrs)
+        create_sheet(writer, "Analogies", sltn_anlg_df, sltn_anlg_col_widths, sltn_anlg_hdrs)
+        create_sheet(writer, "Transformations", sltn_tran_df, sltn_tran_col_widths, sltn_tran_hdrs)
 
-        sltn_tran_df.to_excel(writer, sheet_name = "sltn_tran_sheet", index_label = sltn_tran_hdrs[0],
-                              header = sltn_tran_hdrs[1:])
-        sltn_tran_sheet = writer.sheets["sltn_tran_sheet"]
-        for jj, w in enumerate(sltn_col_widths):
-            sltn_tran_sheet.set_column(jj, jj, w)
+
+def create_sheet(writer, sheet_name, df, col_widths, col_hdrs):
+    df.to_excel(writer, sheet_name = sheet_name, index_label = col_hdrs[0], header = col_hdrs[1:])
+    sheet = writer.sheets[sheet_name]
+    for jj, w in enumerate(col_widths):
+        sheet.set_column(jj, jj, w)
 
 
 def extract_data(probs):
@@ -87,12 +82,9 @@ def extract_data(probs):
 
     sltn_anlg_df = sltn_df.groupby("anlg_name").apply(sltn2anlg)
     sltn_tran_df = sltn_df.groupby("tran_name").apply(sltn2tran)
+    sltn_df.set_index("prob_name", inplace = True)
 
     return anlg_tran_df, anlg_df, pred_df, sltn_df, sltn_anlg_df, sltn_tran_df
-
-
-def create_worksheet(workbook, data):
-    prob_worksheet = workbook.add_worksheet("Problems")
 
 
 def sltn2anlg(anlg_group):

@@ -3,9 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 import copy
-import report_explanatory
-import report_greedy
-import report_brutal
+import report
 import analogy
 import transform
 import jaccard
@@ -84,8 +82,10 @@ def run_raven_explanatory(show_me = False, test_problems = None):
         jaccard.save_jaccard_cache(prob.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
 
-        # output report
         prob.data = aggregation_progression
+
+    # output report
+    report.create_report(probs, "explanatory_")
 
     end_time = time.time()
     print(end_time - start_time)
@@ -155,10 +155,10 @@ def run_raven_greedy(show_me = False, test_problems = None):
         jaccard.save_jaccard_cache(prob.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
 
-        # output report
         prob.data = aggregation_progression
 
-    np.savez("test_report.npz", probs = probs)
+    # output report
+    report.create_report(probs, "greedy_")
 
     end_time = time.time()
     print(end_time - start_time)
@@ -220,8 +220,10 @@ def run_rave_brutal(show_me = False, test_problems = None):
         jaccard.save_jaccard_cache(prob.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
 
-        # output report
         prob.data = aggregation_progression
+
+    # output report
+    report.create_report(probs, "brutal_")
 
     end_time = time.time()
     print(end_time - start_time)
@@ -263,6 +265,8 @@ def run_prob_anlg_tran(prob, anlg, tran):
 
         u1 = prob.matrix[anlg.get("value")[0]]
         u2 = prob.matrix[anlg.get("value")[1]]
+
+        print(prob.name, anlg.get("name"), tran.get("name"))
 
         if "add_diff" == tran.get("name"):
             score, diff_to_u1_x, diff_to_u1_y, _, _, diff = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
@@ -343,11 +347,12 @@ def predict(prob, d):
         best_u1_u2_align_y = d.get("diff_to_u1_y")
         best_u1_u2_diff = d.get("diff")
         u3 = prob.matrix[anlg.get("value")[2]]
+        u1 = prob.matrix[anlg.get("value")[0]]
 
         if tran.get("name") == "add_diff":
-            prediction = transform.add_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff)
+            prediction = transform.add_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff, u1)
         elif tran.get("name") == "subtract_diff":
-            prediction = transform.subtract_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff)
+            prediction = transform.subtract_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff, u1)
         else:
             prediction = transform.apply_unary_transformation(u3, tran)
 
@@ -363,6 +368,9 @@ def predict(prob, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
         score, _, _ = jaccard.jaccard_coef(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
