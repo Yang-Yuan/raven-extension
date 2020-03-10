@@ -56,7 +56,7 @@ def run_raven_explanatory(show_me = False, test_problems = None):
         pred_d = find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
-        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], show_me)
+        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], "explanatory", show_me)
 
         # data aggregation progression, TODO maybe save them as images
         for d in anlg_tran_data:
@@ -85,7 +85,8 @@ def run_raven_explanatory(show_me = False, test_problems = None):
         prob.data = aggregation_progression
 
     # output report
-    report.create_report(probs, "explanatory_")
+    if test_problems is None:
+        report.create_report(probs, "explanatory_")
 
     end_time = time.time()
     print(end_time - start_time)
@@ -129,7 +130,7 @@ def run_raven_greedy(show_me = False, test_problems = None):
         pred_d = find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
-        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], show_me)
+        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], "greedy", show_me)
 
         # data aggregation progression, TODO maybe save them as images
         for d in anlg_tran_data:
@@ -158,7 +159,8 @@ def run_raven_greedy(show_me = False, test_problems = None):
         prob.data = aggregation_progression
 
     # output report
-    report.create_report(probs, "greedy_")
+    if test_problems is None:
+        report.create_report(probs, "greedy_")
 
     end_time = time.time()
     print(end_time - start_time)
@@ -197,7 +199,7 @@ def run_rave_brutal(show_me = False, test_problems = None):
         pred_d = find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
-        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], show_me)
+        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], "brutal", show_me)
 
         # data aggregation progression, TODO maybe save them as images
         for d in anlg_tran_data:
@@ -223,7 +225,8 @@ def run_rave_brutal(show_me = False, test_problems = None):
         prob.data = aggregation_progression
 
     # output report
-    report.create_report(probs, "brutal_")
+    if test_problems is None:
+        report.create_report(probs, "brutal_")
 
     end_time = time.time()
     print(end_time - start_time)
@@ -305,7 +308,7 @@ def run_prob_anlg_tran(prob, anlg, tran):
     }
 
 
-def save_image(prob, prediction, selection, show_me = False):
+def save_image(prob, prediction, selection, prefix, show_me = False):
     if show_me:
         plt.figure()
         plt.imshow(prediction)
@@ -315,11 +318,11 @@ def save_image(prob, prediction, selection, show_me = False):
     else:
         plt.figure()
         plt.imshow(prediction)
-        plt.savefig("./data/explanatory_" + prob.name + "_prediction.png")
+        plt.savefig("./data/" + prefix + "_" + prob.name + "_prediction.png")
         plt.close()
         plt.figure()
         plt.imshow(selection)
-        plt.savefig("./data/explanatory_" + prob.name + "_selection.png")
+        plt.savefig("./data/" + prefix + "_" + prob.name + "_selection.png")
         plt.close()
 
 
@@ -333,6 +336,11 @@ def find_best(data, *score_names):
         if best_score < score:
             best_ii = ii
             best_score = score
+
+    # if data[best_ii].get("diff") is not None:
+    #     plt.figure()
+    #     plt.imshow(data[best_ii].get("diff"))
+    #     plt.show()
 
     return copy.copy(data[best_ii])
 
@@ -371,7 +379,19 @@ def predict(prob, d):
 
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
 
-        score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        if tran.get("name") == "add_diff":
+            u3_score, _, _, _, _, diff = asymmetric_jaccard.asymmetric_jaccard_coef(u3, opt)
+            diff_score, _ , _ = jaccard.jaccard_coef(diff, best_u1_u2_diff)
+            opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
+            score = (diff_score + opt_score + u3_score) / 3
+        elif tran.get("name") == "subtract_diff":
+            u3_score, _, _, _, _, diff = asymmetric_jaccard.asymmetric_jaccard_coef(opt, u3)
+            diff_score, _, _ = jaccard.jaccard_coef(diff, best_u1_u2_diff)
+            opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
+            score = (diff_score + opt_score + u3_score) / 3
+        else:
+            score, _, _ = jaccard.jaccard_coef(opt, prediction)
+
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
     return pred_data

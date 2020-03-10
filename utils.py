@@ -107,5 +107,3 @@ def erase_noise_point(img, noise_point_size):
             img[labels == label] = False
     return img
 
-
-

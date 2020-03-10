@@ -153,6 +153,15 @@ def jaccard_coef(A, B):
     global jaccard_x
     global jaccard_y
 
+    if A is None:
+        if B is None:
+            return 1, 0, 0
+        else:
+            return 0, 0, 0
+    else:
+        if B is None:
+            return 0, 0, 0
+
     A_y, A_x = np.where(A)
     B_y, B_x = np.where(B)
     if 0 == len(A_y):

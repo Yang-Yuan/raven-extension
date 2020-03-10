@@ -52,6 +52,24 @@ def create_report(probs, prefix):
         create_sheet(writer, "Analogies", sltn_anlg_df, sltn_anlg_col_widths, sltn_anlg_hdrs)
         create_sheet(writer, "Transformations", sltn_tran_df, sltn_tran_col_widths, sltn_tran_hdrs)
 
+        highlight(writer, "Problems", sltn_df)
+
+
+def highlight(writer, sheet_name, df):
+    red = writer.book.add_format({"color": "#FF0000"})
+    bold = writer.book.add_format({'bold': True, 'text_wrap': True})
+    sheet = writer.sheets[sheet_name]
+    correct_n = 0
+    for ii in range(len(df)) :
+        row = df.iloc[ii]
+        if row["prob_ansr"] != row["optn"]:
+            sheet.set_row(ii + 1, None, red)
+        else:
+            correct_n += 1
+
+    sheet.write(ii + 2, 0, "Accuracy:", bold)
+    sheet.write(ii + 2, 1, str(correct_n) + "/" + str(ii + 1), bold)
+
 
 def create_sheet(writer, sheet_name, df, col_widths, col_hdrs):
     df.to_excel(writer, sheet_name = sheet_name, index_label = col_hdrs[0], header = col_hdrs[1:])
@@ -71,7 +89,7 @@ def extract_data(probs):
     for prob in probs:
         aggregation_progression = prob.data
         anlg_tran_data.extend(aggregation_progression.get("anlg_tran_data"))
-        anlg_data.extend(aggregation_progression.get("anlg_data"))
+        anlg_data.extend(aggregation_progression.get("anlg_data", []))
         pred_data.extend(aggregation_progression.get("pred_data"))
         sltn_data.append(aggregation_progression.get("pred_d"))
 
