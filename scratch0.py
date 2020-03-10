@@ -1,6 +1,6 @@
 import run_raven
 
-run_raven.run_rave_brutal()
+run_raven.run_rave_brutal(test_problems = ["c6"])
 
 # run_raven.run_raven_greedy()
 #

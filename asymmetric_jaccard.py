@@ -320,3 +320,37 @@ def asymmetric_jaccard_image2index(img):
                                          constant_values = None)
 
     return ii + 1
+
+
+def asymmetric_jaccard_coef_pos_fixed(A, B, A_to_B_x, A_to_B_y):
+
+    A_sum = A.sum()
+    B_sum = B.sum()
+
+    if 0 == A_sum:
+        if 0 == B_sum:
+            return 0, None
+        else:
+            return 1, B
+    else:
+        if 0 == B_sum:
+            return 0, None
+        else:
+            A_aligned, B_aligned = utils.align(A, B, A_to_B_x, A_to_B_y)
+
+    itsc = np.logical(A_aligned, B_aligned)
+    j_coef = itsc.sum() / A_sum
+
+    diff = np.logical_and(B_aligned, np.logical_not(itsc))  # diff = B - A
+
+    return j_coef, utils.trim_binary_image(diff)
+
+
+
+
+
+
+
+
+
+

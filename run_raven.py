@@ -260,6 +260,8 @@ def run_prob_anlg_tran(prob, anlg, tran):
 
     diff_to_u1_x = None
     diff_to_u1_y = None
+    diff_to_u2_x = None
+    diff_to_u2_y = None
     diff = None
     b1_to_b2_x = None
     b1_to_b2_y = None
@@ -272,9 +274,11 @@ def run_prob_anlg_tran(prob, anlg, tran):
         print(prob.name, anlg.get("name"), tran.get("name"))
 
         if "add_diff" == tran.get("name"):
-            score, diff_to_u1_x, diff_to_u1_y, _, _, diff = asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
+            score, diff_to_u1_x, diff_to_u1_y, diff_to_u2_x, diff_to_u2_y, diff = \
+                asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
         elif "subtract_diff" == tran.get("name"):
-            score, _, _, diff_to_u1_x, diff_to_u1_y, diff = asymmetric_jaccard.asymmetric_jaccard_coef(u2, u1)
+            score, diff_to_u2_x, diff_to_u2_y, diff_to_u1_x, diff_to_u1_y, diff = \
+                asymmetric_jaccard.asymmetric_jaccard_coef(u2, u1)
         else:
             u1_t = transform.apply_unary_transformation(u1, tran)
             score, _, _ = jaccard.jaccard_coef(u1_t, u2)
@@ -302,6 +306,8 @@ def run_prob_anlg_tran(prob, anlg, tran):
         "tran_type": tran.get("type"),
         "diff_to_u1_x": diff_to_u1_x,
         "diff_to_u1_y": diff_to_u1_y,
+        "diff_to_u2_x": diff_to_u2_x,
+        "diff_to_u2_y": diff_to_u2_y,
         "diff": diff,
         "b1_to_b2_x": b1_to_b2_x,
         "b1_to_b2_y": b1_to_b2_y
@@ -351,16 +357,18 @@ def predict(prob, d):
     tran = transform.get_tran(d.get("tran_name"))
 
     if 3 == len(anlg.get("value")):
-        best_u1_u2_align_x = d.get("diff_to_u1_x")
-        best_u1_u2_align_y = d.get("diff_to_u1_y")
-        best_u1_u2_diff = d.get("diff")
+        best_diff_to_u1_x = d.get("diff_to_u1_x")
+        best_diff_to_u1_y = d.get("diff_to_u1_y")
+        best_diff_to_u2_x = d.get("diff_to_u2_x")
+        best_diff_to_u2_y = d.get("diff_to_u2_y")
+        best_diff = d.get("diff")
         u3 = prob.matrix[anlg.get("value")[2]]
         u1 = prob.matrix[anlg.get("value")[0]]
 
         if tran.get("name") == "add_diff":
-            prediction = transform.add_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff, u1)
+            prediction = transform.add_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1)
         elif tran.get("name") == "subtract_diff":
-            prediction = transform.subtract_diff(u3, best_u1_u2_align_x, best_u1_u2_align_y, best_u1_u2_diff, u1)
+            prediction = transform.subtract_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1)
         else:
             prediction = transform.apply_unary_transformation(u3, tran)
 
@@ -380,13 +388,17 @@ def predict(prob, d):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
 
         if tran.get("name") == "add_diff":
-            u3_score, _, _, _, _, diff = asymmetric_jaccard.asymmetric_jaccard_coef(u3, opt)
-            diff_score, _ , _ = jaccard.jaccard_coef(diff, best_u1_u2_diff)
+            u1_to_u2_x = (-best_diff_to_u1_x) - (-best_diff_to_u2_x)
+            u1_to_u2_y = (-best_diff_to_u1_y) - (-best_diff_to_u2_y)
+            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(u3, opt, u1_to_u2_x, u1_to_u2_y)
+            diff_score, _ , _ = jaccard.jaccard_coef(diff, best_diff)
             opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
             score = (diff_score + opt_score + u3_score) / 3
         elif tran.get("name") == "subtract_diff":
-            u3_score, _, _, _, _, diff = asymmetric_jaccard.asymmetric_jaccard_coef(opt, u3)
-            diff_score, _, _ = jaccard.jaccard_coef(diff, best_u1_u2_diff)
+            u2_to_u1_x = (-best_diff_to_u2_x) - (-best_diff_to_u1_x)
+            u2_to_u1_y = (-best_diff_to_u2_y) - (-best_diff_to_u1_y)
+            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, u3, u2_to_u1_x, u2_to_u1_y)
+            diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
             opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
             score = (diff_score + opt_score + u3_score) / 3
         else:

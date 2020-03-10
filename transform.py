@@ -62,7 +62,7 @@ def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     diff_to_img_x = diff_to_ref_x - img_to_ref_x
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
 
-    diff_aligned, img_aligned = align(diff, img, diff_to_img_x, diff_to_img_y)
+    diff_aligned, img_aligned = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
     return utils.trim_binary_image(np.logical_and(img_aligned, np.logical_not(diff_aligned)))
 
 
@@ -261,7 +261,7 @@ def apply_binary_transformation(imgA, imgB, tran,
     if imgA_to_imgB_x is None or imgA_to_imgB_y is None:
         _, imgA_to_imgB_x, imgA_to_imgB_y = jaccard.jaccard_coef(imgA, imgB)
 
-    imgA_aligned, imgB_aligned = align(imgA, imgB, imgA_to_imgB_x, imgA_to_imgB_y)
+    imgA_aligned, imgB_aligned = utils.align(imgA, imgB, imgA_to_imgB_x, imgA_to_imgB_y)
 
     img = None
 
@@ -319,35 +319,6 @@ def xor(imgA, imgB):
     return np.logical_xor(imgA, imgB)
 
 
-def align(imgA, imgB, x, y):
-    """
-    Align imgA to imgB.
-    Consider the top-left corner of imgB as the origin
-    the top-left corner of imgA should be as (x, y) using this origin.
-    Output A_aligned and B_aligned trimmed to the smallest shape
-    such that if you superimpose A_aligned on B_aligned
-    no true pixels will fall out of the boundary.
-    :param imgA:
-    :param imgB:
-    :param x:
-    :param y:
-    :return: A_aligned, B_aligned
-    """
-    A_shape_y, A_shape_x = imgA.shape
-    B_shape_y, B_shape_x = imgB.shape
-
-    min_x = min(x, 0)
-    min_y = min(y, 0)
-    max_x = max(B_shape_x, x + A_shape_x)
-    max_y = max(B_shape_y, y + A_shape_y)
-
-    A_aligned = np.full((max_y - min_y, max_x - min_x), False)
-    B_aligned = np.full((max_y - min_y, max_x - min_x), False)
-
-    A_aligned[y - min_y: y - min_y + A_shape_y, x - min_x: x - min_x + A_shape_x] = imgA
-    B_aligned[- min_y: - min_y + B_shape_y, - min_x: - min_x + B_shape_x] = imgB
-
-    return A_aligned, B_aligned
 
 
 
