@@ -7,11 +7,6 @@ from transform import rescale
 
 problems = problem.load_problems()
 
-d1 = problems[36]
+c7 = problems[30]
 
-mtrx = d1.matrix
-
-k = 0
-(mtrx[k, 0] == mtrx[k, 1]).all()
-(mtrx[k, 0] == mtrx[k, 2]).all()
-(mtrx[k, 1] == mtrx[k, 2]).all()
+c7.plot_problem()

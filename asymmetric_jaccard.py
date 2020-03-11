@@ -338,7 +338,7 @@ def asymmetric_jaccard_coef_pos_fixed(A, B, A_to_B_x, A_to_B_y):
         else:
             A_aligned, B_aligned = utils.align(A, B, A_to_B_x, A_to_B_y)
 
-    itsc = np.logical(A_aligned, B_aligned)
+    itsc = np.logical_and(A_aligned, B_aligned)
     j_coef = itsc.sum() / A_sum
 
     diff = np.logical_and(B_aligned, np.logical_not(itsc))  # diff = B - A

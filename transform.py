@@ -81,7 +81,7 @@ def add_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     diff_to_img_x = diff_to_ref_x - img_to_ref_x
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
 
-    diff_aligned, img_aligned = align(diff, img, diff_to_img_x, diff_to_img_y)
+    diff_aligned, img_aligned = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
     return utils.trim_binary_image(np.logical_or(img_aligned, diff_aligned))
 
 

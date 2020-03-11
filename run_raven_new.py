@@ -1,0 +1,287 @@
+import json
+import numpy as np
+from matplotlib import pyplot as plt
+import time
+import copy
+import report
+import analogy_new
+import transform
+import jaccard
+import asymmetric_jaccard
+import prob_anlg_tran_new
+
+
+def run_prob(prob, anlg_tran_pairs):
+
+    pred_data = []
+    for p in anlg_tran_pairs:
+        anlg_tran_pred_data = run_prob_anlg_tran(prob, p.get("anlg"), p.get("tran"))
+        pred_data.extend(anlg_tran_pred_data)
+
+    return pred_data
+
+
+def run_rave_brutal(show_me = False, test_problems = None):
+    start_time = time.time()
+
+    print("run raven in greedy mode.")
+
+    probs = prob_anlg_tran_new.get_probs(test_problems)
+
+    for prob in probs:
+
+        print(prob.name)
+
+        jaccard.load_jaccard_cache(prob.name)
+        asymmetric_jaccard.load_asymmetric_jaccard_cache(prob.name)
+
+        anlg_tran_pairs = prob_anlg_tran_new.get_anlg_tran_pairs(prob)
+
+        pred_data = run_prob(prob, anlg_tran_pairs)
+
+        # optimize w.r.t. options
+        pred_d = find_best(pred_data, "pat_score", "pato_score")
+
+        # imaging
+        save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], "brutal", show_me)
+
+        # data aggregation progression, TODO maybe save them as images
+        for d in anlg_tran_data:
+            del d["diff"]
+        for d in pred_data:
+            del d["diff"]
+            del d["pred"]
+        del pred_d["diff"]
+        del pred_d["pred"]
+        aggregation_progression = {
+            "anlg_tran_data": anlg_tran_data,
+            "pred_data": pred_data,
+            "pred_d": pred_d
+        }
+        with open("./data/brutal_" + prob.name + ".json", 'w+') as outfile:
+            json.dump(aggregation_progression, outfile)
+            outfile.close()
+
+        # update cache
+        jaccard.save_jaccard_cache(prob.name)
+        asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
+
+        prob.data = aggregation_progression
+
+    # output report
+    if test_problems is None:
+        report.create_report(probs, "brutal_")
+
+    end_time = time.time()
+    print(end_time - start_time)
+
+
+def run_prob_anlg(prob, anlg):
+    """
+    compute the result given a combination of a problem and an analogy
+    :param prob:
+    :param anlg:
+    :return:
+    """
+
+    tran_data = []
+    trans = prob_anlg_tran_new.get_trans(prob, anlg)
+    for tran in trans:
+        tran_d = run_prob_anlg_tran(prob, anlg, tran)
+        tran_data.append(tran_d)
+
+    return tran_data
+
+
+def run_prob_anlg_tran(prob, anlg, tran):
+    """
+    compute the result for a combination of a problem, an analogy and a transformation.
+    :param prob:
+    :param anlg:
+    :param tran:
+    :return:
+    """
+
+    print(prob.name, anlg.get("name"), tran.get("name"))
+
+    if "unary_2x2" == anlg.get("value"):
+        return run_prob_anlg_tran_unary_2x2(prob, anlg, tran)
+    elif "unary_3x3" == anlg.get("value"):
+        return run_prob_anlg_tran_unary_3x3(prob, anlg, tran)
+    elif "binary_3x3" == anlg.get("value"):
+        return run_prob_anlg_tran_binary_3x3(prob, anlg, tran)
+    else:
+        raise Exception("Ryan!")
+
+    if 3 == len(anlg.get("value")):  # unary anlg and tran
+        pass
+
+    elif 5 == len(anlg.get("value")):  # binary anlg and tran
+
+        b1 = prob.matrix[anlg.get("value")[0]]
+        b2 = prob.matrix[anlg.get("value")[1]]
+        b3 = prob.matrix[anlg.get("value")[2]]
+
+        b1_b2_t, b1_to_b2_x, b1_to_b2_y = transform.apply_binary_transformation(b1, b2, tran)
+        score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
+
+    else:
+        raise Exception("Ryan!")
+
+
+def save_image(prob, prediction, selection, prefix, show_me = False):
+    if show_me:
+        plt.figure()
+        plt.imshow(prediction)
+        plt.figure()
+        plt.imshow(selection)
+        plt.show()
+    else:
+        plt.figure()
+        plt.imshow(prediction)
+        plt.savefig("./data/" + prefix + "_" + prob.name + "_prediction.png")
+        plt.close()
+        plt.figure()
+        plt.imshow(selection)
+        plt.savefig("./data/" + prefix + "_" + prob.name + "_selection.png")
+        plt.close()
+
+
+def find_best(data, *score_names):
+    best_score = -1
+    best_ii = None
+    for ii, d in enumerate(data):
+        score = 0
+        for score_name in score_names:
+            score += d.get(score_name)
+        if best_score < score:
+            best_ii = ii
+            best_score = score
+
+    # if data[best_ii].get("diff") is not None:
+    #     plt.figure()
+    #     plt.imshow(data[best_ii].get("diff"))
+    #     plt.show()
+
+    return copy.copy(data[best_ii])
+
+
+def predict(prob, d):
+    anlg = analogy_new.get_anlg(d.get("anlg_name"))
+    tran = transform.get_tran(d.get("tran_name"))
+
+    if 3 == len(anlg.get("value")):
+        best_diff_to_u1_x = d.get("diff_to_u1_x")
+        best_diff_to_u1_y = d.get("diff_to_u1_y")
+        best_diff_to_u2_x = d.get("diff_to_u2_x")
+        best_diff_to_u2_y = d.get("diff_to_u2_y")
+        best_diff = d.get("diff")
+        u3 = prob.matrix[anlg.get("value")[2]]
+        u1 = prob.matrix[anlg.get("value")[0]]
+
+        if tran.get("name") == "add_diff":
+            prediction = transform.add_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1)
+        elif tran.get("name") == "subtract_diff":
+            prediction = transform.subtract_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1)
+        else:
+            prediction = transform.apply_unary_transformation(u3, tran)
+
+    elif 5 == len(anlg.get("value")):
+        best_b1_to_b2_x = d.get("b1_to_b2_x")
+        best_b1_to_b2_y = d.get("b1_to_b2_y")
+        b4 = prob.matrix[anlg.get("value")[3]]
+        b5 = prob.matrix[anlg.get("value")[4]]
+        prediction, _, _ = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
+
+    else:
+        raise Exception("Ryan!")
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
+        if tran.get("name") == "add_diff":
+            u1_to_u2_x = (-best_diff_to_u1_x) - (-best_diff_to_u2_x)
+            u1_to_u2_y = (-best_diff_to_u1_y) - (-best_diff_to_u2_y)
+            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(u3, opt, u1_to_u2_x, u1_to_u2_y)
+            diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
+            opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
+            score = (diff_score + opt_score + u3_score) / 3
+        elif tran.get("name") == "subtract_diff":
+            u2_to_u1_x = (-best_diff_to_u2_x) - (-best_diff_to_u1_x)
+            u2_to_u1_y = (-best_diff_to_u2_y) - (-best_diff_to_u1_y)
+            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, u3, u2_to_u1_x, u2_to_u1_y)
+            diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
+            opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
+            score = (diff_score + opt_score + u3_score) / 3
+        else:
+            score, _, _ = jaccard.jaccard_coef(opt, prediction)
+
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def run_prob_anlg_tran_unary_2x2(prob, anlg, tran):
+    u1 = prob.matrix[anlg.get("value")[0]]
+    u2 = prob.matrix[anlg.get("value")[1]]
+
+    diff_to_u1_x = None
+    diff_to_u1_y = None
+    diff_to_u2_x = None
+    diff_to_u2_y = None
+    diff = None
+
+    if "add_diff" == tran.get("name"):
+        score, diff_to_u1_x, diff_to_u1_y, diff_to_u2_x, diff_to_u2_y, diff = \
+            asymmetric_jaccard.asymmetric_jaccard_coef(u1, u2)
+
+    elif "subtract_diff" == tran.get("name"):
+        score, diff_to_u2_x, diff_to_u2_y, diff_to_u1_x, diff_to_u1_y, diff = \
+            asymmetric_jaccard.asymmetric_jaccard_coef(u2, u1)
+    else:
+        u1_t = transform.apply_unary_transformation(u1, tran)
+        score, _, _ = jaccard.jaccard_coef(u1_t, u2)
+
+    return assemble_prob_anlg_tran_d(prob, anlg, tran, score,
+                                     diff_to_u1_x = diff_to_u1_x, diff_to_u1_y = diff_to_u1_y,
+                                     diff_to_u2_x = diff_to_u2_x, diff_to_u2_y = diff_to_u2_y,
+                                     diff = diff)
+
+
+def run_prob_anlg_tran_unary_3x3(prob, anlg, tran):
+
+    if "unary_3x3" == anlg.get("type"):
+        sub_probs = get_sub_probs(prob)
+
+
+def run_prob_anlg_tran_binary_3x3(prob, anlg, tran):
+    pass
+
+
+def assemble_prob_anlg_tran_d(prob, anlg, tran, pat_score,
+                              diff_to_u1_x = None,
+                              diff_to_u1_y = None,
+                              diff_to_u2_x = None,
+                              diff_to_u2_y = None,
+                              diff = None,
+                              b1_to_b2_x = None,
+                              b1_to_b2_y = None):
+    return {
+        "prob_name": prob.name,
+        "anlg_name": anlg.get("name"),
+        "tran_name": tran.get("name"),
+        "pat_score": pat_score,  # pat = prob + anlg + tran
+        "prob_ansr": prob.answer,
+        "prob_type": prob.type,
+        "anlg_type": anlg.get("type"),
+        "tran_type": tran.get("type"),
+        "diff_to_u1_x": diff_to_u1_x,
+        "diff_to_u1_y": diff_to_u1_y,
+        "diff_to_u2_x": diff_to_u2_x,
+        "diff_to_u2_y": diff_to_u2_y,
+        "diff": diff,
+        "b1_to_b2_x": b1_to_b2_x,
+        "b1_to_b2_y": b1_to_b2_y
+    }

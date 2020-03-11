@@ -408,3 +408,45 @@ def predict(prob, d):
 
     return pred_data
 
+
+# def vote(prob, data, **score_names):
+#
+#     candidates = []
+#     for ii in range(len(prob.options)):
+#         candidates.append({
+#             "prob_name": prob.name,
+#             "anlg_name": "",
+#             "tran_name": "",
+#             "pat_score": 0,  # pat = prob + anlg + tran
+#             "prob_ansr": prob.answer,
+#             "prob_type": prob.type,
+#             "anlg_type": "",
+#             "tran_type": "",
+#             "diff_to_u1_x": None,
+#             "diff_to_u1_y": None,
+#             "diff_to_u2_x": None,
+#             "diff_to_u2_y": None,
+#             "diff": None,
+#             "b1_to_b2_x": None,
+#             "b1_to_b2_y": None,
+#             "optn": ii + 1,
+#             "pato_score": 0,
+#             "pred": None
+#         })
+#
+#     best_score = -1
+#     best_ii = None
+#     for ii, d in enumerate(data):
+#         score = 0
+#         for score_name in score_names:
+#             score += d.get(score_name)
+#         if best_score < score:
+#             best_ii = ii
+#             best_score = score
+#
+#     # if data[best_ii].get("diff") is not None:
+#     #     plt.figure()
+#     #     plt.imshow(data[best_ii].get("diff"))
+#     #     plt.show()
+#
+#     return copy.copy(data[best_ii])
