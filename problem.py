@@ -62,12 +62,18 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
         # and it will definitely accelerate the computation.
         binary_smaller_coms = [utils.trim_binary_image(com) for com in binary_smaller_coms]
 
+        # some blatant magic code, because of the blatant hand drawing
+        if problem_name in ["c7"]:
+            binary_smaller_coms = utils.resize_to_average_shape(binary_smaller_coms, ignore = [8])
+
         if 10 == len(coms):
-            problems.append(
-                RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 4], binary_smaller_coms[4:], answer))
+            matrix = utils.create_object_matrix(binary_smaller_coms[: 4], (2, 2))
+            options = binary_smaller_coms[4:]
+            problems.append(RavenProgressiveMatrix(problem_name, matrix, options, answer))
         elif 17 == len(coms):
-            problems.append(
-                RavenProgressiveMatrix(problem_name, binary_smaller_coms[: 9], binary_smaller_coms[9:], answer))
+            matrix = utils.create_object_matrix(binary_smaller_coms[: 9], (3, 3))
+            options = binary_smaller_coms[9:]
+            problems.append(RavenProgressiveMatrix(problem_name, matrix, options, answer))
         else:
             raise Exception("Crap!")
 
@@ -76,3 +82,4 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
             prob.plot_problem()
 
     return problems
+

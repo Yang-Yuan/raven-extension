@@ -29,7 +29,7 @@ translations = {
 sltn_cols = ["prob_name", "prob_type", "prob_ansr", "optn", "pato_score",
              "anlg_name", "anlg_type", "tran_name", "tran_type", "pat_score"]
 sltn_hdrs = [translations.get(col) for col in sltn_cols]
-sltn_col_widths = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15]
+sltn_col_widths = [15, 15, 15, 15, 15, 40, 15, 15, 15, 15]
 
 sltn_anlg_cols = ["anlg_name", "anlg_type", "anlg_n", "crct_probs", "incr_probs", "crct/incr"]
 sltn_anlg_hdrs = [translations.get(col) for col in sltn_anlg_cols]

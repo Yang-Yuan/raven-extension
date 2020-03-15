@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt
 from skimage.transform import rotate
 from skimage.transform import rescale as rs
-from skimage.transform import resize
 from sys import modules
 import numpy as np
 import jaccard

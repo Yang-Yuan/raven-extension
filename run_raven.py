@@ -9,6 +9,7 @@ import transform
 import jaccard
 import asymmetric_jaccard
 import prob_anlg_tran
+import utils
 
 
 def run_raven_explanatory(show_me = False, test_problems = None):
@@ -47,13 +48,13 @@ def run_raven_explanatory(show_me = False, test_problems = None):
             anlg_data.append(anlg_tran_d)
 
         # optimize w.r.t analogies (pat_score)
-        anlg_d = find_best(anlg_data, "pat_score")
+        anlg_d = utils.find_best(anlg_data, "pat_score")
 
         # predict with the best analogy and score all options with the prediction
         pred_data = predict(prob, anlg_d)
 
         # optimize w.r.t.options (pato_score)
-        pred_d = find_best(pred_data, "pat_score", "pato_score")
+        pred_d = utils.find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
         save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], "explanatory", show_me)
@@ -117,7 +118,7 @@ def run_raven_greedy(show_me = False, test_problems = None):
             anlg_tran_data.extend(tran_data)
 
             # optimize w.r.t. transformations for this analogy
-            anlg_tran_d = find_best(tran_data, "pat_score")
+            anlg_tran_d = utils.find_best(tran_data, "pat_score")
             anlg_data.append(anlg_tran_d)
 
         pred_data = []
@@ -127,7 +128,7 @@ def run_raven_greedy(show_me = False, test_problems = None):
             pred_data.extend(anlg_pred_data)
 
         # optimize w.r.t. options
-        pred_d = find_best(pred_data, "pat_score", "pato_score")
+        pred_d = utils.find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
         save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], "greedy", show_me)
@@ -196,7 +197,7 @@ def run_rave_brutal(show_me = False, test_problems = None):
             pred_data.extend(anlg_tran_pred_data)
 
         # optimize w.r.t. options
-        pred_d = find_best(pred_data, "pat_score", "pato_score")
+        pred_d = utils.find_best(pred_data, "pat_score", "pato_score")
 
         # imaging
         save_image(prob, pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], "brutal", show_me)
@@ -330,25 +331,6 @@ def save_image(prob, prediction, selection, prefix, show_me = False):
         plt.imshow(selection)
         plt.savefig("./data/" + prefix + "_" + prob.name + "_selection.png")
         plt.close()
-
-
-def find_best(data, *score_names):
-    best_score = -1
-    best_ii = None
-    for ii, d in enumerate(data):
-        score = 0
-        for score_name in score_names:
-            score += d.get(score_name)
-        if best_score < score:
-            best_ii = ii
-            best_score = score
-
-    # if data[best_ii].get("diff") is not None:
-    #     plt.figure()
-    #     plt.imshow(data[best_ii].get("diff"))
-    #     plt.show()
-
-    return copy.copy(data[best_ii])
 
 
 def predict(prob, d):

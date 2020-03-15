@@ -5,8 +5,7 @@ import numpy as np
 from transform import rescale
 
 
-problems = problem.load_problems()
+problems = problem.load_problems(show_me = True)
 
-c7 = problems[30]
 
-c7.plot_problem()
+

@@ -1,6 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from skimage import measure
+import copy
+from skimage.transform import resize
 
 
 def rgb_to_binary(img, bg_color, tolerance):
@@ -138,4 +140,73 @@ def align(imgA, imgB, x, y):
 
     return A_aligned, B_aligned
 
+
+def find_best(data, *score_names):
+    best_score = -1
+    best_ii = None
+    for ii, d in enumerate(data):
+        score = 0
+        for score_name in score_names:
+            score += d.get(score_name)
+        if best_score < score:
+            best_ii = ii
+            best_score = score
+
+    # if data[best_ii].get("diff") is not None:
+    #     plt.figure()
+    #     plt.imshow(data[best_ii].get("diff"))
+    #     plt.show()
+
+    return copy.copy(data[best_ii])
+
+
+def sum_score(data, *score_names):
+    return [sum([d.get(name) for d in data]) for name in score_names]
+
+
+def create_object_matrix(objs, shape):
+    matrix = np.empty(shape, dtype = np.object)
+    kk = 0
+    for ii in range(shape[0]):
+        for jj in range(shape[1]):
+            matrix[ii, jj] = objs[kk]
+            kk += 1
+
+    return matrix
+
+
+def resize_to_average_shape(imgs, shape = None, ignore = None):
+    if shape is None:
+        shape = np.array([img.shape for img in imgs]).mean(axis = 0).astype(np.int)
+        shape = tuple(shape)
+
+    resized_imgs = []
+    for ii, img in enumerate(imgs):
+        if ignore is not None and ii in ignore:
+            resized_imgs.append(img)
+        else:
+            resize_img = grey_to_binary(resize(np.logical_not(img), shape, order = 0), 0.7)
+            resized_imgs.append(resize_img)
+
+    return resized_imgs
+
+
+def fill_holes(img):
+    img_copy = np.copy(img)
+    img_copy_int = img.copy().astype(np.int)
+    labels = measure.label(input = img_copy_int, background = -1, connectivity = 2)
+    label_vals = np.unique(labels)
+
+    y_max, x_max = img.shape
+    y_max -= 1
+    x_max -= 1
+
+    for val in label_vals:
+        y, x = np.where(labels == val)
+        if x.size != 0 and y.size != 0 \
+                and (img_copy_int[y, x][0] == 0) \
+                and (x.min() != 0 and y.min() != 0 and x.max() != x_max and y.max() != y_max):
+            img_copy[y, x] = True
+
+    return img_copy
 

@@ -4,20 +4,6 @@ import transform
 
 problems = problem.load_problems()
 
-analogy_groups = {
-    "2x2_unary_analogies": analogy_new.unary_analogies_2by2,
-    "2x2_binary_analogies": {},
-    "3x3_unary_analogies": analogy_new.unary_analogies_3by3,
-    "3x3_binary_analogies": analogy_new.binary_analogies_3by3
-}
-
-transformation_groups = {
-    "2x2_unary_transformations": transform.unary_transformations,
-    "2x2_binary_transformations": [],
-    "3x3_unary_transformations": transform.unary_transformations,
-    "3x3_binary_transformations": transform.binary_transformations
-}
-
 
 def get_probs(test_problems):
     if test_problems is None:
@@ -27,22 +13,23 @@ def get_probs(test_problems):
 
 
 def get_anlgs(prob):
-    if 2 == prob.matrix_n:
-        return analogy_groups.get("2x2_unary_analogies")
-    elif 3 == prob.matrix_n:
-        return analogy_groups.get("3x3_unary_analogies") + analogy_groups.get("3x3_binary_analogies")
+    if "2x2" in prob.type:
+        return analogy_new.unary_2x2
+    elif "3x2" in prob.type:
+        return analogy_new.binary_3x2
+    elif "2x3" in prob.type:
+        return analogy_new.binary_2x3
+    elif "3x3" in prob.type:
+        return analogy_new.unary_3x3 + analogy_new.binary_3x3
     else:
         raise Exception("Ryan!")
 
 
 def get_trans(prob, anlg):
-    if 2 == prob.matrix_n:
-        return transformation_groups.get("2x2_unary_transformations")
-    elif 3 == prob.matrix_n:
-        if 3 == len(anlg.get("value")):
-            return transformation_groups.get("3x3_unary_transformations")
-        elif 5 == len(anlg.get("value")):
-            return transformation_groups.get("3x3_binary_transformations")
+    if "unary" in anlg.get("type"):
+        return transform.unary_transformations
+    elif "binary" in anlg.get("type"):
+        return transform.binary_transformations
     else:
         raise Exception("Ryan don't forget anlg")
 
