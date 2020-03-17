@@ -93,16 +93,14 @@ def run_prob_anlg_tran(prob, anlg, tran):
     print(prob.name, anlg.get("name"), tran.get("name"))
 
     if "unary_2x2" == anlg.get("type"):
-
-        if "A : B  ::  C : ?" == anlg.get("name") and "subtract_diff" == tran.get("name"):
-            print("asdfasdf")
-
         return run_prob_anlg_tran_2x2(prob, anlg, tran)
     elif "binary_3x2" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "binary_2x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
+        # if "A : C  ::  D : F  :::  D : F  ::  G : ?" == anlg.get("name") and "add_diff" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
@@ -164,16 +162,26 @@ def predict(prob, d):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
 
         if tran.get("name") == "add_diff":
+            u3_score, diff_to_u3_x, diff_to_u3_y, diff_to_opt_x, diff_to_opt_y, diff = \
+                asymmetric_jaccard.asymmetric_jaccard_coef(u3, opt)
+            u3_to_opt_x = (-diff_to_u3_x) - (-diff_to_opt_x)
+            u3_to_opt_y = (-diff_to_u3_y) - (-diff_to_opt_y)
             u1_to_u2_x = (-best_diff_to_u1_x) - (-best_diff_to_u2_x)
             u1_to_u2_y = (-best_diff_to_u1_y) - (-best_diff_to_u2_y)
-            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(u3, opt, u1_to_u2_x, u1_to_u2_y)
+            if abs(u3_to_opt_x - u1_to_u2_x) > 2 or abs(u3_to_opt_y - u1_to_u2_y) > 2:
+                u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(u3, opt, u1_to_u2_x, u1_to_u2_y)
             diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
             opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
             score = (diff_score + opt_score + u3_score) / 3
         elif tran.get("name") == "subtract_diff":
+            u3_score, diff_to_opt_x, diff_to_opt_y, diff_to_u3_x, diff_to_u3_y, diff = \
+                asymmetric_jaccard.asymmetric_jaccard_coef(opt, u3)
+            opt_to_u3_x = (-diff_to_opt_x) - (-diff_to_u3_x)
+            opt_to_u3_y = (-diff_to_opt_y) - (-diff_to_u3_y)
             u2_to_u1_x = (-best_diff_to_u2_x) - (-best_diff_to_u1_x)
             u2_to_u1_y = (-best_diff_to_u2_y) - (-best_diff_to_u1_y)
-            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, u3, u2_to_u1_x, u2_to_u1_y)
+            if abs(opt_to_u3_x - u2_to_u1_x) > 2 or abs(opt_to_u3_y - u2_to_u1_y) > 2:
+                u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, u3, u2_to_u1_x, u2_to_u1_y)
             diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
             opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
             score = (diff_score + opt_score + u3_score) / 3
