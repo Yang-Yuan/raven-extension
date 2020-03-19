@@ -1,7 +1,7 @@
 import run_raven_new
 
 
-run_raven_new.run_rave_brutal()
+run_raven_new.run_rave_brutal(test_problems = ["e1"])
 
 # import run_raven
 #

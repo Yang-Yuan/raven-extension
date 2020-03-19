@@ -99,10 +99,10 @@ def run_prob_anlg_tran(prob, anlg, tran):
     elif "binary_2x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
-        # if "A : C  ::  D : F  :::  D : F  ::  G : ?" == anlg.get("name") and "add_diff" == tran.get("name"):
-        #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
+        if "A : D : G  ::  B : E : H  :::  B : E : H  ::  C : F : ?" == anlg.get("name") and "unite" == tran.get("name"):
+            print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     else:
         raise Exception("Ryan!")
@@ -149,9 +149,16 @@ def predict(prob, d):
     elif "binary_3x2" == anlg.get("type") or "binary_2x3" == anlg.get("type"):
         best_b1_to_b2_x = d.get("b1_to_b2_x")
         best_b1_to_b2_y = d.get("b1_to_b2_y")
+        b1 = prob.matrix[anlg.get("value")[0]]
+        b2 = prob.matrix[anlg.get("value")[1]]
         b4 = prob.matrix[anlg.get("value")[3]]
         b5 = prob.matrix[anlg.get("value")[4]]
-        prediction, _, _ = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
+        _, b4_to_b1_x, b4_to_b1_y = jaccard.jaccard_coef(b4, b1)
+        _, b5_to_b2_x, b5_to_b2_y = jaccard.jaccard_coef(b5, b2)
+        b4_to_b5_x = b4_to_b1_x - (b5_to_b2_x - best_b1_to_b2_x)
+        b4_to_b5_y = b4_to_b1_y - (b5_to_b2_y - best_b1_to_b2_y)
+        prediction, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(b4, b5, tran, b4_to_b5_x, b4_to_b5_y)
+        prediction_bak, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
 
     else:
         raise Exception("Ryan!")
@@ -185,6 +192,19 @@ def predict(prob, d):
             diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
             opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
             score = (diff_score + opt_score + u3_score) / 3
+        # elif tran.get("name") == "subtract":
+        #     pred_score, opt_to_pred_x, opt_to_pred_y = jaccard.jaccard_coef(opt, prediction)
+        #     b4_to_pred_x = best_b1_to_b2_x - pred_to_b5_x
+        #     b4_to_pred_y = best_b1_to_b2_y - pred_to_b5_y
+        #     b4_to_opt_x = b4_to_pred_x - opt_to_pred_x
+        #     b4_to_opt_y = b4_to_pred_y - opt_to_pred_y
+        #     b5_prediction, _, _, _, _ = transform.apply_binary_transformation(b4, opt, tran, b4_to_opt_x, b4_to_opt_y)
+        #     b5_score, _, _ = jaccard.jaccard_coef(b5_prediction, b5)
+        #     b5_to_opt_x = (-pred_to_b5_x) - opt_to_pred_x
+        #     b5_to_opt_y = (-pred_to_b5_y) - opt_to_pred_y
+        #     b4_prediction, _, _, _, _ = transform.apply_binary_transformation(b5, opt, transform.get_tran("unite"), b5_to_opt_x, b5_to_opt_y)
+        #     b4_score, _, _ = jaccard.jaccard_coef(b4_prediction, b4)
+        #     score = (b4_score + b5_score + pred_score) / 3
         else:
             score, _, _ = jaccard.jaccard_coef(opt, prediction)
 
@@ -227,7 +247,7 @@ def run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran):
     b2 = prob.matrix[anlg.get("value")[1]]
     b3 = prob.matrix[anlg.get("value")[2]]
 
-    b1_b2_t, b1_to_b2_x, b1_to_b2_y = transform.apply_binary_transformation(b1, b2, tran)
+    b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran)
     score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
 
     prob_anlg_tran_d = assemble_prob_anlg_tran_d(prob, anlg, tran, score,

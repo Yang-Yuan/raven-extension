@@ -110,7 +110,7 @@ def erase_noise_point(img, noise_point_size):
     return img
 
 
-def align(imgA, imgB, x, y):
+def align(imgA, imgB, A_to_B_x, A_to_B_y):
     """
     Align imgA to imgB.
     Consider the top-left corner of imgB as the origin
@@ -118,27 +118,32 @@ def align(imgA, imgB, x, y):
     Output A_aligned and B_aligned trimmed to the smallest shape
     such that if you superimpose A_aligned on B_aligned
     no true pixels will fall out of the boundary.
+    :param A_to_B_y:
+    :param A_to_B_x:
     :param imgA:
     :param imgB:
     :param x:
     :param y:
-    :return: A_aligned, B_aligned
+    :return: A_aligned, B_aligned, aligned_to_B_x, align_to_B_y
     """
     A_shape_y, A_shape_x = imgA.shape
     B_shape_y, B_shape_x = imgB.shape
 
-    min_x = min(x, 0)
-    min_y = min(y, 0)
-    max_x = max(B_shape_x, x + A_shape_x)
-    max_y = max(B_shape_y, y + A_shape_y)
+    min_x = min(A_to_B_x, 0)
+    min_y = min(A_to_B_y, 0)
+    max_x = max(B_shape_x, A_to_B_x + A_shape_x)
+    max_y = max(B_shape_y, A_to_B_y + A_shape_y)
 
     A_aligned = np.full((max_y - min_y, max_x - min_x), False)
     B_aligned = np.full((max_y - min_y, max_x - min_x), False)
 
-    A_aligned[y - min_y: y - min_y + A_shape_y, x - min_x: x - min_x + A_shape_x] = imgA
+    A_aligned[A_to_B_y - min_y: A_to_B_y - min_y + A_shape_y, A_to_B_x - min_x: A_to_B_x - min_x + A_shape_x] = imgA
     B_aligned[- min_y: - min_y + B_shape_y, - min_x: - min_x + B_shape_x] = imgB
 
-    return A_aligned, B_aligned
+    aligned_to_B_x = min_x
+    aligned_to_B_y = min_y
+
+    return A_aligned, B_aligned, aligned_to_B_x, aligned_to_B_y
 
 
 def find_best(data, *score_names):

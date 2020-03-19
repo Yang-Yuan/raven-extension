@@ -61,7 +61,7 @@ def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     diff_to_img_x = diff_to_ref_x - img_to_ref_x
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
 
-    diff_aligned, img_aligned = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
+    diff_aligned, img_aligned, _, _ = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
     return utils.trim_binary_image(np.logical_and(img_aligned, np.logical_not(diff_aligned)))
 
 
@@ -80,55 +80,8 @@ def add_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     diff_to_img_x = diff_to_ref_x - img_to_ref_x
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
 
-    diff_aligned, img_aligned = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
+    diff_aligned, img_aligned, _, _ = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
     return utils.trim_binary_image(np.logical_or(img_aligned, diff_aligned))
-
-
-# def add_diff(img, align_x, align_y, diff, diff_is_positive):
-#     if diff_is_positive:
-#         diff_aligned, img_aligned = align(diff, img, align_x, align_y)
-#         result = np.logical_or(diff_aligned, img_aligned)
-#     else:
-#         _, align_x, align_y = jaccard.jaccard_coef(np.logical_not(diff), img)
-#
-#         diff_y, diff_x = diff.shape
-#         img_y, img_x = img.shape
-#
-#         if align_y < 0:
-#             diff_y_min = -align_y
-#             img_y_min = 0
-#         else:
-#             diff_y_min = 0
-#             img_y_min = align_y
-#
-#         if align_x < 0:
-#             diff_x_min = -align_x
-#             img_x_min = 0
-#         else:
-#             diff_x_min = 0
-#             img_x_min = align_x
-#
-#         if align_y + diff_y > img_y:
-#             diff_y_max = img_y - (align_y + diff_y)
-#             img_y_max = img_y
-#         else:
-#             diff_y_max = diff_y
-#             img_y_max = align_y + diff_y
-#
-#         if align_x + diff_x > img_x:
-#             diff_x_max = img_x - (align_x + diff_x)
-#             img_x_max = img_x
-#         else:
-#             diff_x_max = diff_x
-#             img_x_max = align_x + diff_x
-#
-#         img_bounded = img[img_y_min: img_y_max, img_x_min: img_x_max]
-#         diff_bounded = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
-#
-#         result = np.copy(img)
-#         result[img_y_min: img_y_max, img_x_min: img_x_max] = np.logical_and(img_bounded, diff_bounded)
-#
-#     return result
 
 
 def rot_binary(img, angle):
@@ -256,13 +209,14 @@ def apply_unary_transformation(img, tran, show_me = False):
 
 
 def apply_binary_transformation(imgA, imgB, tran,
-                                imgA_to_imgB_x = None, imgA_to_imgB_y = None):
+                                imgA_to_imgB_x = None, imgA_to_imgB_y = None,
+                                expect = None):
     if imgA_to_imgB_x is None or imgA_to_imgB_y is None:
         _, imgA_to_imgB_x, imgA_to_imgB_y = jaccard.jaccard_coef(imgA, imgB)
 
-    imgA_aligned, imgB_aligned = utils.align(imgA, imgB, imgA_to_imgB_x, imgA_to_imgB_y)
+    imgA_aligned, imgB_aligned, aligned_to_B_x, aligned_to_B_y = utils.align(imgA, imgB, imgA_to_imgB_x, imgA_to_imgB_y)
 
-    img = None
+    img_aligned = None
 
     binary_trans = tran.get("value")
 
@@ -276,11 +230,11 @@ def apply_binary_transformation(imgA, imgB, tran,
 
         args = tran.get("args")
         if args is None:
-            img = foo(imgA_aligned, imgB_aligned)
+            img_aligned = foo(imgA_aligned, imgB_aligned)
         else:
-            img = foo(imgA_aligned, imgB_aligned, **args)
+            img_aligned = foo(imgA_aligned, imgB_aligned, **args)
 
-    return img, int(imgA_to_imgB_x), int(imgA_to_imgB_y)
+    return img_aligned, int(imgA_to_imgB_x), int(imgA_to_imgB_y), aligned_to_B_x, aligned_to_B_y
 
 
 def unite(imgA, imgB):
@@ -320,44 +274,3 @@ def xor(imgA, imgB):
 
 
 
-
-
-# def binary_transform(imgA, imgB, show_me = False):
-#     # TODO this alignment must be enhanced in the future.
-#     _, align_x, align_y = jaccard.jaccard_coef(imgA, imgB)
-#
-#     A_aligned, B_aligned = align(imgA, imgB, align_x, align_y)
-#
-#     transformed_images = [unite(A_aligned, B_aligned),
-#                           intersect(A_aligned, B_aligned),
-#                           subtract(A_aligned, B_aligned),
-#                           backward_subtract(A_aligned, B_aligned),
-#                           xor(A_aligned, B_aligned)]
-#
-#     transformations = [
-#         [{"name": "unite"}],
-#         [{"name": "intersect"}],
-#         [{"name": "subtract"}],
-#         [{"name": "backward_subtract"}],
-#         [{"name": "xor"}]]
-#
-#     if show_me:
-#         fig, axs = plt.subplots(1, 5)
-#         for img, ax in zip(transformed_images, axs):
-#             ax.imshow(img, cmap = "binary")
-#         plt.show()
-#
-#     return transformed_images, transformations, align_x, align_y
-
-
-# def argmax_binary_sim(similarities, default = None):
-#     tran_n = np.argmax(similarities)
-#     switch = {
-#         # code : [mirror_left_right, degree to rotate]
-#         0: ["unite"],
-#         1: ["intersect"],
-#         2: ["subtract"],
-#         3: [False, 270],
-#         4: [True, 0],
-#     }
-#     return switch.get(tran_n, default)

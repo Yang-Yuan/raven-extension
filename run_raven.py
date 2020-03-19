@@ -290,7 +290,7 @@ def run_prob_anlg_tran(prob, anlg, tran):
         b2 = prob.matrix[anlg.get("value")[1]]
         b3 = prob.matrix[anlg.get("value")[2]]
 
-        b1_b2_t, b1_to_b2_x, b1_to_b2_y = transform.apply_binary_transformation(b1, b2, tran)
+        b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran)
         score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
 
     else:
@@ -357,9 +357,15 @@ def predict(prob, d):
     elif 5 == len(anlg.get("value")):
         best_b1_to_b2_x = d.get("b1_to_b2_x")
         best_b1_to_b2_y = d.get("b1_to_b2_y")
+        b1 = prob.matrix[anlg.get("value")[0]]
+        b2 = prob.matrix[anlg.get("value")[1]]
         b4 = prob.matrix[anlg.get("value")[3]]
         b5 = prob.matrix[anlg.get("value")[4]]
-        prediction, _, _ = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
+        _, b4_to_b1_x, b4_to_b1_y = jaccard.jaccard_coef(b4, b1)
+        _, b5_to_b2_x, b5_to_b2_y = jaccard.jaccard_coef(b5, b2)
+        b4_to_b5_x = b4_to_b1_x - (b5_to_b2_x - best_b1_to_b2_x)
+        b4_to_b5_y = b4_to_b1_y - (b5_to_b2_y - best_b1_to_b2_y)
+        prediction, _, _, _, _ = transform.apply_binary_transformation(b4, b5, tran, b4_to_b5_x, b4_to_b5_y)
 
     else:
         raise Exception("Ryan!")
