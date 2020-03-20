@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from skimage.transform import rotate
 from skimage.transform import rescale as rs
+from skimage.transform import resize
 from sys import modules
 import numpy as np
 import jaccard
@@ -17,9 +18,11 @@ unary_transformations = [
     {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
     {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
     {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
-    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary"},
+    # {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary"},
+    {"name": "upscale_to", "value": [{"name": "upscale_to"}], "type": "unary"},
     {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary"},
-    {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary"}
+    {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary"},
+    {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary"}
 ]
 
 binary_transformations = [
@@ -46,6 +49,14 @@ def rescale(img, x_factor, y_factor):
     # return utils.grey_to_binary(resize(np.logical_not(img), shape, order = 0), 0.7)
 
 
+def upscale_to(img, ref):
+    img_shape_y, img_shape_x = img.shape
+    ref_shape_y, ref_shape_x = ref.shape
+    max_y = max(img_shape_y, ref_shape_y)
+    max_x = max(img_shape_x, ref_shape_x)
+    return utils.grey_to_binary(resize(np.logical_not(img), (max_y, max_x), order = 0), 0.7)
+
+
 def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     """
 
@@ -62,7 +73,7 @@ def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
 
     diff_aligned, img_aligned, _, _ = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
-    return utils.trim_binary_image(np.logical_and(img_aligned, np.logical_not(diff_aligned)))
+    return utils.erase_noise_point(utils.trim_binary_image(np.logical_and(img_aligned, np.logical_not(diff_aligned))), 4)
 
 
 def add_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
@@ -82,6 +93,24 @@ def add_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
 
     diff_aligned, img_aligned, _, _ = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
     return utils.trim_binary_image(np.logical_or(img_aligned, diff_aligned))
+
+
+def xor_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
+    """
+
+    :param img:
+    :param diff_to_ref_x:
+    :param diff_to_ref_y:
+    :param diff:
+    :param ref:
+    :return:
+    """
+    _, img_to_ref_x, img_to_ref_y = jaccard.jaccard_coef(img, ref)
+    diff_to_img_x = diff_to_ref_x - img_to_ref_x
+    diff_to_img_y = diff_to_ref_y - img_to_ref_y
+
+    diff_aligned, img_aligned, _, _ = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
+    return utils.erase_noise_point(utils.trim_binary_image(np.logical_xor(img_aligned, diff_aligned)), 4)
 
 
 def rot_binary(img, angle):
@@ -144,46 +173,6 @@ def mirror(img, mode):
         pass
 
 
-# def unary_transform(img, show_me = False):
-#     """
-#
-#     :param show_me:
-#     :param img:
-#     :return:
-#     """
-#     transformed_images = []
-#     for angle in np.arange(0, 360, 90):
-#         transformed_images.append(rot_binary(img, angle))
-#
-#     tmp = mirror_left_right(img)
-#     for angle in np.arange(0, 360, 90):
-#         transformed_images.append(rot_binary(tmp, angle))
-#
-#     if show_me:
-#         fig, axs = plt.subplots(2, 4)
-#         for img, ax in zip(transformed_images, axs.flatten()):
-#             ax.imshow(img, cmap = "binary")
-#         plt.show()
-#
-#     transformations = [
-#         [{"name": None}],
-#         [{"name": "rot_binary", "args": {"angle": 90}}],
-#         [{"name": "rot_binary", "args": {"angle": 180}}],
-#         [{"name": "rot_binary", "args": {"angle": 270}}],
-#         [{"name": "mirror_left_right"}],
-#         [{"name": "mirror_left_right"},
-#          {"name": "rot_binary", "args": {"angle": 90}}],
-#         [{"name": "mirror_left_right"},
-#          {"name": "rot_binary", "args": {"angle": 180}}],
-#         [{"name": "mirror_left_right"},
-#          {"name": "rot_binary", "args": {"angle": 270}}],
-#         [{"name": "extend"}],
-#         [{"name": "backward_extend"}]
-#     ]
-#
-#     return transformed_images, transformations
-
-
 def apply_unary_transformation(img, tran, show_me = False):
     unary_trans = tran.get("value")
     for tran in unary_trans:
@@ -241,35 +230,35 @@ def unite(imgA, imgB):
     if imgA.shape != imgB.shape:
         raise Exception("Crap!")
 
-    return np.logical_or(imgA, imgB)
+    return utils.erase_noise_point(np.logical_or(imgA, imgB), 4)
 
 
 def intersect(imgA, imgB):
     if imgA.shape != imgB.shape:
         raise Exception("Crap!")
 
-    return np.logical_and(imgA, imgB)
+    return utils.erase_noise_point(np.logical_and(imgA, imgB), 4)
 
 
 def subtract(imgA, imgB):
     if imgA.shape != imgB.shape:
         raise Exception("Crap!")
 
-    return np.logical_and(imgA, np.logical_not(np.logical_and(imgA, imgB)))
+    return utils.erase_noise_point(np.logical_and(imgA, np.logical_not(np.logical_and(imgA, imgB))), 4)
 
 
 def backward_subtract(imgA, imgB):
     if imgA.shape != imgB.shape:
         raise Exception("Crap!")
 
-    return np.logical_and(imgB, np.logical_not(np.logical_and(imgB, imgA)))
+    return utils.erase_noise_point(np.logical_and(imgB, np.logical_not(np.logical_and(imgB, imgA))), 4)
 
 
 def xor(imgA, imgB):
     if imgA.shape != imgB.shape:
         raise Exception("Crap!")
 
-    return np.logical_xor(imgA, imgB)
+    return utils.erase_noise_point(np.logical_xor(imgA, imgB), 4)
 
 
 

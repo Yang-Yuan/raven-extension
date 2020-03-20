@@ -84,6 +84,66 @@ def jaccard_coef_same_shape(A, B):
         return np.logical_and(A, B).sum() / A_B_sum
 
 
+def jaccard_coef_naive_embed(frgd, bkgd):
+
+    bgd_shape_y, bgd_shape_x = bkgd.shape
+    fgd_shape_y, fgd_shape_x = frgd.shape
+
+    padding_y = int(fgd_shape_y * 0.1)
+    padding_x = int(fgd_shape_x * 0.1)
+
+    x_range = bgd_shape_x - fgd_shape_x + 1 + padding_x * 2
+    y_range = bgd_shape_y - fgd_shape_y + 1 + padding_y * 2
+
+    length = int(x_range * y_range)
+    coords = np.full((length, 2), fill_value = -1, dtype = np.int)
+    j_coefs = np.zeros(length, dtype = np.float)
+
+    background = np.pad(bkgd, ((padding_y, padding_y), (padding_x, padding_x)), constant_values = False)
+    foreground = np.full_like(background, fill_value = False)
+    kk = 0
+    for frgd_x in range(0, x_range):
+        for frgd_y in range(0, y_range):
+            foreground.fill(False)
+            foreground[frgd_y: frgd_y + fgd_shape_y, frgd_x: frgd_x + fgd_shape_x] = frgd
+            coords[kk] = [frgd_x - padding_x, frgd_y - padding_y]
+            j_coefs[kk] = jaccard_coef_same_shape(foreground, background)
+            kk += 1
+
+    return coords, j_coefs
+
+
+def jaccard_coef_naive_cross(hrz, vtc):
+
+    hrz_shape_y, hrz_shape_x = hrz.shape
+    vtc_shape_y, vtc_shape_x = vtc.shape
+
+    padding_y = int(vtc_shape_y * 0.1)
+    padding_x = int(hrz_shape_x * 0.1)
+
+    x_range = vtc_shape_x - hrz_shape_x + 1 + padding_x * 2
+    y_range = hrz_shape_y - vtc_shape_y + 1 + padding_y * 2
+
+    length = int(x_range * y_range)
+    coords = np.full((length, 2), fill_value = -1, dtype = np.int)
+    j_coefs = np.zeros(length, dtype = np.float)
+
+    hrz_expanded = np.full((hrz_shape_y + padding_y * 2, vtc_shape_x + padding_x * 2), fill_value = False)
+    vtc_expanded = np.full((hrz_shape_y + padding_y * 2, vtc_shape_x + padding_x * 2), fill_value = False)
+    kk = 0
+    for hrz_x in range(0, x_range):
+        hrz_expanded.fill(False)
+        hrz_expanded[padding_y : padding_y + hrz_shape_y, hrz_x: hrz_x + hrz_shape_x] = hrz
+        for vtc_y in range(0, y_range):
+            vtc_expanded.fill(False)
+            vtc_expanded[vtc_y: vtc_y + vtc_shape_y, padding_x : padding_x + vtc_shape_x] = vtc
+            coords[kk] = [hrz_x - padding_x, padding_y - vtc_y]
+            j_coefs[kk] = jaccard_coef_same_shape(hrz_expanded, vtc_expanded)
+            kk += 1
+
+    return coords, j_coefs
+
+
 def jaccard_coef_naive(A, B):
     """
 
@@ -91,47 +151,45 @@ def jaccard_coef_naive(A, B):
     :param B:
     :return: j_coef, A_to_B_x, A_to_B_y
     """
-    A_shape_y, A_shape_x = A.shape[: 2]
-    B_shape_y, B_shape_x = B.shape[: 2]
+    A_shape_y, A_shape_x = A.shape
+    B_shape_y, B_shape_x = B.shape
 
-    B_expanded = np.pad(B,
-                        ((A_shape_y, A_shape_y), (A_shape_x, A_shape_x)),
-                        constant_values = False)
-    A_expanded = np.full_like(B_expanded, False)
-
-    cartesian_prod = [(x, y)
-                      for x in np.arange(1, A_shape_x + B_shape_x)
-                      for y in np.arange(1, A_shape_y + B_shape_y)]
-
-    j_coefs = np.zeros(len(cartesian_prod))
-    for (x, y), ii in zip(cartesian_prod, np.arange(len(j_coefs))):
-        A_expanded.fill(False)
-        A_expanded[y: y + A_shape_y, x: x + A_shape_x] = A
-        j_coefs[ii] = jaccard_coef_same_shape(A_expanded, B_expanded)
+    if A_shape_x < B_shape_x and A_shape_y < B_shape_y:
+        A_to_B_coords, j_coefs = jaccard_coef_naive_embed(A, B)
+    elif A_shape_x >= B_shape_x and A_shape_y >= B_shape_y:
+        B_to_A_coords, j_coefs = jaccard_coef_naive_embed(B, A)
+        A_to_B_coords = -B_to_A_coords
+    elif A_shape_x < B_shape_x and A_shape_y >= B_shape_y:
+        A_to_B_coords, j_coefs = jaccard_coef_naive_cross(A, B)
+    elif A_shape_x >= B_shape_x and A_shape_y < B_shape_y:
+        B_to_A_coords, j_coefs = jaccard_coef_naive_cross(B, A)
+        A_to_B_coords = -B_to_A_coords
+    else:
+        raise Exception("Impossible Exception!")
 
     j_coef = np.max(j_coefs)
     coef_argmax = np.where(j_coefs == j_coef)[0]
 
     if 1 == len(coef_argmax):
         ii = coef_argmax[0]
-        x, y = cartesian_prod[ii]
+        A_to_B_x, A_to_B_y = A_to_B_coords[ii]
     else:
-        center_y = (A_shape_y * 2 + B_shape_y) / 2
-        center_x = (A_shape_x * 2 + B_shape_x) / 2
 
-        most_centered_ii = -1
-        smallest_dist2center = np.inf
+        A_center_x = (A_shape_x - 1) / 2
+        A_center_y = (A_shape_y - 1) / 2
+        B_center_x = (B_shape_x - 1) / 2
+        B_center_y = (B_shape_y - 1) / 2
+
+        closest_center_ii = -1
+        smallest_center_dist = np.inf
         for ii in coef_argmax:
-            x_tmp, y_tmp = cartesian_prod[ii]
-            dist2center = abs(x_tmp + A_shape_x / 2 - center_x) + abs(y_tmp + A_shape_y / 2 - center_y)
-            if dist2center < smallest_dist2center:
-                smallest_dist2center = dist2center
-                most_centered_ii = ii
+            x, y = A_to_B_coords[ii]
+            center_dist = abs(x + A_center_x - B_center_x) + abs(y + A_center_y - B_center_y)
+            if center_dist < smallest_center_dist:
+                closest_center_ii = ii
+                smallest_center_dist = center_dist
 
-        x, y = cartesian_prod[most_centered_ii]
-
-    A_to_B_x = x - A_shape_x
-    A_to_B_y = y - A_shape_y
+        A_to_B_x, A_to_B_y = A_to_B_coords[closest_center_ii]
 
     return j_coef, int(A_to_B_x), int(A_to_B_y)
 

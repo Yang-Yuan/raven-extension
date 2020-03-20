@@ -92,6 +92,9 @@ def run_prob_anlg_tran(prob, anlg, tran):
 
     print(prob.name, anlg.get("name"), tran.get("name"))
 
+    if "upscale_to" == tran.get("name"):
+        print("asdfasdf")
+
     if "unary_2x2" == anlg.get("type"):
         return run_prob_anlg_tran_2x2(prob, anlg, tran)
     elif "binary_3x2" == anlg.get("type"):
@@ -99,10 +102,10 @@ def run_prob_anlg_tran(prob, anlg, tran):
     elif "binary_2x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
+        # if "unary_3x3_row_rpl_col_B" == anlg.get("name") and "upscale_to" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
-        if "A : D : G  ::  B : E : H  :::  B : E : H  ::  C : F : ?" == anlg.get("name") and "unite" == tran.get("name"):
-            print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     else:
         raise Exception("Ryan!")
@@ -143,6 +146,10 @@ def predict(prob, d):
             prediction = transform.add_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
         elif tran.get("name") == "subtract_diff":
             prediction = transform.subtract_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
+        elif tran.get("name") == "xor_diff":
+            prediction = transform.xor_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
+        elif tran.get("name") == "upscale_to":
+            prediction = None
         else:
             prediction = transform.apply_unary_transformation(u3, tran)
 
@@ -158,7 +165,7 @@ def predict(prob, d):
         b4_to_b5_x = b4_to_b1_x - (b5_to_b2_x - best_b1_to_b2_x)
         b4_to_b5_y = b4_to_b1_y - (b5_to_b2_y - best_b1_to_b2_y)
         prediction, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(b4, b5, tran, b4_to_b5_x, b4_to_b5_y)
-        prediction_bak, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
+        # prediction_bak, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
 
     else:
         raise Exception("Ryan!")
@@ -192,6 +199,17 @@ def predict(prob, d):
             diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
             opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
             score = (diff_score + opt_score + u3_score) / 3
+        elif tran.get("name") == "xor_diff":
+            pred_score, _, _ = jaccard.jaccard_coef(prediction, opt)
+            u3_score, u3_to_opt_x, u3_to_opt_y = jaccard.jaccard_coef(u3, opt)
+            u3_score = 1 - u3_score
+            u1_aligned, u2_aligned, aligned_to_u2_x, aligned_to_u2_y = utils.align(u3, opt, u3_to_opt_x, u3_to_opt_y)
+            diff = utils.erase_noise_point(np.logical_xor(u1_aligned, u2_aligned), 4)
+            diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
+            score = (diff_score + u3_score + pred_score) / 3
+        elif tran.get("name") == "upscale_to":
+            prediction = transform.upscale_to(u3, opt)
+            score, _, _ = jaccard.jaccard_coef(opt, prediction)
         # elif tran.get("name") == "subtract":
         #     pred_score, opt_to_pred_x, opt_to_pred_y = jaccard.jaccard_coef(opt, prediction)
         #     b4_to_pred_x = best_b1_to_b2_x - pred_to_b5_x
@@ -229,6 +247,18 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
     elif "subtract_diff" == tran.get("name"):
         score, diff_to_u2_x, diff_to_u2_y, diff_to_u1_x, diff_to_u1_y, diff = \
             asymmetric_jaccard.asymmetric_jaccard_coef(u2, u1)
+    elif "xor_diff" == tran.get("name"):
+        score, u1_to_u2_x, u1_to_u2_y = jaccard.jaccard_coef(u1, u2)
+        score = 1 - score
+        u1_aligned, u2_aligned, aligned_to_u2_x, aligned_to_u2_y = utils.align(u1, u2, u1_to_u2_x, u1_to_u2_y)
+        diff = utils.erase_noise_point(np.logical_xor(u1_aligned, u2_aligned), 4)
+        diff_to_u2_x = int(aligned_to_u2_x)
+        diff_to_u2_y = int(aligned_to_u2_y)
+        diff_to_u1_x = int(diff_to_u2_x - u1_to_u2_x)
+        diff_to_u1_y = int(diff_to_u2_y - u1_to_u2_y)
+    elif "upscale_to" == tran.get("name"):
+        u1_upscaled = transform.upscale_to(u1, u2)
+        score, _, _ = jaccard.jaccard_coef(u2, u1_upscaled)
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)
@@ -315,7 +345,7 @@ def get_sub_probs(prob, anlg):
     sub_probs = []
     for ii, coords in enumerate(value):
 
-        prob_name = prob.name + "_sub_" + anlg.get("type") + "_" + str(ii)
+        prob_name = prob.name + "_sub_" + anlg.get("name") + "_" + str(ii)
 
         coms = []
         for coord in coords:

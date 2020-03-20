@@ -104,7 +104,7 @@ def save_asymmetric_jaccard_cache(problem_name):
              *asymmetric_jaccard_images)
 
 
-def asymmetric_jaccard_coef_same_shape(A, B, A_sum):
+def asymmetric_jaccard_coef_same_shape(A, B, denominator):
     """
     calculate the asymmetric jaccard coefficient.
     sim = |A intersect B| / |A|
@@ -118,10 +118,68 @@ def asymmetric_jaccard_coef_same_shape(A, B, A_sum):
     if A.shape != B.shape:
         raise Exception("A and B should have the same shape.")
 
-    if 0 == A_sum:
+    if 0 == denominator:
         raise Exception("A can't be all white.")
 
-    return np.logical_and(A, B).sum() / A_sum
+    return np.logical_and(A, B).sum() / denominator
+
+
+def asymmetric_jaccard_coef_naive_embed(frgd, bkgd, denominator):
+    bgd_shape_y, bgd_shape_x = bkgd.shape
+    fgd_shape_y, fgd_shape_x = frgd.shape
+
+    padding_y = int(fgd_shape_y * 0.1)
+    padding_x = int(fgd_shape_x * 0.1)
+
+    x_range = bgd_shape_x - fgd_shape_x + 1 + padding_x * 2
+    y_range = bgd_shape_y - fgd_shape_y + 1 + padding_y * 2
+
+    length = int(x_range * y_range)
+    coords = np.full((length, 2), fill_value = -1, dtype = np.int)
+    a_j_coefs = np.zeros(length, dtype = np.float)
+
+    background = np.pad(bkgd, ((padding_y, padding_y), (padding_x, padding_x)), constant_values = False)
+    foreground = np.full_like(background, fill_value = False)
+    kk = 0
+    for frgd_x in range(0, x_range):
+        for frgd_y in range(0, y_range):
+            foreground.fill(False)
+            foreground[frgd_y: frgd_y + fgd_shape_y, frgd_x: frgd_x + fgd_shape_x] = frgd
+            coords[kk] = [frgd_x - padding_x, frgd_y - padding_y]
+            a_j_coefs[kk] = asymmetric_jaccard_coef_same_shape(foreground, background, denominator)
+            kk += 1
+
+    return coords, a_j_coefs
+
+
+def asymmetric_jaccard_coef_naive_cross(hrz, vtc, denominator):
+    hrz_shape_y, hrz_shape_x = hrz.shape
+    vtc_shape_y, vtc_shape_x = vtc.shape
+
+    padding_y = int(vtc_shape_y * 0.1)
+    padding_x = int(hrz_shape_x * 0.1)
+
+    x_range = vtc_shape_x - hrz_shape_x + 1 + padding_x * 2
+    y_range = hrz_shape_y - vtc_shape_y + 1 + padding_y * 2
+
+    length = int(x_range * y_range)
+    coords = np.full((length, 2), fill_value = -1, dtype = np.int)
+    a_j_coefs = np.zeros(length, dtype = np.float)
+
+    hrz_expanded = np.full((hrz_shape_y + padding_y * 2, vtc_shape_x + padding_x * 2), fill_value = False)
+    vtc_expanded = np.full((hrz_shape_y + padding_y * 2, vtc_shape_x + padding_x * 2), fill_value = False)
+    kk = 0
+    for hrz_x in range(0, x_range):
+        hrz_expanded.fill(False)
+        hrz_expanded[padding_y : padding_y + hrz_shape_y, hrz_x: hrz_x + hrz_shape_x] = hrz
+        for vtc_y in range(0, y_range):
+            vtc_expanded.fill(False)
+            vtc_expanded[vtc_y: vtc_y + vtc_shape_y, padding_x : padding_x + vtc_shape_x] = vtc
+            coords[kk] = [hrz_x - padding_x, padding_y - vtc_y]
+            a_j_coefs[kk] = asymmetric_jaccard_coef_same_shape(hrz_expanded, vtc_expanded, denominator)
+            kk += 1
+
+    return coords, a_j_coefs
 
 
 def asymmetric_jaccard_coef_naive(A, B):
@@ -132,52 +190,52 @@ def asymmetric_jaccard_coef_naive(A, B):
     :return: a_j_coef, diff_to_A_x, diff_to_A_y, diff_to_B_x, diff_to_B_y, diff
     """
 
-    A_shape_y, A_shape_x = A.shape[: 2]
-    B_shape_y, B_shape_x = B.shape[: 2]
+    A_shape_y, A_shape_x = A.shape
+    B_shape_y, B_shape_x = B.shape
 
-    B_expanded = np.pad(B,
-                        ((A_shape_y, A_shape_y), (A_shape_x, A_shape_x)),
-                        constant_values = False)
-    A_expanded = np.full_like(B_expanded, False)
-
-    cartesian_prod = [(x, y)
-                      for x in np.arange(1, A_shape_x + B_shape_x)
-                      for y in np.arange(1, A_shape_y + B_shape_y)]
-
-    a_j_coefs = np.zeros(len(cartesian_prod))  # abbreviated for asymmetric jaccard coefficient
     A_sum = A.sum()
-    for (x, y), ii in zip(cartesian_prod, np.arange(len(a_j_coefs))):
-        A_expanded.fill(False)
-        A_expanded[y: y + A_shape_y, x: x + A_shape_x] = A
-        a_j_coefs[ii] = asymmetric_jaccard_coef_same_shape(A_expanded, B_expanded, A_sum)
+
+    if A_shape_x < B_shape_x and A_shape_y < B_shape_y:
+        A_to_B_coords, a_j_coefs = asymmetric_jaccard_coef_naive_embed(A, B, A_sum)
+    elif A_shape_x >= B_shape_x and A_shape_y >= B_shape_y:
+        B_to_A_coords, a_j_coefs = asymmetric_jaccard_coef_naive_embed(B, A, A_sum)
+        A_to_B_coords = -B_to_A_coords
+    elif A_shape_x < B_shape_x and A_shape_y >= B_shape_y:
+        A_to_B_coords, a_j_coefs = asymmetric_jaccard_coef_naive_cross(A, B, A_sum)
+    elif A_shape_x >= B_shape_x and A_shape_y < B_shape_y:
+        B_to_A_coords, a_j_coefs = asymmetric_jaccard_coef_naive_cross(B, A, A_sum)
+        A_to_B_coords = -B_to_A_coords
+    else:
+        raise Exception("Impossible Exception!")
 
     a_j_coef = np.max(a_j_coefs)
     coef_argmax = np.where(a_j_coefs == a_j_coef)[0]
 
     if 1 == len(coef_argmax):
         ii = coef_argmax[0]
-        x, y = cartesian_prod[ii]
-
+        A_to_B_x, A_to_B_y = A_to_B_coords[ii]
     else:
-        center_y = (A_shape_y * 2 + B_shape_y) / 2
-        center_x = (A_shape_x * 2 + B_shape_x) / 2
 
-        most_centered_ii = -1
-        smallest_dist2center = np.inf
+        A_center_x = (A_shape_x - 1) / 2
+        A_center_y = (A_shape_y - 1) / 2
+        B_center_x = (B_shape_x - 1) / 2
+        B_center_y = (B_shape_y - 1) / 2
+
+        closest_center_ii = -1
+        smallest_center_dist = np.inf
         for ii in coef_argmax:
-            x_tmp, y_tmp = cartesian_prod[ii]
-            dist2center = abs(x_tmp + A_shape_x / 2 - center_x) + abs(y_tmp + A_shape_y / 2 - center_y)
-            if dist2center < smallest_dist2center:
-                smallest_dist2center = dist2center
-                most_centered_ii = ii
+            x, y = A_to_B_coords[ii]
+            center_dist = abs(x + A_center_x - B_center_x) + abs(y + A_center_y - B_center_y)
+            if center_dist < smallest_center_dist:
+                closest_center_ii = ii
+                smallest_center_dist = center_dist
 
-        x, y = cartesian_prod[most_centered_ii]
+        A_to_B_x, A_to_B_y = A_to_B_coords[closest_center_ii]
 
-    A_expanded.fill(False)
-    A_expanded[y: y + A_shape_y, x: x + A_shape_x] = A
+    A_aligned, B_aligned, aligned_to_B_x, aligned_to_B_y = utils.align(A, B, A_to_B_x, A_to_B_y)
 
-    diff = np.logical_and(B_expanded,
-                          np.logical_not(A_expanded))
+    diff = np.logical_and(B_aligned,
+                          np.logical_not(A_aligned))
 
     if diff.any():
         diff_y, diff_x = np.where(diff)
@@ -186,18 +244,18 @@ def asymmetric_jaccard_coef_naive(A, B):
         diff_y_min = diff_y.min()
         diff_y_max = diff_y.max() + 1
         diff = diff[diff_y_min: diff_y_max, diff_x_min: diff_x_max]
-        diff_to_A_x = diff_x_min - x
-        diff_to_A_y = diff_y_min - y
-        diff_to_B_x = diff_x_min - A_shape_x
-        diff_to_B_y = diff_y_min - A_shape_y
+        diff_to_B_x = diff_x_min + aligned_to_B_x
+        diff_to_B_y = diff_y_min + aligned_to_B_y
+        diff_to_A_x = diff_to_B_x - A_to_B_x
+        diff_to_A_y = diff_to_B_y - A_to_B_y
     else:  # diff is all white, i.e. B is completely covered by A
         diff_to_A_x = 0
         diff_to_A_y = 0
-        diff_to_B_x = x - A_shape_x
-        diff_to_B_y = y - A_shape_y
-        diff = diff[y: y + A_shape_y, x: x + A_shape_x]
+        diff_to_B_x = A_to_B_x
+        diff_to_B_y = A_to_B_y
+        diff = np.full_like(A, fill_value = False)
 
-    return a_j_coef, diff_to_A_x, diff_to_A_y, diff_to_B_x, diff_to_B_y, diff
+    return a_j_coef, diff_to_A_x, diff_to_A_y, diff_to_B_x, diff_to_B_y, utils.erase_noise_point(diff, 4)
 
 
 def asymmetric_jaccard_coef(A, B):
