@@ -85,12 +85,15 @@ def extract_components(img, coords):
             for x, y, delta_x, delta_y in coords]
 
 
-def trim_binary_image(img):
+def trim_binary_image(img, coord = False):
     if 2 != len(img.shape):
         raise Exception("Crap!")
 
     if (img == False).all():
-        return img
+        if coord:
+            return img, 0, 0
+        else:
+            return img
 
     y, x = np.where(img)
     y_max = y.max() + 1
@@ -98,7 +101,10 @@ def trim_binary_image(img):
     x_max = x.max() + 1
     y_min = y.min()
 
-    return img[y_min: y_max, x_min:x_max]
+    if coord:
+        return img[y_min: y_max, x_min:x_max], x_min, y_min
+    else:
+        return img[y_min: y_max, x_min:x_max]
 
 
 def erase_noise_point(img, noise_point_size):

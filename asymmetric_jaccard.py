@@ -380,28 +380,36 @@ def asymmetric_jaccard_image2index(img):
     return ii + 1
 
 
-def asymmetric_jaccard_coef_pos_fixed(A, B, A_to_B_x, A_to_B_y):
+def asymmetric_jaccard_coef_pos_fixed(A, B, A_to_B_x, A_to_B_y, coord = False):
 
     A_sum = A.sum()
     B_sum = B.sum()
 
     if 0 == A_sum:
         if 0 == B_sum:
-            return 0, None
+            j_coef, diff, diff_to_B_x, diff_to_B_y = 0, None, 0, 0
         else:
-            return 1, B
+            j_coef, diff, diff_to_B_x, diff_to_B_y = 1, B, 0, 0
     else:
         if 0 == B_sum:
-            return 0, None
+            j_coef, diff, diff_to_B_x, diff_to_B_y = 0, None, 0, 0
         else:
-            A_aligned, B_aligned, _, _ = utils.align(A, B, A_to_B_x, A_to_B_y)
+            A_aligned, B_aligned, aligned_to_B_x, aligned_to_B_y = utils.align(A, B, A_to_B_x, A_to_B_y)
 
-    itsc = np.logical_and(A_aligned, B_aligned)
-    j_coef = itsc.sum() / A_sum
+            itsc = np.logical_and(A_aligned, B_aligned)
+            j_coef = itsc.sum() / A_sum
 
-    diff = np.logical_and(B_aligned, np.logical_not(itsc))  # diff = B - A
+            diff, diff_to_aligned_x, diff_to_aligned_y = utils.trim_binary_image(
+                utils.erase_noise_point(np.logical_and(B_aligned, np.logical_not(itsc)), 4),
+                coord = True)  # diff = B - A
 
-    return j_coef, utils.trim_binary_image(diff)
+            diff_to_B_x = diff_to_aligned_x + aligned_to_B_x
+            diff_to_B_y = diff_to_aligned_y + aligned_to_B_y
+
+    if coord:
+        return j_coef, diff, diff_to_B_x, diff_to_B_y
+    else:
+        return j_coef, diff
 
 
 

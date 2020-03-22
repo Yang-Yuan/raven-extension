@@ -93,16 +93,20 @@ def run_prob_anlg_tran(prob, anlg, tran):
     print(prob.name, anlg.get("name"), tran.get("name"))
 
     if "unary_2x2" == anlg.get("type"):
+        # if "B:A::C:?" == anlg.get("name") and "add_diff" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_2x2(prob, anlg, tran)
     elif "binary_3x2" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "binary_2x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
-        if "D:G::E:H:::E:H::F:?" == anlg.get("name") and "add_diff" == tran.get("name"):
-            print("asdfasdf")
+        # if "F:B::H:D:::H:D::A:?" == anlg.get("name") and "add_diff" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
+        # if "A:F:H::C:E:G:::C:E:G::B:D:?" == anlg.get("name") and "unite" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     else:
         raise Exception("Ryan!")
@@ -277,6 +281,12 @@ def run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran):
     b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran)
     score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
 
+    if "unite" == tran.get("name"):
+        b1_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b1, b2)
+        b2_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b2, b1)
+        if max(b1_score, b2_score) > 0.9:  # if b1 is almost a subset of b2 or vice versa
+            score = 0
+
     prob_anlg_tran_d = assemble_prob_anlg_tran_d(prob, anlg, tran, score,
                                                  b1_to_b2_x = b1_to_b2_x, b1_to_b2_y = b1_to_b2_y)
     pred_data = predict(prob, prob_anlg_tran_d)
@@ -342,7 +352,10 @@ def get_sub_probs(prob, anlg):
 
     sub_probs = []
     for ii in range(child_n):
-        coords = value[ii * 4 : (ii + 1) * 4]
+        if "binary" in anlg.get("type"):
+            coords = value[ii * 6 : (ii + 1) * 6]
+        else:
+            coords = value[ii * 4 : (ii + 1) * 4]
 
         prob_name = prob.name + "_sub_" + anlg.get("name") + "_" + str(ii)
 

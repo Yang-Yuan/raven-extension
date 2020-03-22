@@ -218,6 +218,9 @@ def collapse(args, link_symbol, type, chld_name, shape):
 
 def get_matrix_analogies(symbol_matrix, symbol_to_coord, tuple_n, link_symbol, order_n):
 
+    if not isinstance(tuple_n, list):
+        tuple_n = [tuple_n] * (order_n - 1)
+
     order_link = link_symbol
     args = [(symbol_matrix, symbol_to_coord)]
     for order in range(order_n - 1):
@@ -225,7 +228,7 @@ def get_matrix_analogies(symbol_matrix, symbol_to_coord, tuple_n, link_symbol, o
         new_args = []
         for arg in args:
 
-            row, col = generate_analogies(*arg, tuple_n, order_link)
+            row, col = generate_analogies(*arg, tuple_n[order], order_link)
             if row is not None:
                 new_args.append(row)
             if col is not None:
@@ -235,9 +238,9 @@ def get_matrix_analogies(symbol_matrix, symbol_to_coord, tuple_n, link_symbol, o
         args = new_args
 
     row_n, col_n = np.array(symbol_matrix).shape
-    if 2 == tuple_n:
+    if 2 == tuple_n[0]:
         anlg_type = "unary_" + str(row_n) + 'x' + str(col_n)
-    elif 3 == tuple_n:
+    elif 3 == tuple_n[0]:
         anlg_type = "binary_" + str(row_n) + 'x' + str(col_n)
     else:
         anlg_type = "X_" + str(row_n) + 'x' + str(col_n)
@@ -320,6 +323,10 @@ matrices_3x3 = [  # redundancy exists,
                  ['A', 'B', 'C'],
                  ['G', 'H', '?']],
 
+                [['E', 'D', 'F'],  # original, replace rows and cols
+                 ['B', 'A', 'C'],
+                 ['H', 'G', '?']],
+
                 [['A', 'C', 'B'],  # replace the first and the last entries in row
                  ['F', 'E', 'D'],
                  ['H', 'G', '?']],
@@ -330,6 +337,10 @@ matrices_3x3 = [  # redundancy exists,
 
                 [['C', 'A', 'B'],  # replace the first and the last entries in row, and replace cols
                  ['E', 'F', 'D'],
+                 ['G', 'H', '?']],
+
+                [['E', 'F', 'D'],  # replace the first and the last entries in row, and replace cols and rows
+                 ['C', 'A', 'B'],
                  ['G', 'H', '?']],
 
                 [['A', 'H', 'F'],  # replace the first and the last entries in col
@@ -344,6 +355,10 @@ matrices_3x3 = [  # redundancy exists,
                  ['E', 'G', 'C'],
                  ['B', 'D', '?']],
 
+                [['E', 'G', 'C'],  # replace the first and the last entries in col, and replace cols and rows
+                 ['H', 'A', 'F'],
+                 ['B', 'D', '?']],
+
                 [['H', 'F', 'A'],  # I don't how to change the original to this one for now. But it definitely explain two diagonal directions very well.
                  ['C', 'G', 'E'],  # Let's call it strange one.
                  ['D', 'B', '?']],
@@ -354,7 +369,11 @@ matrices_3x3 = [  # redundancy exists,
 
                 [['F', 'H', 'A'],  # strange one, replace cols.
                  ['G', 'C', 'E'],
-                 ['B', 'D', '?']]
+                 ['B', 'D', '?']],
+
+                [['G', 'C', 'E'],  # strange one, replace rows and cols.
+                 ['F', 'H', 'A'],
+                 ['B', 'D', '?']],
 ]
 
 unary_3x3 = []
@@ -363,7 +382,7 @@ for m in matrices_3x3:
     unary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, 2, ':', 3)
     unary_anlgs = remove_redundant_ones(unary_anlgs)
     unary_3x3.extend(unary_anlgs)
-    binary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, 3, ':', 3)
+    binary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, [3, 2], ':', 3)
     binary_anlgs = remove_redundant_ones(binary_anlgs)
     binary_3x3.extend(binary_anlgs)
 
@@ -398,6 +417,4 @@ def get_anlg(anlg_name):
         if anlg_name == anlg.get("name"):
             return anlg
 
-for anlg in all_anlgs:
-    print(anlg.get('name'))
 

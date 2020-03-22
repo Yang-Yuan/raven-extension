@@ -5,6 +5,7 @@ from skimage.transform import resize
 from sys import modules
 import numpy as np
 import jaccard
+import asymmetric_jaccard
 import utils
 
 THIS = modules[__name__]
@@ -68,6 +69,9 @@ def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     :return:
     """
 
+    if 0 == diff.sum():
+        return img
+
     _, img_to_ref_x, img_to_ref_y = jaccard.jaccard_coef(img, ref)
     diff_to_img_x = diff_to_ref_x - img_to_ref_x
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
@@ -87,11 +91,42 @@ def add_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     :return:
     """
 
-    _, img_to_ref_x, img_to_ref_y = jaccard.jaccard_coef(img, ref)
-    diff_to_img_x = diff_to_ref_x - img_to_ref_x
-    diff_to_img_y = diff_to_ref_y - img_to_ref_y
+    if 0 == diff.sum():
+        return img
+
+    iimg = img.copy()
+    iimg_to_img_x = 0
+    iimg_to_img_y = 0
+    while True:
+
+        _, ref_to_iimg_x, ref_to_iimg_y = jaccard.jaccard_coef(ref, iimg)
+        diff_to_iimg_x = diff_to_ref_x + ref_to_iimg_x
+        diff_to_iimg_y = diff_to_ref_y + ref_to_iimg_y
+
+        score, _ = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(
+            diff, iimg, diff_to_iimg_x, diff_to_iimg_y)
+
+        if score > 0.9:
+
+            ref_aligned, iimg_aligned, aligned_to_iimg_x, aligned_to_iimg_y = utils.align(
+                ref, iimg, ref_to_iimg_x, ref_to_iimg_y)
+
+            iimg_aligned = utils.erase_noise_point(np.logical_and(iimg_aligned, np.logical_not(ref_aligned)), 4)
+
+            iimg = iimg_aligned
+            iimg_to_img_x = aligned_to_iimg_x + iimg_to_img_x
+            iimg_to_img_y = aligned_to_iimg_y + iimg_to_img_y
+
+            if iimg.sum() == 0:
+                return img
+        else:
+            break
+
+    diff_to_img_x = diff_to_iimg_x + iimg_to_img_x
+    diff_to_img_y = diff_to_iimg_y + iimg_to_img_x
 
     diff_aligned, img_aligned, _, _ = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
+
     return utils.trim_binary_image(np.logical_or(img_aligned, diff_aligned))
 
 
@@ -105,6 +140,10 @@ def xor_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     :param ref:
     :return:
     """
+
+    if 0 == diff.sum():
+        return img
+
     _, img_to_ref_x, img_to_ref_y = jaccard.jaccard_coef(img, ref)
     diff_to_img_x = diff_to_ref_x - img_to_ref_x
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
