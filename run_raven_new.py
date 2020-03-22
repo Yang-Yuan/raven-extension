@@ -92,9 +92,6 @@ def run_prob_anlg_tran(prob, anlg, tran):
 
     print(prob.name, anlg.get("name"), tran.get("name"))
 
-    if "upscale_to" == tran.get("name"):
-        print("asdfasdf")
-
     if "unary_2x2" == anlg.get("type"):
         return run_prob_anlg_tran_2x2(prob, anlg, tran)
     elif "binary_3x2" == anlg.get("type"):
@@ -102,8 +99,8 @@ def run_prob_anlg_tran(prob, anlg, tran):
     elif "binary_2x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
-        # if "unary_3x3_row_rpl_col_B" == anlg.get("name") and "upscale_to" == tran.get("name"):
-        #     print("asdfasdf")
+        if "D:G::E:H:::E:H::F:?" == anlg.get("name") and "add_diff" == tran.get("name"):
+            print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
@@ -338,12 +335,14 @@ def get_sub_probs(prob, anlg):
 
     value = anlg.get("value")
     child_name = anlg.get("chld_name")
+    child_n = anlg.get("chld_n")
 
     child_anlg = analogy_new.get_anlg(child_name)
     shape = child_anlg.get("shape")
 
     sub_probs = []
-    for ii, coords in enumerate(value):
+    for ii in range(child_n):
+        coords = value[ii * 4 : (ii + 1) * 4]
 
         prob_name = prob.name + "_sub_" + anlg.get("name") + "_" + str(ii)
 
@@ -352,7 +351,7 @@ def get_sub_probs(prob, anlg):
             coms.append(prob.matrix[coord])
         matrix = utils.create_object_matrix(coms, shape)
 
-        if ii == len(value) - 1:
+        if ii == child_n - 1:
             options = prob.options
             answer = prob.answer
         else:

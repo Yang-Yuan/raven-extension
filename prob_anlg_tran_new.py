@@ -15,8 +15,6 @@ def get_probs(test_problems):
 def get_anlgs(prob):
     if "2x2" in prob.type:
         return analogy_new.unary_2x2
-    elif "3x2" in prob.type:
-        return analogy_new.binary_3x2
     elif "2x3" in prob.type:
         return analogy_new.binary_2x3
     elif "3x3" in prob.type:
