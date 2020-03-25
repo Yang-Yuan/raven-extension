@@ -221,3 +221,21 @@ def fill_holes(img):
 
     return img_copy
 
+
+def decompose(img, smallest_size):
+
+    labels, label_num = measure.label(input = img, background = False, return_num = True, connectivity = 1)
+    sizes = [(labels == label).sum() for label in range(1, label_num + 1)]
+    coms = []
+    coms_x = []
+    coms_y = []
+    for size, label in zip(sizes, range(1, label_num + 1)):
+        if size >= smallest_size:
+            com, com_x, com_y = trim_binary_image(labels == label, coord = True)
+            coms.append(com)
+            coms_x.append(int(com_x))
+            coms_y.append(int(com_y))
+
+    return coms, coms_x, coms_y
+
+

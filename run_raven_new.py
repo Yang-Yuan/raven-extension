@@ -101,8 +101,8 @@ def run_prob_anlg_tran(prob, anlg, tran):
     elif "binary_2x3" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
-        # if "F:B::H:D:::H:D::A:?" == anlg.get("name") and "add_diff" == tran.get("name"):
-        #     print("asdfasdf")
+        if "A:C::D:F:::D:F::G:?" == anlg.get("name") and "rearrange" == tran.get("name"):
+            print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
         # if "A:F:H::C:E:G:::C:E:G::B:D:?" == anlg.get("name") and "unite" == tran.get("name"):
@@ -140,6 +140,13 @@ def predict(prob, d):
         best_diff_to_u2_x = d.get("diff_to_u2_x")
         best_diff_to_u2_y = d.get("diff_to_u2_y")
         best_diff = d.get("diff")
+        best_copies_to_u1_x = d.get("copies_to_u1_x")
+        best_copies_to_u1_y = d.get("copies_to_u1_y")
+        u1_coms_x = d.get("u1_coms_x")
+        u1_coms_y = d.get("u1_coms_y")
+        u2_coms_x = d.get("u2_coms_x")
+        u2_coms_y = d.get("u2_coms_y")
+
         u3 = prob.matrix[anlg.get("value")[2]]
         u1_ref = prob.matrix_ref[anlg.get("value")[0]]
 
@@ -151,6 +158,10 @@ def predict(prob, d):
             prediction = transform.xor_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
         elif tran.get("name") == "upscale_to":
             prediction = None
+        elif tran.get("name") == "duplicate":
+            prediction = transform.duplicate(u3, best_copies_to_u1_x, best_copies_to_u1_y)
+        elif tran.get("name") == "rearrange":
+            prediction = transform.rearrange(u3, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y)
         else:
             prediction = transform.apply_unary_transformation(u3, tran)
 
@@ -241,6 +252,12 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
     diff_to_u2_x = None
     diff_to_u2_y = None
     diff = None
+    copies_to_u1_x = None
+    copies_to_u1_y = None
+    u1_coms_x = None
+    u1_coms_y = None
+    u2_coms_x = None
+    u2_coms_y = None
 
     if "add_diff" == tran.get("name"):
         score, diff_to_u1_x, diff_to_u1_y, diff_to_u2_x, diff_to_u2_y, diff = \
@@ -260,6 +277,43 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
     elif "upscale_to" == tran.get("name"):
         u1_upscaled = transform.upscale_to(u1, u2)
         score, _, _ = jaccard.jaccard_coef(u2, u1_upscaled)
+    elif "duplicate" == tran.get("name"):
+        scores = []
+        u1_to_u2_xs = []
+        u1_to_u2_ys = []
+        current = u2.copy()
+        current_to_u2_x = 0
+        current_to_u2_y = 0
+        while current.sum():
+            score_tmp, diff_tmp_to_u1_x, diff_tmp_to_u1_y, diff_tmp_to_current_x, diff_tmp_to_current_y, _ = \
+                asymmetric_jaccard.asymmetric_jaccard_coef(u1, current)
+
+            if score_tmp < 0.6:
+                break
+
+            scores.append(score_tmp)
+            u1_to_current_x = (-diff_tmp_to_u1_x) - (-diff_tmp_to_current_x)
+            u1_to_current_y = (-diff_tmp_to_u1_y) - (-diff_tmp_to_current_y)
+            u1_to_u2_x = u1_to_current_x + current_to_u2_x
+            u1_to_u2_y = u1_to_current_y + current_to_u2_y
+            u1_to_u2_xs.append(u1_to_u2_x)
+            u1_to_u2_ys.append(u1_to_u2_y)
+            u1_aligned, current_aligned, aligned_to_current_x, aligned_to_current_y = utils.align(
+                u1, current, u1_to_current_x, u1_to_current_y)
+            current = utils.erase_noise_point(np.logical_and(current_aligned, np.logical_not(u1_aligned)), 8)
+            current_to_u2_x = aligned_to_current_x + current_to_u2_x
+            current_to_u2_y = aligned_to_current_y + current_to_u2_y
+
+        if 1 >= len(scores):
+            score = 0
+            copies_to_u1_x = [0]
+            copies_to_u1_y = [0]
+        else:
+            score = min(scores)
+            copies_to_u1_x = (np.array(u1_to_u2_xs[1 :]) - u1_to_u2_xs[0]).tolist()
+            copies_to_u1_y = (np.array(u1_to_u2_ys[1 :]) - u1_to_u2_ys[0]).tolist()
+    elif "rearrange" == tran.get("name"):
+        score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y = transform.evaluate_rearrange(u1, u2)
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)
@@ -267,7 +321,14 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
     prob_anlg_tran_d = assemble_prob_anlg_tran_d(prob, anlg, tran, score,
                                                  diff_to_u1_x = diff_to_u1_x, diff_to_u1_y = diff_to_u1_y,
                                                  diff_to_u2_x = diff_to_u2_x, diff_to_u2_y = diff_to_u2_y,
-                                                 diff = diff)
+                                                 diff = diff,
+                                                 copies_to_u1_x = copies_to_u1_x,
+                                                 copies_to_u1_y = copies_to_u1_y,
+                                                 u1_coms_x = u1_coms_x,
+                                                 u1_coms_y = u1_coms_y,
+                                                 u2_coms_x = u2_coms_x,
+                                                 u2_coms_y = u2_coms_y)
+
     pred_data = predict(prob, prob_anlg_tran_d)
 
     return [prob_anlg_tran_d], pred_data
@@ -384,7 +445,14 @@ def assemble_prob_anlg_tran_d(prob, anlg, tran, pat_score,
                               diff_to_u2_y = None,
                               diff = None,
                               b1_to_b2_x = None,
-                              b1_to_b2_y = None):
+                              b1_to_b2_y = None,
+                              copies_to_u1_x = None,
+                              copies_to_u1_y = None,
+                              u1_coms_x = None,
+                              u1_coms_y = None,
+                              u2_coms_x = None,
+                              u2_coms_y = None):
+
     return {
         "prob_name": prob.name,
         "anlg_name": anlg.get("name"),
@@ -400,5 +468,11 @@ def assemble_prob_anlg_tran_d(prob, anlg, tran, pat_score,
         "diff_to_u2_y": diff_to_u2_y,
         "diff": diff,
         "b1_to_b2_x": b1_to_b2_x,
-        "b1_to_b2_y": b1_to_b2_y
+        "b1_to_b2_y": b1_to_b2_y,
+        "copies_to_u1_x": copies_to_u1_x,
+        "copies_to_u1_y": copies_to_u1_y,
+        "u1_coms_x": u1_coms_x,
+        "u1_coms_y": u1_coms_y,
+        "u2_coms_x": u2_coms_x,
+        "u2_coms_y": u2_coms_y
     }

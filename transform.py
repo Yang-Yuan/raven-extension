@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 from skimage.transform import rotate
 from skimage.transform import rescale as rs
 from skimage.transform import resize
+from itertools import permutations
 from sys import modules
 import numpy as np
 import jaccard
@@ -12,18 +13,20 @@ THIS = modules[__name__]
 
 unary_transformations = [
     {"name": "identity", "value": [{"name": None}], "type": "unary"},
-    {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
-    {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    # {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    # {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
+    # {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
     {"name": "mirror", "value": [{"name": "mirror_left_right"}], "type": "unary"},
-    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    # {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
     {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    # {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
     {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary"},
     # {"name": "upscale_to", "value": [{"name": "upscale_to"}], "type": "unary"},
     {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary"},
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary"},
-    {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary"}
+    {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary"},
+    {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary"},
+    {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary"}
 ]
 
 binary_transformations = [
@@ -41,6 +44,89 @@ def get_tran(tran_name):
     for tran in all_trans:
         if tran_name == tran.get("name"):
             return tran
+
+
+def duplicate(img, copies_to_img_x, copies_to_img_y):
+
+    current = img.copy()
+    current_to_img_x = 0
+    current_to_img_y = 0
+    for copy_to_img_x, copy_to_img_y in zip(copies_to_img_x, copies_to_img_y):
+        copy_to_current_x = copy_to_img_x - current_to_img_x
+        copy_to_current_y = copy_to_img_y - current_to_img_y
+        copy_aligned, current_aligned, aligned_to_current_x, aligned_to_current_y = utils.align(
+            img, current, copy_to_current_x, copy_to_current_y)
+        current = np.logical_or(copy_aligned, current_aligned)
+        current_to_img_x = aligned_to_current_x + current_to_img_x
+        current_to_img_y = aligned_to_current_y + current_to_img_y
+
+    return utils.trim_binary_image(current)
+
+
+def evaluate_rearrange(u1, u2):
+
+    u1_coms, u1_coms_x, u1_coms_y = utils.decompose(u1, 8)
+    u2_coms, u2_coms_x, u2_coms_y = utils.decompose(u2, 8)
+
+    if len(u1_coms) != len(u2_coms):
+        return 0, [], [], [], []
+
+    max_scores = []
+    max_ids = []
+    chosen = [False] * len(u2_coms)
+    for u1_com in u1_coms:
+
+        max_score = -1
+        max_id = -1
+        for id, u2_com in enumerate(u2_coms):
+            if not chosen[id]:
+                score, _, _ = jaccard.jaccard_coef(u1_com, u2_com)
+                if score > max_score:
+                    max_score = score
+                    max_id = id
+
+        max_scores.append(max_score)
+        max_ids.append(max_id)
+        chosen[max_id] = True
+
+    min_max_score = min(max_scores)
+    if min_max_score < 0.6:
+        return 0, [], [], [], []
+    else:
+        u2_coms_x = [u2_coms_x[id] for id in max_ids]
+        u2_coms_y = [u2_coms_y[id] for id in max_ids]
+        return min_max_score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y
+
+
+def rearrange(img, old_xs, old_ys, new_xs, new_ys):
+
+    coms, coms_x, coms_y = utils.decompose(img, 8)
+
+    if len(coms) != len(old_xs):
+        return np.full_like(img, fill_value = False)
+
+    new_coms = []
+    for com, com_x, com_y in zip(coms, coms_x, coms_y):
+
+        closet_dist = np.inf
+        closest_ii = -1
+        for ii, old_x, old_y in zip(range(len(old_xs)), old_xs, old_ys):
+            dist = abs(com_x - old_x) + abs(com_y - old_y)
+            if dist < closet_dist:
+                closet_dist = dist
+                closest_ii = ii
+
+        x = new_xs[closest_ii]
+        y = new_ys[closest_ii]
+        bg = np.full((300, 300), fill_value = False)
+        bg[y : y + com.shape[0], x : x + com.shape[1]] = com  # A bug here, but I am too tired to fix it today.
+        new_coms.append(bg)
+
+    current = np.full((300, 300), fill_value = False)
+    for new_com in new_coms:
+        current = np.logical_or(current, new_com)
+
+    return utils.trim_binary_image(current)
 
 
 def rescale(img, x_factor, y_factor):
