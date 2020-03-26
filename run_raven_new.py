@@ -99,14 +99,16 @@ def run_prob_anlg_tran(prob, anlg, tran):
     elif "binary_3x2" == anlg.get("type"):
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "binary_2x3" == anlg.get("type"):
+        # if "D:E:F::G:H:?" == anlg.get("name") and "subtract" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
-        if "A:C::D:F:::D:F::G:?" == anlg.get("name") and "rearrange" == tran.get("name"):
-            print("asdfasdf")
+        # if "A:C::D:F:::D:F::G:?" == anlg.get("name") and "rearrange" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
-        # if "A:F:H::C:E:G:::C:E:G::B:D:?" == anlg.get("name") and "unite" == tran.get("name"):
-        #     print("asdfasdf")
+        if "A:B:C::D:E:F:::D:E:F::G:H:?" == anlg.get("name") and "shadow_mask_unite" == tran.get("name"):
+            print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     else:
         raise Exception("Ryan!")
@@ -172,12 +174,29 @@ def predict(prob, d):
         b2 = prob.matrix[anlg.get("value")[1]]
         b4 = prob.matrix[anlg.get("value")[3]]
         b5 = prob.matrix[anlg.get("value")[4]]
-        _, b4_to_b1_x, b4_to_b1_y = jaccard.jaccard_coef(b4, b1)
-        _, b5_to_b2_x, b5_to_b2_y = jaccard.jaccard_coef(b5, b2)
-        b4_to_b5_x = b4_to_b1_x - (b5_to_b2_x - best_b1_to_b2_x)
-        b4_to_b5_y = b4_to_b1_y - (b5_to_b2_y - best_b1_to_b2_y)
-        prediction, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(b4, b5, tran, b4_to_b5_x, b4_to_b5_y)
-        # prediction_bak, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
+
+        b4_b1_score, b4_to_b1_x, b4_to_b1_y = jaccard.jaccard_coef(b4, b1)
+        b4_b2_score, b5_to_b2_x, b5_to_b2_y = jaccard.jaccard_coef(b5, b2)
+        if min(b4_b1_score, b4_b2_score) < 0.5:
+            # b4_center_x, b4_center_y = utils.where_is_center(b4)
+            # b1_center_x, b1_center_y = utils.where_is_center(b1)
+            # b4_to_b1_x = int(b1_center_x - b4_center_x)
+            # b4_to_b1_y = int(b1_center_y - b4_center_y)
+            # b5_center_x, b5_center_y = utils.where_is_center(b5)
+            # b2_center_x, b2_center_y = utils.where_is_center(b2)
+            # b5_to_b2_x = int(b2_center_x - b5_center_x)
+            # b5_to_b2_y = int(b2_center_y - b5_center_y)
+            prediction, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(
+                b4, b5, tran)
+        else:
+            b4_to_b5_x = b4_to_b1_x - (b5_to_b2_x - best_b1_to_b2_x)
+            b4_to_b5_y = b4_to_b1_y - (b5_to_b2_y - best_b1_to_b2_y)
+            prediction, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(
+                    b4, b5, tran, b4_to_b5_x, b4_to_b5_y)
+        # prediction_bak, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(
+        # b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
+
+
 
     else:
         raise Exception("Ryan!")

@@ -398,9 +398,7 @@ symbol_to_coord_2x3 = {
 
 
 matrix_2x3 = [[['A', 'B', 'C'],
-               ['D', 'E', '?']]
-              # add more matrices here
-              ]
+               ['D', 'E', '?']]]
 
 binary_2x3 = []
 for m in matrix_2x3:

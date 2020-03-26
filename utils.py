@@ -172,7 +172,10 @@ def find_best(data, *score_names):
 
 
 def sum_score(data, *score_names):
-    return [sum([d.get(name) for d in data]) for name in score_names]
+    if 0 == len(data):
+        return [0] * len(score_names)
+    else:
+        return [sum([d.get(name) for d in data]) for name in score_names]
 
 
 def create_object_matrix(objs, shape):
@@ -238,4 +241,8 @@ def decompose(img, smallest_size):
 
     return coms, coms_x, coms_y
 
+
+def where_is_center(img):
+    img_shape_y, img_shape_x = img.shape
+    return (img_shape_x - 1) / 2, (img_shape_y - 1) / 2
 

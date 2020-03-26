@@ -34,7 +34,8 @@ binary_transformations = [
     {"name": "intersect", "value": [{"name": "intersect"}], "type": "binary"},
     {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
     {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
-    {"name": "xor", "value": [{"name": "xor"}], "type": "binary"}
+    {"name": "xor", "value": [{"name": "xor"}], "type": "binary"},
+    {"name": "shadow_mask_unite", "value": [{"name": "shadow_mask_unite"}], "type": "binary"}  # for e8
 ]
 
 all_trans = unary_transformations + binary_transformations
@@ -386,5 +387,21 @@ def xor(imgA, imgB):
     return utils.erase_noise_point(np.logical_xor(imgA, imgB), 4)
 
 
+def shadow_mask_unite(A, B):
+
+    shadow_A = utils.fill_holes(A)
+    shadow_B = utils.fill_holes(B)
+
+    score, shadow_A_to_B_x, shadow_A_to_B_y = jaccard.jaccard_coef(A, B)
+
+    shadow_A_aligned, shadow_B_aligned, _, _ = utils.align(shadow_A, shadow_B, shadow_A_to_B_x, shadow_A_to_B_y)
+    mask = np.logical_and(shadow_A_aligned, shadow_B_aligned)
+
+    A_aligned, B_aligned, _, _ = utils.align(A, B, shadow_A_to_B_x, shadow_A_to_B_y)
+    union = np.logical_or(A_aligned, B_aligned)
+
+    masked_union = np.logical_and(mask, union)
+
+    return utils.trim_binary_image(masked_union)
 
 
