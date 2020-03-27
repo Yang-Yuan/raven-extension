@@ -169,6 +169,7 @@ def predict_unary_default(prob, anlg, tran, d):
     prediction = transform.apply_unary_transformation(u3, tran)
     pred_data = []
     for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
         score, _, _ = jaccard.jaccard_coef(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
@@ -186,6 +187,7 @@ def predict_rearrange(prob, anlg, tran, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
         score, _, _ = jaccard.jaccard_coef(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
@@ -201,6 +203,7 @@ def predict_duplicate(prob, anlg, tran, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
         score, _, _ = jaccard.jaccard_coef(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
@@ -213,6 +216,7 @@ def predict_upscale_to(prob, anlg, tran, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
         prediction = transform.upscale_to(u3, opt)
         score, _, _ = jaccard.jaccard_coef(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
@@ -231,6 +235,9 @@ def predict_xor_diff(prob, anlg, tran, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
         pred_score, _, _ = jaccard.jaccard_coef(prediction, opt)
         u3_score, u3_to_opt_x, u3_to_opt_y = jaccard.jaccard_coef(u3, opt)
         u3_score = 1 - u3_score
@@ -256,6 +263,9 @@ def predict_subtract_diff(prob, anlg, tran, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
         u3_score, diff_to_opt_x, diff_to_opt_y, diff_to_u3_x, diff_to_u3_y, diff = \
             asymmetric_jaccard.asymmetric_jaccard_coef(opt, u3)
         opt_to_u3_x = (-diff_to_opt_x) - (-diff_to_u3_x)
@@ -322,6 +332,9 @@ def predict_inv_unite(prob, anlg, tran, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
         # prediction = transform.inv_unite(b4, b5, opt)
         # score, _, _ = jaccard.jaccard_coef(opt, prediction)
         b4_new, _, _, _, _ = transform.apply_binary_transformation(b5, opt, transform.get_tran("unite"), imgC = b4)
@@ -341,6 +354,9 @@ def predict_unite(prob, anlg, tran, d):
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
+
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
         prediction, _, _, _, _ = transform.apply_binary_transformation(b4, b5, tran, imgC = opt)
         score, _, _ = jaccard.jaccard_coef(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
@@ -437,6 +453,13 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)
+
+    if "mirror" == tran.get("name") or "mirror_rot_180" == tran.get("name"):
+        u1_mirror_score, _, _ = jaccard.jaccard_coef(u1_t, u1)
+        u2_mirror = transform.apply_unary_transformation(u2, tran)
+        u2_mirror_score, _, _ = jaccard.jaccard_coef(u2_mirror, u2)
+        if max(u1_mirror_score, u2_mirror_score) > 0.9:
+            score = 0
 
     prob_anlg_tran_d = assemble_prob_anlg_tran_d(prob, anlg, tran, score,
                                                  diff_to_u1_x = diff_to_u1_x, diff_to_u1_y = diff_to_u1_y,

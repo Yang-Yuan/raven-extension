@@ -63,8 +63,8 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
         binary_smaller_coms = [utils.trim_binary_image(com) for com in binary_smaller_coms]
 
         # some blatant magic code, because of the blatant hand drawing
-        if problem_name in ["c7"]:
-            binary_smaller_coms = utils.resize_to_average_shape(binary_smaller_coms, ignore = [8])
+        # if problem_name in ["c7"]:
+        #     binary_smaller_coms = utils.resize_to_average_shape(binary_smaller_coms, ignore = [8])
 
         if 10 == len(coms):
             matrix = utils.create_object_matrix(binary_smaller_coms[: 4], (2, 2))
