@@ -109,7 +109,7 @@ def run_prob_anlg_tran(prob, anlg, tran):
         #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
-        # if "A:B:C::D:E:F:::D:E:F::G:H:?" == anlg.get("name") and "shadow_mask_unite" == tran.get("name"):
+        # if "A:B:C::D:E:F:::D:E:F::G:H:?" == anlg.get("name") and "inv_unite" == tran.get("name"):
         #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     else:
@@ -310,8 +310,29 @@ def predict_binary(prob, anlg, tran, d):
 
     if "unite" == tran.get("name"):
         return predict_unite(prob, anlg, tran, d)
+    elif "inv_unite" == tran.get("name"):
+        return predict_inv_unite(prob, anlg, tran, d)
     else:
         return predict_binary_default(prob, anlg, tran, d)
+
+
+def predict_inv_unite(prob, anlg, tran, d):
+    b4 = prob.matrix[anlg.get("value")[3]]
+    b5 = prob.matrix[anlg.get("value")[4]]
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        # prediction = transform.inv_unite(b4, b5, opt)
+        # score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        b4_new, _, _, _, _ = transform.apply_binary_transformation(b5, opt, transform.get_tran("unite"), imgC = b4)
+        score, _, _ = jaccard.jaccard_coef(b4_new, b4)
+        b5_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b5, opt)
+        opt_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(opt, b5)
+        if max(b5_score, opt_score) > 0.85:
+            score = 0
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": opt})
+
+    return pred_data
 
 
 def predict_unite(prob, anlg, tran, d):
@@ -438,8 +459,22 @@ def run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran):
     b2 = prob.matrix[anlg.get("value")[1]]
     b3 = prob.matrix[anlg.get("value")[2]]
 
-    b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran, imgC = b3)
-    score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
+    if "inv_unite" == tran.get("name"):
+        b1_new, _, _, _, _ = transform.apply_binary_transformation(b2, b3, transform.get_tran("unite"), imgC = b1)
+        score, _, _ = jaccard.jaccard_coef(b1_new, b1)
+        b1_to_b2_x = None
+        b1_to_b2_y = None
+        # b1_b2_t = transform.inv_unite(b1, b2, b3)
+        # score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
+    else:
+        b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran, imgC = b3)
+        score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
+
+    if "inv_unite" == tran.get("name"):
+        b2_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b2, b3)
+        b3_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b3, b2)
+        if max(b2_score, b3_score) > 0.9:
+            score = 0
 
     if "unite" == tran.get("name") or "shadow_mask_unite" == tran.get("name"):
         b1_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b1, b2)

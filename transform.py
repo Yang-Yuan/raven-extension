@@ -32,10 +32,11 @@ unary_transformations = [
 binary_transformations = [
     {"name": "unite", "value": [{"name": "unite"}], "type": "binary", "align": "unite_align"},
     {"name": "intersect", "value": [{"name": "intersect"}], "type": "binary"},
-    {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
-    {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
+    # {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
+    # {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
     {"name": "xor", "value": [{"name": "xor"}], "type": "binary"},
-    {"name": "shadow_mask_unite", "value": [{"name": "shadow_mask_unite"}], "type": "binary"}  # for e8
+    {"name": "shadow_mask_unite", "value": [{"name": "shadow_mask_unite"}], "type": "binary"},  # for e8
+    {"name": "inv_unite", "value": [{"name": "inv_unite"}], "type": "binary"}
 ]
 
 all_trans = unary_transformations + binary_transformations
@@ -416,4 +417,22 @@ def unite_align(A, B, C):
     A_to_B_x = A_to_C_x - B_to_C_x
     A_to_B_y = A_to_C_y - B_to_C_y
     return A_to_B_x, A_to_B_y
+
+
+def inv_unite(A, B, C):
+    _, B_to_A_x, B_to_A_y = jaccard.jaccard_coef(B, A)
+    _, C_to_A_x, C_to_A_y = jaccard.jaccard_coef(C, A)
+    B_to_C_x = B_to_A_x - C_to_A_x
+    B_to_C_y = B_to_A_y - C_to_A_y
+    B_aligned, C_aligned, aligned_to_C_x, aligned_to_C_y = utils.align(B, C, B_to_C_x, B_to_C_y)
+    B_new = np.logical_and(B_aligned, np.logical_not(C_aligned))
+    aligned_to_A_x = aligned_to_C_x + C_to_A_x
+    aligned_to_A_y = aligned_to_C_y + C_to_A_y
+    A_aligned, B_aligned, _, _ = utils.align(A, B_new, -aligned_to_A_x, -aligned_to_A_y)
+    C_new = np.logical_and(A_aligned, np.logical_not(B_aligned))
+    C_new = utils.trim_binary_image(utils.erase_noise_point(C_new, 8))
+
+    return C_new
+
+
 
