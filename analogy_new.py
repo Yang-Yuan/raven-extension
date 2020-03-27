@@ -273,6 +273,22 @@ def remove_redundant_ones(anlgs):
 
     return thin_anlgs
 
+    # non_double_line_angls = []
+    # for anlg in thin_anlgs:
+    #     value = anlg.get("value")
+    #     double_line = False
+    #     kk = 0
+    #     for ii in range(len(value) - 1):
+    #         if value[ii] == value[ii + 1]:
+    #             kk += 1
+    #         if kk == 2:
+    #             double_line = True
+    #             break
+    #     if not double_line:
+    #         non_double_line_angls.append(anlg)
+    #
+    # return non_double_line_angls
+
 
 symbol_to_coord_2x2 = {
     'A': [(0, 0)],

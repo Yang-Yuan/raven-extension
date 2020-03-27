@@ -38,6 +38,24 @@ def get_anlg_tran_pairs(prob):
     for anlg in anlgs:
         trans = get_trans(prob, anlg)
         for tran in trans:
-            pairs.append({"anlg": anlg, "tran": tran})
+            if is_valid(anlg, tran):
+                pairs.append({"anlg": anlg, "tran": tran})
 
     return pairs
+
+
+def is_valid(anlg, tran):
+
+    valid = True
+
+    if "mirror" == tran.get("name") or "mirror_rot_180" == tran.get("name"):
+
+        value = anlg.get("value")
+        for ii, u in enumerate(value):
+            for jj, v in enumerate(value):
+                if u == v and (ii % 2) != (jj % 2):
+                    valid = False
+
+    return valid
+
+

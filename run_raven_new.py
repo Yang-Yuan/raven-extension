@@ -103,12 +103,14 @@ def run_prob_anlg_tran(prob, anlg, tran):
         #     print("asdfasdf")
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
-        # if "A:C::D:F:::D:F::G:?" == anlg.get("name") and "rearrange" == tran.get("name"):
+        # if "B:A::H:G:::A:C::G:?" == anlg.get("name") and "mirror" == tran.get("name"):
+        #     print("asdfasdf")
+        # if "B:A::H:G:::A:C::G:?" == anlg.get("name") and "mirror_rot_180" == tran.get("name"):
         #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
-        if "A:B:C::D:E:F:::D:E:F::G:H:?" == anlg.get("name") and "shadow_mask_unite" == tran.get("name"):
-            print("asdfasdf")
+        # if "A:B:C::D:E:F:::D:E:F::G:H:?" == anlg.get("name") and "shadow_mask_unite" == tran.get("name"):
+        #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     else:
         raise Exception("Ryan!")
@@ -137,126 +139,204 @@ def predict(prob, d):
     tran = transform.get_tran(d.get("tran_name"))
 
     if "unary_2x2" == anlg.get("type"):
-        best_diff_to_u1_x = d.get("diff_to_u1_x")
-        best_diff_to_u1_y = d.get("diff_to_u1_y")
-        best_diff_to_u2_x = d.get("diff_to_u2_x")
-        best_diff_to_u2_y = d.get("diff_to_u2_y")
-        best_diff = d.get("diff")
-        best_copies_to_u1_x = d.get("copies_to_u1_x")
-        best_copies_to_u1_y = d.get("copies_to_u1_y")
-        u1_coms_x = d.get("u1_coms_x")
-        u1_coms_y = d.get("u1_coms_y")
-        u2_coms_x = d.get("u2_coms_x")
-        u2_coms_y = d.get("u2_coms_y")
-
-        u3 = prob.matrix[anlg.get("value")[2]]
-        u1_ref = prob.matrix_ref[anlg.get("value")[0]]
-
-        if tran.get("name") == "add_diff":
-            prediction = transform.add_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
-        elif tran.get("name") == "subtract_diff":
-            prediction = transform.subtract_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
-        elif tran.get("name") == "xor_diff":
-            prediction = transform.xor_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
-        elif tran.get("name") == "upscale_to":
-            prediction = None
-        elif tran.get("name") == "duplicate":
-            prediction = transform.duplicate(u3, best_copies_to_u1_x, best_copies_to_u1_y)
-        elif tran.get("name") == "rearrange":
-            prediction = transform.rearrange(u3, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y)
-        else:
-            prediction = transform.apply_unary_transformation(u3, tran)
-
+        return predict_unary(prob, anlg, tran, d)
     elif "binary_3x2" == anlg.get("type") or "binary_2x3" == anlg.get("type"):
-        best_b1_to_b2_x = d.get("b1_to_b2_x")
-        best_b1_to_b2_y = d.get("b1_to_b2_y")
-        b1 = prob.matrix[anlg.get("value")[0]]
-        b2 = prob.matrix[anlg.get("value")[1]]
-        b4 = prob.matrix[anlg.get("value")[3]]
-        b5 = prob.matrix[anlg.get("value")[4]]
-
-        b4_b1_score, b4_to_b1_x, b4_to_b1_y = jaccard.jaccard_coef(b4, b1)
-        b4_b2_score, b5_to_b2_x, b5_to_b2_y = jaccard.jaccard_coef(b5, b2)
-        if min(b4_b1_score, b4_b2_score) < 0.5:
-            # b4_center_x, b4_center_y = utils.where_is_center(b4)
-            # b1_center_x, b1_center_y = utils.where_is_center(b1)
-            # b4_to_b1_x = int(b1_center_x - b4_center_x)
-            # b4_to_b1_y = int(b1_center_y - b4_center_y)
-            # b5_center_x, b5_center_y = utils.where_is_center(b5)
-            # b2_center_x, b2_center_y = utils.where_is_center(b2)
-            # b5_to_b2_x = int(b2_center_x - b5_center_x)
-            # b5_to_b2_y = int(b2_center_y - b5_center_y)
-            prediction, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(
-                b4, b5, tran)
-        else:
-            b4_to_b5_x = b4_to_b1_x - (b5_to_b2_x - best_b1_to_b2_x)
-            b4_to_b5_y = b4_to_b1_y - (b5_to_b2_y - best_b1_to_b2_y)
-            prediction, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(
-                    b4, b5, tran, b4_to_b5_x, b4_to_b5_y)
-        # prediction_bak, _, _, pred_to_b5_x, pred_to_b5_y = transform.apply_binary_transformation(
-        # b4, b5, tran, best_b1_to_b2_x, best_b1_to_b2_y)
-
-
-
+        return predict_binary(prob, anlg, tran, d)
     else:
         raise Exception("Ryan!")
+
+
+def predict_unary(prob, anlg, tran, d):
+
+    if tran.get("name") == "add_diff":
+        return predict_add_diff(prob, anlg, tran, d)
+    elif tran.get("name") == "subtract_diff":
+        return predict_subtract_diff(prob, anlg, tran, d)
+    elif tran.get("name") == "xor_diff":
+        return predict_xor_diff(prob, anlg, tran, d)
+    elif tran.get("name") == "upscale_to":
+        return predict_upscale_to(prob, anlg, tran, d)
+    elif tran.get("name") == "duplicate":
+        return predict_duplicate(prob, anlg, tran, d)
+    elif tran.get("name") == "rearrange":
+        return predict_rearrange(prob, anlg, tran, d)
+    else:
+        return predict_unary_default(prob, anlg, tran, d)
+
+
+def predict_unary_default(prob, anlg, tran, d):
+    u3 = prob.matrix[anlg.get("value")[2]]
+    prediction = transform.apply_unary_transformation(u3, tran)
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_rearrange(prob, anlg, tran, d):
+    u1_coms_x = d.get("u1_coms_x")
+    u1_coms_y = d.get("u1_coms_y")
+    u2_coms_x = d.get("u2_coms_x")
+    u2_coms_y = d.get("u2_coms_y")
+
+    u3 = prob.matrix[anlg.get("value")[2]]
+    prediction = transform.rearrange(u3, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y)
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_duplicate(prob, anlg, tran, d):
+
+    best_copies_to_u1_x = d.get("copies_to_u1_x")
+    best_copies_to_u1_y = d.get("copies_to_u1_y")
+    u3 = prob.matrix[anlg.get("value")[2]]
+    prediction = transform.duplicate(u3, best_copies_to_u1_x, best_copies_to_u1_y)
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_upscale_to(prob, anlg, tran, d):
+
+    u3 = prob.matrix[anlg.get("value")[2]]
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        prediction = transform.upscale_to(u3, opt)
+        score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_xor_diff(prob, anlg, tran, d):
+    best_diff_to_u1_x = d.get("diff_to_u1_x")
+    best_diff_to_u1_y = d.get("diff_to_u1_y")
+    best_diff = d.get("diff")
+    u3 = prob.matrix[anlg.get("value")[2]]
+    u1_ref = prob.matrix_ref[anlg.get("value")[0]]
+
+    prediction = transform.xor_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        pred_score, _, _ = jaccard.jaccard_coef(prediction, opt)
+        u3_score, u3_to_opt_x, u3_to_opt_y = jaccard.jaccard_coef(u3, opt)
+        u3_score = 1 - u3_score
+        u1_aligned, u2_aligned, aligned_to_u2_x, aligned_to_u2_y = utils.align(u3, opt, u3_to_opt_x, u3_to_opt_y)
+        diff = utils.erase_noise_point(np.logical_xor(u1_aligned, u2_aligned), 4)
+        diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
+        score = (diff_score + u3_score + pred_score) / 3
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_subtract_diff(prob, anlg, tran, d):
+    best_diff_to_u1_x = d.get("diff_to_u1_x")
+    best_diff_to_u1_y = d.get("diff_to_u1_y")
+    best_diff_to_u2_x = d.get("diff_to_u2_x")
+    best_diff_to_u2_y = d.get("diff_to_u2_y")
+    best_diff = d.get("diff")
+    u3 = prob.matrix[anlg.get("value")[2]]
+    u1_ref = prob.matrix_ref[anlg.get("value")[0]]
+
+    prediction = transform.subtract_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        u3_score, diff_to_opt_x, diff_to_opt_y, diff_to_u3_x, diff_to_u3_y, diff = \
+            asymmetric_jaccard.asymmetric_jaccard_coef(opt, u3)
+        opt_to_u3_x = (-diff_to_opt_x) - (-diff_to_u3_x)
+        opt_to_u3_y = (-diff_to_opt_y) - (-diff_to_u3_y)
+        u2_to_u1_x = (-best_diff_to_u2_x) - (-best_diff_to_u1_x)
+        u2_to_u1_y = (-best_diff_to_u2_y) - (-best_diff_to_u1_y)
+        if abs(opt_to_u3_x - u2_to_u1_x) > 2 or abs(opt_to_u3_y - u2_to_u1_y) > 2:
+            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, u3, u2_to_u1_x, u2_to_u1_y)
+        diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
+        opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        score = (diff_score + opt_score + u3_score) / 3
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_add_diff(prob, anlg, tran, d):
+
+    best_diff_to_u1_x = d.get("diff_to_u1_x")
+    best_diff_to_u1_y = d.get("diff_to_u1_y")
+    best_diff_to_u2_x = d.get("diff_to_u2_x")
+    best_diff_to_u2_y = d.get("diff_to_u2_y")
+    best_diff = d.get("diff")
+
+    u3 = prob.matrix[anlg.get("value")[2]]
+    u1_ref = prob.matrix_ref[anlg.get("value")[0]]
+    prediction = transform.add_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
 
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
 
-        if tran.get("name") == "add_diff":
-            u3_score, diff_to_u3_x, diff_to_u3_y, diff_to_opt_x, diff_to_opt_y, diff = \
-                asymmetric_jaccard.asymmetric_jaccard_coef(u3, opt)
-            u3_to_opt_x = (-diff_to_u3_x) - (-diff_to_opt_x)
-            u3_to_opt_y = (-diff_to_u3_y) - (-diff_to_opt_y)
-            u1_to_u2_x = (-best_diff_to_u1_x) - (-best_diff_to_u2_x)
-            u1_to_u2_y = (-best_diff_to_u1_y) - (-best_diff_to_u2_y)
-            if abs(u3_to_opt_x - u1_to_u2_x) > 2 or abs(u3_to_opt_y - u1_to_u2_y) > 2:
-                u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(u3, opt, u1_to_u2_x, u1_to_u2_y)
-            diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
-            opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
-            score = (diff_score + opt_score + u3_score) / 3
-        elif tran.get("name") == "subtract_diff":
-            u3_score, diff_to_opt_x, diff_to_opt_y, diff_to_u3_x, diff_to_u3_y, diff = \
-                asymmetric_jaccard.asymmetric_jaccard_coef(opt, u3)
-            opt_to_u3_x = (-diff_to_opt_x) - (-diff_to_u3_x)
-            opt_to_u3_y = (-diff_to_opt_y) - (-diff_to_u3_y)
-            u2_to_u1_x = (-best_diff_to_u2_x) - (-best_diff_to_u1_x)
-            u2_to_u1_y = (-best_diff_to_u2_y) - (-best_diff_to_u1_y)
-            if abs(opt_to_u3_x - u2_to_u1_x) > 2 or abs(opt_to_u3_y - u2_to_u1_y) > 2:
-                u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, u3, u2_to_u1_x, u2_to_u1_y)
-            diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
-            opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
-            score = (diff_score + opt_score + u3_score) / 3
-        elif tran.get("name") == "xor_diff":
-            pred_score, _, _ = jaccard.jaccard_coef(prediction, opt)
-            u3_score, u3_to_opt_x, u3_to_opt_y = jaccard.jaccard_coef(u3, opt)
-            u3_score = 1 - u3_score
-            u1_aligned, u2_aligned, aligned_to_u2_x, aligned_to_u2_y = utils.align(u3, opt, u3_to_opt_x, u3_to_opt_y)
-            diff = utils.erase_noise_point(np.logical_xor(u1_aligned, u2_aligned), 4)
-            diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
-            score = (diff_score + u3_score + pred_score) / 3
-        elif tran.get("name") == "upscale_to":
-            prediction = transform.upscale_to(u3, opt)
-            score, _, _ = jaccard.jaccard_coef(opt, prediction)
-        # elif tran.get("name") == "subtract":
-        #     pred_score, opt_to_pred_x, opt_to_pred_y = jaccard.jaccard_coef(opt, prediction)
-        #     b4_to_pred_x = best_b1_to_b2_x - pred_to_b5_x
-        #     b4_to_pred_y = best_b1_to_b2_y - pred_to_b5_y
-        #     b4_to_opt_x = b4_to_pred_x - opt_to_pred_x
-        #     b4_to_opt_y = b4_to_pred_y - opt_to_pred_y
-        #     b5_prediction, _, _, _, _ = transform.apply_binary_transformation(b4, opt, tran, b4_to_opt_x, b4_to_opt_y)
-        #     b5_score, _, _ = jaccard.jaccard_coef(b5_prediction, b5)
-        #     b5_to_opt_x = (-pred_to_b5_x) - opt_to_pred_x
-        #     b5_to_opt_y = (-pred_to_b5_y) - opt_to_pred_y
-        #     b4_prediction, _, _, _, _ = transform.apply_binary_transformation(b5, opt, transform.get_tran("unite"), b5_to_opt_x, b5_to_opt_y)
-        #     b4_score, _, _ = jaccard.jaccard_coef(b4_prediction, b4)
-        #     score = (b4_score + b5_score + pred_score) / 3
-        else:
-            score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        u3_score, diff_to_u3_x, diff_to_u3_y, diff_to_opt_x, diff_to_opt_y, diff = \
+            asymmetric_jaccard.asymmetric_jaccard_coef(u3, opt)
+        u3_to_opt_x = (-diff_to_u3_x) - (-diff_to_opt_x)
+        u3_to_opt_y = (-diff_to_u3_y) - (-diff_to_opt_y)
+        u1_to_u2_x = (-best_diff_to_u1_x) - (-best_diff_to_u2_x)
+        u1_to_u2_y = (-best_diff_to_u1_y) - (-best_diff_to_u2_y)
+        if abs(u3_to_opt_x - u1_to_u2_x) > 2 or abs(u3_to_opt_y - u1_to_u2_y) > 2:
+            u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(u3, opt, u1_to_u2_x, u1_to_u2_y)
+        diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
+        opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        score = (diff_score + opt_score + u3_score) / 3
 
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_binary(prob, anlg, tran, d):
+
+    if "unite" == tran.get("name"):
+        return predict_unite(prob, anlg, tran, d)
+    else:
+        return predict_binary_default(prob, anlg, tran, d)
+
+
+def predict_unite(prob, anlg, tran, d):
+    b4 = prob.matrix[anlg.get("value")[3]]
+    b5 = prob.matrix[anlg.get("value")[4]]
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        prediction, _, _, _, _ = transform.apply_binary_transformation(b4, b5, tran, imgC = opt)
+        score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
+def predict_binary_default(prob, anlg, tran, d):
+
+    b4 = prob.matrix[anlg.get("value")[3]]
+    b5 = prob.matrix[anlg.get("value")[4]]
+
+    prediction, _, _, _, _ = transform.apply_binary_transformation(b4, b5, tran)
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        score, _, _ = jaccard.jaccard_coef(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
     return pred_data
@@ -358,10 +438,10 @@ def run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran):
     b2 = prob.matrix[anlg.get("value")[1]]
     b3 = prob.matrix[anlg.get("value")[2]]
 
-    b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran)
+    b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran, imgC = b3)
     score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
 
-    if "unite" == tran.get("name"):
+    if "unite" == tran.get("name") or "shadow_mask_unite" == tran.get("name"):
         b1_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b1, b2)
         b2_score, _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(b2, b1)
         if max(b1_score, b2_score) > 0.9:  # if b1 is almost a subset of b2 or vice versa

@@ -30,7 +30,7 @@ unary_transformations = [
 ]
 
 binary_transformations = [
-    {"name": "unite", "value": [{"name": "unite"}], "type": "binary"},
+    {"name": "unite", "value": [{"name": "unite"}], "type": "binary", "align": "unite_align"},
     {"name": "intersect", "value": [{"name": "intersect"}], "type": "binary"},
     {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
     {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
@@ -325,9 +325,14 @@ def apply_unary_transformation(img, tran, show_me = False):
 
 def apply_binary_transformation(imgA, imgB, tran,
                                 imgA_to_imgB_x = None, imgA_to_imgB_y = None,
-                                expect = None):
+                                imgC = None):
     if imgA_to_imgB_x is None or imgA_to_imgB_y is None:
-        _, imgA_to_imgB_x, imgA_to_imgB_y = jaccard.jaccard_coef(imgA, imgB)
+        align_foo_name = tran.get("align")
+        if align_foo_name is  None:
+            _, imgA_to_imgB_x, imgA_to_imgB_y = jaccard.jaccard_coef(imgA, imgB)
+        else:
+            align_foo = getattr(THIS, align_foo_name)
+            imgA_to_imgB_x, imgA_to_imgB_y = align_foo(imgA, imgB, imgC)
 
     imgA_aligned, imgB_aligned, aligned_to_B_x, aligned_to_B_y = utils.align(imgA, imgB, imgA_to_imgB_x, imgA_to_imgB_y)
 
@@ -404,4 +409,11 @@ def shadow_mask_unite(A, B):
 
     return utils.trim_binary_image(masked_union)
 
+
+def unite_align(A, B, C):
+    _, A_to_C_x, A_to_C_y = jaccard.jaccard_coef(A, C)
+    _, B_to_C_x, B_to_C_y = jaccard.jaccard_coef(B, C)
+    A_to_B_x = A_to_C_x - B_to_C_x
+    A_to_B_y = A_to_C_y - B_to_C_y
+    return A_to_B_x, A_to_B_y
 

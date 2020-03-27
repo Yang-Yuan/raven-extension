@@ -7,15 +7,15 @@ from skimage.transform import resize
 
 problems = problem.load_problems()
 
-prob = problems[25]
+prob = problems[55]
 
-a = prob.matrix[1, 1]
-b = prob.matrix[1, 2]
-
-c = utils.grey_to_binary(resize(np.logical_not(a), b.shape, order = 0), 0.7)
-
-d1 = utils.grey_to_binary(resize(np.logical_not(a), (b.shape[0], a.shape[1]), order = 0), 0.7)
-d2 = utils.grey_to_binary(resize(np.logical_not(a), (d1.shape[0], b.shape[1]), order = 0), 0.7)
+# a = prob.matrix[1, 1]
+# b = prob.matrix[1, 2]
+#
+# c = utils.grey_to_binary(resize(np.logical_not(a), b.shape, order = 0), 0.7)
+#
+# d1 = utils.grey_to_binary(resize(np.logical_not(a), (b.shape[0], a.shape[1]), order = 0), 0.7)
+# d2 = utils.grey_to_binary(resize(np.logical_not(a), (d1.shape[0], b.shape[1]), order = 0), 0.7)
 
 # a11 = problems[10]
 #

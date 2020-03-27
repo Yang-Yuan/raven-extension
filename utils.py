@@ -178,6 +178,20 @@ def sum_score(data, *score_names):
         return [sum([d.get(name) for d in data]) for name in score_names]
 
 
+def avg_score(data, *score_names):
+    if 0 == len(data):
+        return [0] * len(score_names)
+    else:
+        return [sum([d.get(name) for d in data]) / len(data) for name in score_names]
+
+
+def min_score(data, *score_names):
+    if 0 == len(data):
+        return [0] * len(score_names)
+    else:
+        return [min([d.get(name) for d in data]) for name in score_names]
+
+
 def create_object_matrix(objs, shape):
     matrix = np.empty(shape, dtype = np.object)
     kk = 0
