@@ -203,14 +203,14 @@ def create_object_matrix(objs, shape):
     return matrix
 
 
-def resize_to_average_shape(imgs, shape = None, ignore = None):
+def resize_to_average_shape(imgs, shape = None):
     if shape is None:
         shape = np.array([img.shape for img in imgs]).mean(axis = 0).astype(np.int)
         shape = tuple(shape)
 
     resized_imgs = []
     for ii, img in enumerate(imgs):
-        if ignore is not None and ii in ignore:
+        if img.sum() < 8:
             resized_imgs.append(img)
         else:
             resize_img = grey_to_binary(resize(np.logical_not(img), shape, order = 0), 0.7)
@@ -259,4 +259,13 @@ def decompose(img, smallest_size):
 def where_is_center(img):
     img_shape_y, img_shape_x = img.shape
     return (img_shape_x - 1) / 2, (img_shape_y - 1) / 2
+
+
+
+# def find_texture(img):
+#     img_shape_y, img_shape_x = img.shape
+#
+#     for x in range(img_shape_x):
+#         for y in range(img_shape_y):
+
 

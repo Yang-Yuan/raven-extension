@@ -1,24 +1,19 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import utils
+import jaccard
 
 
 class RavenProgressiveMatrix:
 
-    def __init__(self, name, matrix, options, answer):
+    def __init__(self, name, matrix, matrix_ref, options, answer):
 
         self.name = name
         self.type = str(matrix.shape[0]) + "x" + str(matrix.shape[1])
         self.matrix = matrix
-        self.matrix_ref = np.empty_like(self.matrix, dtype = np.object)
-        if self.is_square_problem():
-            for ii in range(self.matrix_ref.shape[0]):
-                for jj in range(self.matrix_ref.shape[1]):
-                    self.matrix_ref[ii, jj] = utils.fill_holes(self.matrix[ii, jj])
-        else:
-            self.matrix_ref = matrix
         self.options = options
         self.answer = answer
+        self.matrix_ref = matrix_ref
 
     def plot_problem(self):
 
@@ -41,15 +36,10 @@ class RavenProgressiveMatrix:
 
         plt.show()
 
-    # blatant magic code, because the defect of hand drawing
-    def is_square_problem(self):
-
-        square_problems = ["c12"]
-        for prob_name in square_problems:
-            if prob_name in self.name:
-                return True
-
-        return False
-
     def plot_solution(self):
         pass
+
+
+
+
+

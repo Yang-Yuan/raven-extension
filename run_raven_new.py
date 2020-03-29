@@ -2,7 +2,6 @@ import json
 import numpy as np
 from matplotlib import pyplot as plt
 import time
-import copy
 import report
 import analogy_new
 import transform
@@ -103,13 +102,11 @@ def run_prob_anlg_tran(prob, anlg, tran):
         #     print("asdfasdf")
         return run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran)
     elif "unary_3x3" == anlg.get("type"):
-        # if "B:A::H:G:::A:C::G:?" == anlg.get("name") and "mirror" == tran.get("name"):
-        #     print("asdfasdf")
-        # if "B:A::H:G:::A:C::G:?" == anlg.get("name") and "mirror_rot_180" == tran.get("name"):
+        # if "C:D::G:B:::G:B::E:?" == anlg.get("name") and "subtract_diff" == tran.get("name"):
         #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     elif "binary_3x3" == anlg.get("type"):
-        # if "A:B:C::D:E:F:::D:E:F::G:H:?" == anlg.get("name") and "inv_unite" == tran.get("name"):
+        # if "H:C:D::F:G:B:::F:G:B::A:E:?" == anlg.get("name") and "preserving_subtract_diff" == tran.get("name"):
         #     print("asdfasdf")
         return run_prob_anlg_tran_3x3(prob, anlg, tran)
     else:
@@ -259,7 +256,8 @@ def predict_subtract_diff(prob, anlg, tran, d):
     u3 = prob.matrix[anlg.get("value")[2]]
     u1_ref = prob.matrix_ref[anlg.get("value")[0]]
 
-    prediction = transform.subtract_diff(u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref)
+    prediction, best_diff_to_prediction_x,  best_diff_to_prediction_y = transform.subtract_diff(
+        u3, best_diff_to_u1_x, best_diff_to_u1_y, best_diff, u1_ref, coords = True)
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
@@ -275,8 +273,18 @@ def predict_subtract_diff(prob, anlg, tran, d):
         if abs(opt_to_u3_x - u2_to_u1_x) > 2 or abs(opt_to_u3_y - u2_to_u1_y) > 2:
             u3_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, u3, u2_to_u1_x, u2_to_u1_y)
         diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
-        opt_score, _, _ = jaccard.jaccard_coef(opt, prediction)
-        score = (diff_score + opt_score + u3_score) / 3
+        opt_score, _, _ = jaccard.jaccard_coef(prediction, opt)
+
+        # prediction_to_opt_x = -to_pred_x + to_opt_x
+        # prediction_to_opt_y = -to_pred_y + to_opt_y
+        #
+        # best_diff_to_opt_x = best_diff_to_prediction_x + prediction_to_opt_x
+        # best_diff_to_opt_y = best_diff_to_prediction_y + prediction_to_opt_y
+        # best_diff_aligned, opt_aligned, _, _ = utils.align(best_diff, opt, best_diff_to_opt_x, best_diff_to_opt_y)
+        # u3_restored = utils.trim_binary_image(np.logical_or(best_diff_aligned, opt_aligned))
+        # u3_restored_score , _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(u3, u3_restored)
+
+        score = (diff_score + u3_score + diff_score) / 3
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
     return pred_data
@@ -322,6 +330,8 @@ def predict_binary(prob, anlg, tran, d):
         return predict_unite(prob, anlg, tran, d)
     elif "inv_unite" == tran.get("name"):
         return predict_inv_unite(prob, anlg, tran, d)
+    elif "preserving_subtract_diff" == tran.get("name"):
+        return predict_preserving_subtract_diff(prob, anlg, tran, d)
     else:
         return predict_binary_default(prob, anlg, tran, d)
 
@@ -362,6 +372,48 @@ def predict_unite(prob, anlg, tran, d):
         pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
 
     return pred_data
+
+
+def predict_preserving_subtract_diff(prob, anlg, tran, d):
+    best_diff_to_b2_x = d.get("diff_to_b2_x")
+    best_diff_to_b2_y = d.get("diff_to_b2_y")
+    best_diff_to_b3_x = d.get("diff_to_b3_x")
+    best_diff_to_b3_y = d.get("diff_to_b3_y")
+    best_diff = d.get("diff")
+    b4 = prob.matrix[anlg.get("value")[3]]
+    b5 = prob.matrix[anlg.get("value")[4]]
+    b2_ref = prob.matrix_ref[anlg.get("value")[0]]
+
+    prediction, best_diff_to_prediction_x, best_diff_to_prediction_y = transform.subtract_diff(
+        b5, best_diff_to_b2_x, best_diff_to_b2_y, best_diff, b2_ref, coords = True)
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
+        b5_score, diff_to_opt_x, diff_to_opt_y, diff_to_b5_x, diff_to_b5_y, diff = \
+            asymmetric_jaccard.asymmetric_jaccard_coef(opt, b5)
+        opt_to_b5_x = (-diff_to_opt_x) - (-diff_to_b5_x)
+        opt_to_b5_y = (-diff_to_opt_y) - (-diff_to_b5_y)
+        b3_to_b2_x = (-best_diff_to_b3_x) - (-best_diff_to_b2_x)
+        b3_to_b2_y = (-best_diff_to_b3_y) - (-best_diff_to_b2_y)
+        if abs(opt_to_b5_x - b3_to_b2_x) > 2 or abs(opt_to_b5_y - b3_to_b2_y) > 2:
+            b5_score, diff = asymmetric_jaccard.asymmetric_jaccard_coef_pos_fixed(opt, b5, b3_to_b2_x, b3_to_b2_y)
+        diff_score, _, _ = jaccard.jaccard_coef(diff, best_diff)
+        opt_score, _, _ = jaccard.jaccard_coef(prediction, opt)
+
+        b4_b5_aj = asymmetric_jaccard.asymmetric_jaccard_coef(b4, b5)
+        b4_opt_aj = asymmetric_jaccard.asymmetric_jaccard_coef(b4, opt)
+
+        preserving_score = min(b4_b5_aj[0], b4_opt_aj[0])
+
+        score = (diff_score + b5_score + diff_score + preserving_score) / 4
+        pred_data.append({**d, "optn": ii + 1, "pato_score": score, "pred": prediction})
+
+    return pred_data
+
+
 
 
 def predict_binary_default(prob, anlg, tran, d):
@@ -478,6 +530,14 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
 
 
 def run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran):
+    b1_to_b2_x = None
+    b1_to_b2_y = None
+    diff_to_b3_x = None
+    diff_to_b3_y = None
+    diff_to_b2_x = None
+    diff_to_b2_y = None
+    diff = None
+
     b1 = prob.matrix[anlg.get("value")[0]]
     b2 = prob.matrix[anlg.get("value")[1]]
     b3 = prob.matrix[anlg.get("value")[2]]
@@ -485,10 +545,16 @@ def run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran):
     if "inv_unite" == tran.get("name"):
         b1_new, _, _, _, _ = transform.apply_binary_transformation(b2, b3, transform.get_tran("unite"), imgC = b1)
         score, _, _ = jaccard.jaccard_coef(b1_new, b1)
-        b1_to_b2_x = None
-        b1_to_b2_y = None
         # b1_b2_t = transform.inv_unite(b1, b2, b3)
         # score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
+    elif "preserving_subtract_diff" == tran.get("name"):
+        b2_aj = asymmetric_jaccard.asymmetric_jaccard_coef(b1, b2)
+        b3_aj = asymmetric_jaccard.asymmetric_jaccard_coef(b1, b3)
+        preserving_score = min(b2_aj[0], b3_aj[0])
+        score, diff_to_b3_x, diff_to_b3_y, diff_to_b2_x, diff_to_b2_y, diff = \
+            asymmetric_jaccard.asymmetric_jaccard_coef(b3, b2)
+        if preserving_score < 0.85:
+            score = 0
     else:
         b1_b2_t, b1_to_b2_x, b1_to_b2_y, _, _ = transform.apply_binary_transformation(b1, b2, tran, imgC = b3)
         score, _, _ = jaccard.jaccard_coef(b1_b2_t, b3)
@@ -506,7 +572,10 @@ def run_prob_anlg_tran_3x2_and_3x2(prob, anlg, tran):
             score = 0
 
     prob_anlg_tran_d = assemble_prob_anlg_tran_d(prob, anlg, tran, score,
-                                                 b1_to_b2_x = b1_to_b2_x, b1_to_b2_y = b1_to_b2_y)
+                                                 b1_to_b2_x = b1_to_b2_x, b1_to_b2_y = b1_to_b2_y,
+                                                 diff_to_b3_x = diff_to_b3_x, diff_to_b3_y = diff_to_b3_y,
+                                                 diff_to_b2_x = diff_to_b2_x, diff_to_b2_y = diff_to_b2_y,
+                                                 diff = diff)
     pred_data = predict(prob, prob_anlg_tran_d)
 
     return [prob_anlg_tran_d], pred_data
@@ -578,9 +647,12 @@ def get_sub_probs(prob, anlg):
         prob_name = prob.name + "_sub_" + anlg.get("name") + "_" + str(ii)
 
         coms = []
+        ref_coms = []
         for coord in coords:
             coms.append(prob.matrix[coord])
+            ref_coms.append(prob.matrix_ref[coord])
         matrix = utils.create_object_matrix(coms, shape)
+        matrix_ref = utils.create_object_matrix(ref_coms, shape)
 
         if ii == child_n - 1:
             options = prob.options
@@ -590,7 +662,8 @@ def get_sub_probs(prob, anlg):
             options = [coms[-1]]
             answer = 1
 
-        sub_probs.append(RPM(prob_name, matrix, options, answer))
+        rpm = RPM(prob_name, matrix, matrix_ref, options, answer)
+        sub_probs.append(rpm)
 
     return sub_probs
 
@@ -608,7 +681,10 @@ def assemble_prob_anlg_tran_d(prob, anlg, tran, pat_score,
                               u1_coms_x = None,
                               u1_coms_y = None,
                               u2_coms_x = None,
-                              u2_coms_y = None):
+                              u2_coms_y = None,
+                              diff_to_b3_x = None, diff_to_b3_y = None,
+                              diff_to_b2_x = None, diff_to_b2_y = None
+                              ):
 
     return {
         "prob_name": prob.name,
@@ -631,5 +707,9 @@ def assemble_prob_anlg_tran_d(prob, anlg, tran, pat_score,
         "u1_coms_x": u1_coms_x,
         "u1_coms_y": u1_coms_y,
         "u2_coms_x": u2_coms_x,
-        "u2_coms_y": u2_coms_y
+        "u2_coms_y": u2_coms_y,
+        "diff_to_b3_x": diff_to_b3_x,
+        "diff_to_b3_y": diff_to_b3_y,
+        "diff_to_b2_x": diff_to_b2_x,
+        "diff_to_b2_y": diff_to_b2_y
     }

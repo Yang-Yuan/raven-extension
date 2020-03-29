@@ -432,3 +432,5 @@ def get_anlg(anlg_name):
             return anlg
 
 
+for anlg in all_anlgs:
+    print(anlg.get("name"))

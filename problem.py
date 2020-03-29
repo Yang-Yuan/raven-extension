@@ -6,6 +6,7 @@ from skimage.transform import rescale
 from skimage.filters import gaussian
 import numpy as np
 import utils
+import jaccard
 from RavenProgressiveMatrix import RavenProgressiveMatrix
 
 raven_folder = "./problems/SPMpadded"
@@ -48,6 +49,11 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
 
     problems = []
     for img, coords, problem_name, answer in zip(raw_images, problem_coordinates, problem_names, answers):
+
+        print(problem_name)
+
+        jaccard.load_jaccard_cache(problem_name)
+
         coms = utils.extract_components(img, coords)
 
         smaller_coms = [rescale(image = com, scale = (0.5, 0.5)) for com in coms]
@@ -62,20 +68,22 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
         # and it will definitely accelerate the computation.
         binary_smaller_coms = [utils.trim_binary_image(com) for com in binary_smaller_coms]
 
-        # some blatant magic code, because of the blatant hand drawing
-        # if problem_name in ["c7"]:
-        #     binary_smaller_coms = utils.resize_to_average_shape(binary_smaller_coms, ignore = [8])
+        binary_smaller_coms, binary_smaller_coms_ref = standardize(binary_smaller_coms)
 
         if 10 == len(coms):
             matrix = utils.create_object_matrix(binary_smaller_coms[: 4], (2, 2))
+            matrix_ref = utils.create_object_matrix(binary_smaller_coms_ref[: 4], (2, 2))
             options = binary_smaller_coms[4:]
-            problems.append(RavenProgressiveMatrix(problem_name, matrix, options, answer))
+            problems.append(RavenProgressiveMatrix(problem_name, matrix, matrix_ref, options, answer))
         elif 17 == len(coms):
             matrix = utils.create_object_matrix(binary_smaller_coms[: 9], (3, 3))
+            matrix_ref = utils.create_object_matrix(binary_smaller_coms_ref[: 9], (3, 3))
             options = binary_smaller_coms[9:]
-            problems.append(RavenProgressiveMatrix(problem_name, matrix, options, answer))
+            problems.append(RavenProgressiveMatrix(problem_name, matrix, matrix_ref, options, answer))
         else:
             raise Exception("Crap!")
+
+        jaccard.save_jaccard_cache(problem_name)
 
     if show_me:
         for prob in problems:
@@ -83,3 +91,26 @@ def load_problems(problem_folder = None, problem_coordinates_file = None, show_m
 
     return problems
 
+
+def standardize(coms):
+
+    coms_ref = []
+    for com in coms:
+        coms_ref.append(utils.fill_holes(com))
+
+    min_sim = np.inf
+    for A in coms_ref:
+        for B in coms_ref:
+            if 0 == A.sum() or 0 == B.sum():
+                continue
+            sim, _, _ = jaccard.jaccard_coef(A, B)
+            if sim < min_sim:
+                min_sim = sim
+
+    if min_sim > 0.85:
+        print("standardized.")
+        coms = utils.resize_to_average_shape(coms)
+        coms_ref = [np.full_like(coms[0], fill_value = True)] * len(coms)
+        return coms, coms_ref
+    else:
+        return coms, coms

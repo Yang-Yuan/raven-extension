@@ -36,7 +36,8 @@ binary_transformations = [
     # {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
     {"name": "xor", "value": [{"name": "xor"}], "type": "binary"},
     {"name": "shadow_mask_unite", "value": [{"name": "shadow_mask_unite"}], "type": "binary"},  # for e8
-    {"name": "inv_unite", "value": [{"name": "inv_unite"}], "type": "binary"}
+    {"name": "inv_unite", "value": [{"name": "inv_unite"}], "type": "binary"},
+    {"name": "preserving_subtract_diff", "value": [{"name": "preserving_subtract_diff"}], "type": "binary"}
 ]
 
 all_trans = unary_transformations + binary_transformations
@@ -146,7 +147,7 @@ def upscale_to(img, ref):
     return utils.grey_to_binary(resize(np.logical_not(img), (max_y, max_x), order = 0), 0.7)
 
 
-def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
+def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref, coords = False):
     """
 
     :param img:
@@ -158,14 +159,26 @@ def subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
     """
 
     if 0 == diff.sum():
-        return img
+        if coords:
+            return img, 0, 0
+        else:
+            return img
 
     _, img_to_ref_x, img_to_ref_y = jaccard.jaccard_coef(img, ref)
     diff_to_img_x = diff_to_ref_x - img_to_ref_x
     diff_to_img_y = diff_to_ref_y - img_to_ref_y
 
-    diff_aligned, img_aligned, _, _ = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
-    return utils.erase_noise_point(utils.trim_binary_image(np.logical_and(img_aligned, np.logical_not(diff_aligned))), 4)
+    diff_aligned, img_aligned, aligned_to_img_x, aligned_to_img_y = utils.align(diff, img, diff_to_img_x, diff_to_img_y)
+
+    result, result_to_aligned_x, result_to_aligned_y = utils.trim_binary_image(
+        utils.erase_noise_point(np.logical_and(img_aligned, np.logical_not(diff_aligned)), 8), coord = True)
+
+    if coords:
+        diff_to_result_x = (diff_to_img_x - aligned_to_img_x) - result_to_aligned_x
+        diff_to_result_y = (diff_to_img_y - aligned_to_img_y) - result_to_aligned_y
+        return result, diff_to_result_x, diff_to_result_y
+    else:
+        return result
 
 
 def add_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref):
@@ -435,4 +448,5 @@ def inv_unite(A, B, C):
     return C_new
 
 
-
+def preserving_subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref, coords = False):
+    return subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref, coords)
