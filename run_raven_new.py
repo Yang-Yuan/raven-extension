@@ -20,8 +20,6 @@ def run_rave_brutal(show_me = False, test_problems = None):
 
     probs = prob_anlg_tran_new.get_probs(test_problems)
 
-    all_pred_data = []
-
     for prob in probs:
 
         print(prob.name)
@@ -43,9 +41,17 @@ def run_rave_brutal(show_me = False, test_problems = None):
         # data aggregation progression, TODO maybe save them as images
         for d in anlg_tran_data:
             del d["diff"]
+            del d["diff_to_u1_x"]
+            del d["diff_to_u1_y"]
+            del d["diff_to_u2_x"]
+            del d["diff_to_u2_y"]
         for d in pred_data:
             del d["diff"]
             del d["pred"]
+            del d["diff_to_u1_x"]
+            del d["diff_to_u1_y"]
+            del d["diff_to_u2_x"]
+            del d["diff_to_u2_y"]
         del pred_d["diff"]
         del pred_d["pred"]
         aggregation_progression = {
@@ -57,9 +63,6 @@ def run_rave_brutal(show_me = False, test_problems = None):
             json.dump(aggregation_progression, outfile)
             outfile.close()
 
-        # append to the all_pred_data for following analysis
-        all_pred_data.extend(pred_data)
-
         # update cache
         jaccard.save_jaccard_cache(prob.name)
         asymmetric_jaccard.save_asymmetric_jaccard_cache(prob.name)
@@ -69,11 +72,6 @@ def run_rave_brutal(show_me = False, test_problems = None):
     # output report
     if test_problems is None:
         report.create_report(probs, "brutal_new_")
-
-    # save all_pred_data
-    with open("./data/brutal_all.json", 'w+') as outfile:
-        json.dump(all_pred_data, outfile)
-        outfile.close()
 
     end_time = time.time()
     print(end_time - start_time)
