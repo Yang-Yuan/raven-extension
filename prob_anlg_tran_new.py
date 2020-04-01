@@ -1,6 +1,10 @@
 import problem
 import analogy_new
+import numpy as np
 import transform
+from RavenProgressiveMatrix import RavenProgressiveMatrix as RPM
+import utils
+
 
 problems = problem.load_problems()
 
@@ -39,7 +43,7 @@ def get_anlg_tran_pairs(prob):
         trans = get_trans(prob, anlg)
         for tran in trans:
             if is_valid(anlg, tran):
-                pairs.append({"anlg": anlg, "tran": tran})
+                pairs.append((anlg, tran))
 
     return pairs
 
@@ -57,5 +61,45 @@ def is_valid(anlg, tran):
                     valid = False
 
     return valid
+
+
+def get_sub_probs(prob, anlg):
+
+    value = anlg.get("value")
+    child_name = anlg.get("chld_name")
+    child_n = anlg.get("chld_n")
+
+    child_anlg = analogy_new.get_anlg(child_name)
+    shape = child_anlg.get("shape")
+
+    sub_probs = []
+    for ii in range(child_n):
+        if "binary" in anlg.get("type"):
+            coords = value[ii * 6 : (ii + 1) * 6]
+        else:
+            coords = value[ii * 4 : (ii + 1) * 4]
+
+        prob_name = prob.name + "_sub_" + anlg.get("name") + "_" + str(ii)
+
+        coms = []
+        ref_coms = []
+        for coord in coords:
+            coms.append(prob.matrix[coord])
+            ref_coms.append(prob.matrix_ref[coord])
+        matrix = utils.create_object_matrix(coms, shape)
+        matrix_ref = utils.create_object_matrix(ref_coms, shape)
+
+        if ii == child_n - 1:
+            options = prob.options
+            answer = prob.answer
+        else:
+            matrix[-1, -1] = np.full_like(coms[-1], fill_value = False)
+            options = [coms[-1]]
+            answer = 1
+
+        rpm = RPM(prob_name, matrix, matrix_ref, options, answer)
+        sub_probs.append(rpm)
+
+    return sub_probs
 
 
