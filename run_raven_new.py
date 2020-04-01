@@ -39,7 +39,7 @@ def run_rave_brutal(show_me = False, test_problems = None):
             pred_data.extend(predict(prob, anlg_tran_d))
 
         # optimize w.r.t. options
-        pred_d = utils.find_best(pred_data, "pat_score", "pato_score")
+        pred_d = utils.find_best(pred_data, "pato_score")
 
         # save image
         save_image(pred_d.get("pred"), prob.options[pred_d.get("optn") - 1],
