@@ -29,11 +29,18 @@ def get_anlgs(prob):
 
 def get_trans(prob, anlg):
     if "unary" in anlg.get("type"):
-        return transform.unary_transformations
+        trans = transform.unary_transformations
     elif "binary" in anlg.get("type"):
-        return transform.binary_transformations
+        trans = transform.binary_transformations
     else:
         raise Exception("Ryan don't forget anlg")
+
+    valid_ones = []
+    for tran in trans:
+        if is_valid(anlg, tran):
+            valid_ones.append(tran)
+
+    return valid_ones
 
 
 def get_anlg_tran_pairs(prob):
@@ -42,8 +49,7 @@ def get_anlg_tran_pairs(prob):
     for anlg in anlgs:
         trans = get_trans(prob, anlg)
         for tran in trans:
-            if is_valid(anlg, tran):
-                pairs.append((anlg, tran))
+            pairs.append((anlg, tran))
 
     return pairs
 

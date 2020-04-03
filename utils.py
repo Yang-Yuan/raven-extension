@@ -1,3 +1,4 @@
+import json
 from matplotlib import pyplot as plt
 import numpy as np
 from skimage import measure
@@ -240,7 +241,6 @@ def fill_holes(img):
 
 
 def decompose(img, smallest_size):
-
     labels, label_num = measure.label(input = img, background = False, return_num = True, connectivity = 1)
     sizes = [(labels == label).sum() for label in range(1, label_num + 1)]
     coms = []
@@ -261,11 +261,58 @@ def where_is_center(img):
     return (img_shape_x - 1) / 2, (img_shape_y - 1) / 2
 
 
+def save_data(prob, anlg_tran_data, pred_data, pred_d, prefix, show_me = False):
 
-# def find_texture(img):
-#     img_shape_y, img_shape_x = img.shape
-#
-#     for x in range(img_shape_x):
-#         for y in range(img_shape_y):
+    save_image(pred_d.get("pred"), prob.options[pred_d.get("optn") - 1], prefix, show_me)
+
+    return save_json(anlg_tran_data, pred_data, pred_d, prefix)
 
 
+def save_image(prediction, selection, prefix, show_me = False):
+    if show_me:
+        plt.figure()
+        plt.imshow(prediction)
+        plt.figure()
+        plt.imshow(selection)
+        plt.show()
+    else:
+        plt.figure()
+        plt.imshow(prediction)
+        plt.savefig(prefix + "_prediction.png")
+        plt.close()
+        plt.figure()
+        plt.imshow(selection)
+        plt.savefig(prefix + "_selection.png")
+        plt.close()
+
+
+def save_json(anlg_tran_data, pred_data, pred_d, prefix):
+    for d in anlg_tran_data:
+        d.pop("last_sub_prob", None)
+        d.pop("last_sub_prob_anlg_tran_d", None)
+        d.pop("diff", None)
+        d.pop("diff_to_u1_x", None)
+        d.pop("diff_to_u1_y", None)
+        d.pop("diff_to_u2_x", None)
+        d.pop("diff_to_u2_y", None)
+    for d in pred_data:
+        d.pop("diff", None)
+        d.pop("pred", None)
+        d.pop("diff_to_u1_x", None)
+        d.pop("diff_to_u1_y", None)
+        d.pop("diff_to_u2_x", None)
+        d.pop("diff_to_u2_y", None)
+    pred_d.pop("diff", None)
+    pred_d.pop("pred", None)
+
+    aggregation_progression = {
+        "anlg_tran_data": anlg_tran_data,
+        "pred_data": pred_data,
+        "pred_d": pred_d
+    }
+
+    with open(prefix + ".json", 'w+') as outfile:
+        json.dump(aggregation_progression, outfile)
+        outfile.close()
+
+    return aggregation_progression
