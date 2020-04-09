@@ -13,13 +13,13 @@ THIS = modules[__name__]
 
 unary_transformations = [
     {"name": "identity", "value": [{"name": None}], "type": "unary"},
-    # {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
-    # {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    # {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
+    {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
     {"name": "mirror", "value": [{"name": "mirror_left_right"}], "type": "unary"},
-    # {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
+    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
     {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    # {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
+    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
     {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary"},
     # {"name": "upscale_to", "value": [{"name": "upscale_to"}], "type": "unary"},
     {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary"},
