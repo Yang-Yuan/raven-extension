@@ -110,6 +110,7 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)
 
     if "mirror" == tran.get("name") or "mirror_rot_180" == tran.get("name"):
+        # if u1 or u2 is already symmetric, then we shouldn't use mirror tran.
         u1_mirror_score, _, _ = jaccard.jaccard_coef(u1_t, u1)
         u2_mirror = transform.apply_unary_transformation(u2, tran)
         u2_mirror_score, _, _ = jaccard.jaccard_coef(u2_mirror, u2)
