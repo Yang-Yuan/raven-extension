@@ -4,7 +4,7 @@ from predict import predict
 import utils
 
 
-def strategy_1(prob):
+def confident(prob):
 
     anlg_tran_data = []
     pred_data = []
@@ -30,7 +30,7 @@ def strategy_1(prob):
     return anlg_tran_data, pred_data, pred_d
 
 
-def strategy_2(prob):
+def neutral(prob):
 
     anlg_tran_data = []
     pred_data = []
@@ -63,7 +63,7 @@ def strategy_2(prob):
     return anlg_tran_data, pred_data, pred_d
 
 
-def strategy_3(prob):
+def prudent(prob):
 
     anlg_tran_data = []
     pred_data = []

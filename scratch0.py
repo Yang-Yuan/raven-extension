@@ -1,11 +1,11 @@
 import run_raven_new
 import strategy
 
-run_raven_new.run_raven(strategy.strategy_1)
+run_raven_new.run_raven(strategy.confident)
 
-run_raven_new.run_raven(strategy.strategy_2)
+run_raven_new.run_raven(strategy.neutral)
 
-run_raven_new.run_raven(strategy.strategy_3)
+run_raven_new.run_raven(strategy.prudent)
 
 # import run_raven
 #
