@@ -401,7 +401,7 @@ for ii, m in enumerate(matrices_3x3):
     unary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, 2, ':', 3, int(ii / 4))
     unary_anlgs = remove_redundant_ones(unary_anlgs)
     unary_3x3.extend(unary_anlgs)
-    binary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, [3, 2], ':', 3)
+    binary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, [3, 2], ':', 3, int(ii / 4))
     binary_anlgs = remove_redundant_ones(binary_anlgs)
     binary_3x3.extend(binary_anlgs)
 
