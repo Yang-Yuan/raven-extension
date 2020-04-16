@@ -12,32 +12,32 @@ import utils
 THIS = modules[__name__]
 
 unary_transformations = [
-    {"name": "identity", "value": [{"name": None}], "type": "unary"},
-    {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
-    {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
-    {"name": "mirror", "value": [{"name": "mirror_left_right"}], "type": "unary"},
-    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary"},
-    {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary"},
-    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary"},
-    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary"},
+    {"name": "identity", "value": [{"name": None}], "type": "unary", "group": 0},
+    {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary", "group": 0},
+    {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary", "group": 0},
+    {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary", "group": 0},
+    {"name": "mirror", "value": [{"name": "mirror_left_right"}], "type": "unary", "group": 0},
+    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary", "group": 0},
+    {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary", "group": 0},
+    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary", "group": 0},
+    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary", "group": 0},
     # {"name": "upscale_to", "value": [{"name": "upscale_to"}], "type": "unary"},
-    {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary"},
-    {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary"},
-    {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary"},
-    {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary"},
-    {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary"}
+    {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary", "group": 1},
+    {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary", "group": 1},
+    {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
+    {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
+    {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2}
 ]
 
 binary_transformations = [
-    {"name": "unite", "value": [{"name": "unite"}], "type": "binary", "align": "unite_align"},
-    {"name": "intersect", "value": [{"name": "intersect"}], "type": "binary"},
+    {"name": "unite", "value": [{"name": "unite"}], "type": "binary", "align": "unite_align", "group": 3},
+    {"name": "intersect", "value": [{"name": "intersect"}], "type": "binary", "group": 3},
     # {"name": "subtract", "value": [{"name": "subtract"}], "type": "binary"},
     # {"name": "backward_subtract", "value": [{"name": "backward_subtract"}], "type": "binary"},
-    {"name": "xor", "value": [{"name": "xor"}], "type": "binary"},
-    {"name": "shadow_mask_unite", "value": [{"name": "shadow_mask_unite"}], "type": "binary"},  # for e8
-    {"name": "inv_unite", "value": [{"name": "inv_unite"}], "type": "binary"},
-    {"name": "preserving_subtract_diff", "value": [{"name": "preserving_subtract_diff"}], "type": "binary"}
+    {"name": "xor", "value": [{"name": "xor"}], "type": "binary", "group": 3},
+    {"name": "shadow_mask_unite", "value": [{"name": "shadow_mask_unite"}], "type": "binary", "group": 3},
+    {"name": "inv_unite", "value": [{"name": "inv_unite"}], "type": "binary", "group": 3},
+    {"name": "preserving_subtract_diff", "value": [{"name": "preserving_subtract_diff"}], "type": "binary", "group": 3}
 ]
 
 all_trans = unary_transformations + binary_transformations

@@ -171,7 +171,7 @@ def generate_row_analogies(symbol_matrix, symbol_to_coord, tuple_n, link_symbol)
     return tuple_symbol_matrix, tuple_symbol_to_coord
 
 
-def collapse(args, link_symbol, type, chld_name, shape):
+def collapse(args, link_symbol, type, chld_name, shape, group = None):
 
     anlgs = []
     allinone_anlgs = []
@@ -196,7 +196,8 @@ def collapse(args, link_symbol, type, chld_name, shape):
                 "type": type,
                 "chld_name": chld_name,
                 "chld_n": 2,
-                "shape": shape
+                "shape": shape,
+                "group": group
             })
 
         if len(symbols) > 1:
@@ -210,13 +211,14 @@ def collapse(args, link_symbol, type, chld_name, shape):
                 "type": type,
                 "chld_name": chld_name,
                 "chld_n": len(symbols) + 1,
-                "shape": shape
+                "shape": shape,
+                "group": group
             })
 
     return anlgs + allinone_anlgs
 
 
-def get_matrix_analogies(symbol_matrix, symbol_to_coord, tuple_n, link_symbol, order_n):
+def get_matrix_analogies(symbol_matrix, symbol_to_coord, tuple_n, link_symbol, order_n, group = None):
 
     if not isinstance(tuple_n, list):
         tuple_n = [tuple_n] * (order_n - 1)
@@ -252,7 +254,7 @@ def get_matrix_analogies(symbol_matrix, symbol_to_coord, tuple_n, link_symbol, o
     else:
         chld_name = None
 
-    return collapse(args, order_link, anlg_type, chld_name, (row_n, col_n))
+    return collapse(args, order_link, anlg_type, chld_name, (row_n, col_n), group)
 
 
 def remove_redundant_ones(anlgs):
@@ -318,9 +320,10 @@ matrices_2x2 = [[['A', 'B'],
 
                 [['C', 'B'],
                  ['A', '?']]]
+
 unary_2x2 = []
-for m in matrices_2x2:
-    anlgs = get_matrix_analogies(m, symbol_to_coord_2x2, 2, ':', 2)
+for ii, m in enumerate(matrices_2x2):
+    anlgs = get_matrix_analogies(m, symbol_to_coord_2x2, 2, ':', 2, ii)
     anlgs = remove_redundant_ones(anlgs)
     unary_2x2.extend(anlgs)
 
@@ -394,8 +397,8 @@ matrices_3x3 = [  # redundancy exists,
 
 unary_3x3 = []
 binary_3x3 = []
-for m in matrices_3x3:
-    unary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, 2, ':', 3)
+for ii, m in enumerate(matrices_3x3):
+    unary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, 2, ':', 3, int(ii / 4))
     unary_anlgs = remove_redundant_ones(unary_anlgs)
     unary_3x3.extend(unary_anlgs)
     binary_anlgs = get_matrix_analogies(m, symbol_to_coord_3x3, [3, 2], ':', 3)

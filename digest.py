@@ -211,6 +211,8 @@ def run_prob_anlg_tran_3x3(prob, anlg, tran):
     anlg_tran_d["tran_type"] = tran.get("type")
     anlg_tran_d["pat_score"] = (last_sub_prob_anlg_tran_d["pat_score"] + pato_score_sum * 2) / (sub_prob_n * 2 - 1)
     anlg_tran_d["prob_ansr"] = prob.answer
+    anlg_tran_d["anlg_grp"] = anlg.get("group")
+    anlg_tran_d["tran_grp"] = tran.get("group")
 
     return anlg_tran_d
 
@@ -242,6 +244,8 @@ def assemble_prob_anlg_tran_d(prob, anlg, tran, pat_score,
         "prob_type": prob.type,
         "anlg_type": anlg.get("type"),
         "tran_type": tran.get("type"),
+        "anlg_grp": anlg.get("group"),
+        "tran_grp": tran.get("group"),
         "diff_to_u1_x": diff_to_u1_x,
         "diff_to_u1_y": diff_to_u1_y,
         "diff_to_u2_x": diff_to_u2_x,
