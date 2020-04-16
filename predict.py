@@ -323,5 +323,7 @@ def predict_3x3(prob, anlg, tran, d):
         pred_d["prob_ansr"] = prob.answer
         pred_d["pato_score"] = (d.get("pat_score") * (2 * d.get("sub_prob_n") - 1) + pred_d["pato_score"] * 2 - pred_d["pat_score"]) / (2 * d.get("sub_prob_n"))
         pred_d["pat_score"] = d.get("pat_score")
+        pred_d["anlg_grp"] = anlg.get("group")
+        pred_d["tran_grp"] = tran.get("group")
 
     return sub_prob_pred_data
