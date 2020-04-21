@@ -162,7 +162,7 @@ def predict_subtract_diff(prob, anlg, tran, d):
         # u3_restored = utils.trim_binary_image(np.logical_or(best_diff_aligned, opt_aligned))
         # u3_restored_score , _, _, _, _, _ = asymmetric_jaccard.asymmetric_jaccard_coef(u3, u3_restored)
 
-        score = (diff_score + u3_score + diff_score) / 3
+        score = (diff_score + u3_score + opt_score) / 3
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "pato_score": (d.get("pat_score") + score) / 2, "pred": prediction})
 
     return pred_data
