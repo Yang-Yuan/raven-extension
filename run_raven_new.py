@@ -7,7 +7,8 @@ import prob_anlg_tran_new
 import utils
 
 
-def run_raven(strategy, show_me = False, test_problems = None):
+def run_raven(strategy, explanation_score_name = "pat_score", prediction_score_name = "pato_score",
+              show_me = False, test_problems = None):
 
     start_time = time.time()
 
@@ -24,7 +25,8 @@ def run_raven(strategy, show_me = False, test_problems = None):
         asymmetric_jaccard.load_asymmetric_jaccard_cache(prob.name)
 
         # run strategy
-        anlg_tran_data, pred_data, pred_d = strategy(prob)
+        anlg_tran_data, pred_data, pred_d = strategy(prob, explanation_score_name = explanation_score_name,
+                                                     prediction_score_name = prediction_score_name)
 
         # save data
         prob.data = utils.save_data(prob, anlg_tran_data, pred_data, pred_d, "./data/" + strategy.__name__ + "_" + prob.name, show_me)
