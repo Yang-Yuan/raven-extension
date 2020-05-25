@@ -17,9 +17,9 @@ translations = {
     "anlg_type": "Analogy Type",
     "tran_name": "Transformation",
     "tran_type": "Transformation Type",
-    "pat_score": "PAT Score",
+    "mat_score": "MAT Score",
     "optn_score": "O Score",
-    "pato_score": "PATO Score",
+    "mato_score": "MATO Score",
     "anlg_n": "# of Hits",
     "tran_n": "# of Hits",
     "crct_probs": "Correctly Answered",
@@ -28,7 +28,7 @@ translations = {
 }
 
 sltn_cols = ["prob_name", "prob_type", "prob_ansr", "optn",
-             "anlg_name", "anlg_type", "tran_name", "tran_type", "pat_score", "optn_score", "pato_score"]
+             "anlg_name", "anlg_type", "tran_name", "tran_type", "mat_score", "optn_score", "mato_score"]
 sltn_hdrs = [translations.get(col) for col in sltn_cols]
 sltn_col_widths = [15, 15, 15, 15, 40, 15, 20, 15, 15, 15, 15]
 
