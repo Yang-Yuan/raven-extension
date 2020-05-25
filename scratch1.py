@@ -1,13 +1,20 @@
 from matplotlib import pyplot as plt
+from skimage.color import rgb2gray
+from skimage.io import imsave
 import problem
 import utils
 import numpy as np
 from skimage.transform import resize
 
 
-problems = problem.load_problems()
+img = plt.imread("./problems/g1.png")
+img0 = rgb2gray(img)
+imsave("./problems/g1.png", img0)
 
-prob = problems[55]
+
+# problems = problem.load_problems()
+#
+# prob = problems[55]
 
 # a = prob.matrix[1, 1]
 # b = prob.matrix[1, 2]
