@@ -1,15 +1,21 @@
 from matplotlib import pyplot as plt
+from PIL import Image
+import numpy as np
 from skimage.color import rgb2gray
 from skimage.io import imsave
 import problem
 import utils
-import numpy as np
 from skimage.transform import resize
 
 
-img = plt.imread("./problems/g1.png")
-img0 = rgb2gray(img)
-imsave("./problems/g1.png", img0)
+img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")
+img0 = img[:, :, 0]
+c0 = Image.fromarray(img0)
+c0.save("./problems/ace analogies - chopped up/m5/c0.gif", mode = "L")
+
+# img = plt.imread("./problems/g1.png")
+# img0 = rgb2gray(img)
+# imsave("./problems/g1.png", img0)
 
 
 # problems = problem.load_problems()

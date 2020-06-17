@@ -1,5 +1,5 @@
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, isdir
 from matplotlib import pyplot as plt
 from natsort import natsorted
 from skimage.transform import rescale
@@ -8,9 +8,13 @@ import numpy as np
 import utils
 import jaccard
 from RavenProgressiveMatrix import RavenProgressiveMatrix
+from PIL import Image
 
 raven_folder = "./problems/SPMpadded"
 raven_coordinates_file = "./problems/SPM coordinates.txt"
+
+ace_folder = "./problems/ace analogies - chopped up"
+ace_img_names = ["a.gif", "b.gif", "c.gif", "1.gif", "2.gif", "3.gif", "4.gif", "5.gif"]
 
 
 def load_problems(problem_folder = None, problem_coordinates_file = None, show_me = False):
@@ -114,3 +118,45 @@ def standardize(coms):
         return coms, coms_ref
     else:
         return coms, coms
+
+
+def load_ace_problems(problem_folder = None, show_me = False):
+    global ace_folder
+    global ace_img_names
+
+    if problem_folder is None:
+        problem_folder = ace_folder
+
+    problem_names = natsorted([f for f in listdir(problem_folder) if isdir(join(problem_folder, f))])
+
+    with open("./problems/ace analogies - chopped up/stuff.txt", "r") as f:
+        answers = []
+        for line in f:
+            answers.append(int(line))
+
+    problems = []
+
+    for prob_name, answer in zip(problem_names, answers):
+
+        print("load problem: " + prob_name)
+
+        prob_folder = join(problem_folder, prob_name)
+
+        coms = [np.asanyarray(Image.open(join(prob_folder, img_name)).convert("L")) / 255 for img_name in ace_img_names]
+
+        binary_coms = [utils.grey_to_binary(com, 0.7) for com in coms]
+
+        missing_entry = np.full_like(binary_coms[0], fill_value = False)
+
+        binary_coms.insert(3, missing_entry)
+
+        matrix = utils.create_object_matrix(binary_coms[: 4], (2, 2))
+        matrix_ref = utils.create_object_matrix(binary_coms[: 4], (2, 2))
+        options = binary_coms[4:]
+        problems.append(RavenProgressiveMatrix(prob_name, matrix, matrix_ref, options, answer))
+
+    if show_me:
+        for prob in problems:
+            prob.plot_problem()
+
+    return problems
