@@ -7,12 +7,17 @@ from sys import modules
 import numpy as np
 import jaccard
 import asymmetric_jaccard
+import map
 import utils
 
 THIS = modules[__name__]
 
 unary_transformations = [
     {"name": "identity", "value": [{"name": None}], "type": "unary", "group": 0},
+    {"name": "rot_45", "value": [{"name": "rot_binary", "args": {"angle": 45}}], "type": "unary", "groups": 0},
+    {"name": "rot_135", "value": [{"name": "rot_binary", "args": {"angle": 135}}], "type": "unary", "groups": 0},
+    {"name": "rot_225", "value": [{"name": "rot_binary", "args": {"angle": 225}}], "type": "unary", "groups": 0},
+    {"name": "rot_315", "value": [{"name": "rot_binary", "args": {"angle": 315}}], "type": "unary", "groups": 0},
     {"name": "rot_90", "value": [{"name": "rot_binary", "args": {"angle": 90}}], "type": "unary", "group": 0},
     {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary", "group": 0},
     {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary", "group": 0},
@@ -26,7 +31,8 @@ unary_transformations = [
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary", "group": 1},
     {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
-    {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2}
+    {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
+    {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2}
 ]
 
 binary_transformations = [
@@ -99,6 +105,42 @@ def evaluate_rearrange(u1, u2):
         u2_coms_x = [u2_coms_x[id] for id in max_ids]
         u2_coms_y = [u2_coms_y[id] for id in max_ids]
         return min_max_score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y
+
+
+def evaluate_XXX(u1, u2, u3):
+    """
+    1) u1 and u2 have some common (or very similar)components such that
+    an injective mapping exists by the correspondence of similar pairs.
+    2) u1 and u3 share the same topological structure by considering
+    two relations, "disconnect" and "inside".
+    :param u1: an binary image
+    :param u2: a binary iamge
+    :param u3: a binary image
+    :return: MAT score
+    """
+
+    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+
+    jcm, min_jc = map.jaccard_map(u1_coms, u2_coms)
+
+    if min_jc < 0.7:
+        return 0
+
+    u1_tpm_coms, u3_tpm_coms = map.topological_map(u1, u3, u1_coms, u3_coms)
+
+    if u1_tpm_coms is not None:
+        # success tpm
+        pass
+    else:
+        # fail tpm
+        pass
+
+    return None
+
+
+
 
 
 def rearrange(img, old_xs, old_ys, new_xs, new_ys):

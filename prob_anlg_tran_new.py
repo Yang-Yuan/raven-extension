@@ -6,28 +6,39 @@ from RavenProgressiveMatrix import RavenProgressiveMatrix as RPM
 import utils
 
 
-problems = problem.load_problems()
+def get_probs(test_problems, test_name = "spm"):
 
-
-def get_probs(test_problems):
-    if test_problems is None:
-        return problems
-    else:
-        return [prob for prob in problems if prob.name in test_problems]
-
-
-def get_anlgs(prob):
-    if "2x2" in prob.type:
-        return analogy_new.unary_2x2
-    elif "2x3" in prob.type:
-        return analogy_new.binary_2x3
-    elif "3x3" in prob.type:
-        return analogy_new.unary_3x3 + analogy_new.binary_3x3
+    if "spm" == test_name:
+        probs = problem.load_problems()
+    elif "ace" == test_name:
+        probs = problem.load_ace_problems()
     else:
         raise Exception("Ryan!")
 
+    if test_problems is None:
+        return probs
+    else:
+        return [prob for prob in probs if prob.name in test_problems]
 
-def get_trans(prob, anlg):
+
+def get_anlgs(prob, test_anlgs = None):
+
+    if "2x2" in prob.type:
+        anlgs = analogy_new.unary_2x2
+    elif "2x3" in prob.type:
+        anlgs = analogy_new.binary_2x3
+    elif "3x3" in prob.type:
+        anlgs = analogy_new.unary_3x3 + analogy_new.binary_3x3
+    else:
+        raise Exception("Ryan!")
+
+    if test_anlgs is not None:
+        return [anlg for anlg in anlgs if anlg.get("name") in test_anlgs]
+    else:
+        return anlgs
+
+
+def get_trans(prob, anlg, test_trans = None):
     if "unary" in anlg.get("type"):
         trans = transform.unary_transformations
     elif "binary" in anlg.get("type"):
@@ -40,14 +51,17 @@ def get_trans(prob, anlg):
         if is_valid(anlg, tran):
             valid_ones.append(tran)
 
-    return valid_ones
+    if test_trans is not None:
+        return [tran for tran in valid_ones if tran.get("name") in test_trans]
+    else:
+        return valid_ones
 
 
-def get_anlg_tran_pairs(prob):
+def get_anlg_tran_pairs(prob, test_anlgs = None, test_trans = None):
     pairs = []
-    anlgs = get_anlgs(prob)
+    anlgs = get_anlgs(prob, test_anlgs)
     for anlg in anlgs:
-        trans = get_trans(prob, anlg)
+        trans = get_trans(prob, anlg, test_trans)
         for tran in trans:
             pairs.append((anlg, tran))
 

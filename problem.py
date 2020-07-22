@@ -144,7 +144,7 @@ def load_ace_problems(problem_folder = None, show_me = False):
 
         coms = [np.asanyarray(Image.open(join(prob_folder, img_name)).convert("L")) / 255 for img_name in ace_img_names]
 
-        binary_coms = [utils.grey_to_binary(com, 0.7) for com in coms]
+        binary_coms = [utils.grey_to_binary(com, 0.8) for com in coms]
 
         missing_entry = np.full_like(binary_coms[0], fill_value = False)
 

@@ -37,6 +37,7 @@ def digest(prob, anlg, tran):
 def run_prob_anlg_tran_2x2(prob, anlg, tran):
     u1 = prob.matrix[anlg.get("value")[0]]
     u2 = prob.matrix[anlg.get("value")[1]]
+    u3 = prob.matrix[anlg.get("value")[2]]
 
     diff_to_u1_x = None
     diff_to_u1_y = None
@@ -105,6 +106,8 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
             copies_to_u1_y = (np.array(u1_to_u2_ys[1 :]) - u1_to_u2_ys[0]).tolist()
     elif "rearrange" == tran.get("name"):
         score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y = transform.evaluate_rearrange(u1, u2)
+    elif "XXX" == tran.get("name"):
+        score = transform.evaluate_XXX(u1, u2, u3)
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)

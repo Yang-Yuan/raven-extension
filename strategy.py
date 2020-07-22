@@ -4,14 +4,15 @@ from predict import predict
 import utils
 
 
-def confident(prob, explanation_score_name = "pat_score", prediction_score_name = "pato_score"):
+def confident(prob, explanation_score_name = "pat_score", prediction_score_name = "pato_score",
+              test_anlgs = None, test_trans = None):
 
     anlg_tran_data = []
     pred_data = []
     pred_d = None
 
     # get all pairs of anlg and trans for this prob
-    anlg_tran_pairs = prob_anlg_tran_new.get_anlg_tran_pairs(prob)
+    anlg_tran_pairs = prob_anlg_tran_new.get_anlg_tran_pairs(prob, test_anlgs = test_anlgs, test_trans = test_trans)
 
     # explain the problem with each pair of anlg and tran
     for anlg, tran in anlg_tran_pairs:
@@ -30,21 +31,22 @@ def confident(prob, explanation_score_name = "pat_score", prediction_score_name 
     return anlg_tran_data, pred_data, pred_d
 
 
-def neutral(prob, explanation_score_name = "pat_score", prediction_score_name = "pato_score"):
+def neutral(prob, explanation_score_name = "pat_score", prediction_score_name = "pato_score",
+            test_anlgs = None, test_trans = None):
 
     anlg_tran_data = []
     pred_data = []
     pred_d = None
 
     # get all the anlgs
-    anlgs = prob_anlg_tran_new.get_anlgs(prob)
+    anlgs = prob_anlg_tran_new.get_anlgs(prob, test_anlgs = test_anlgs)
 
     # explain the prob with each analogy
     for anlg in anlgs:
         tran_data = []
 
         # get all the trans for this anlg
-        trans = prob_anlg_tran_new.get_trans(prob, anlg)
+        trans = prob_anlg_tran_new.get_trans(prob, anlg, test_trans = test_trans)
 
         # explan the prob with the anlg and the tran
         for tran in trans:
@@ -63,14 +65,15 @@ def neutral(prob, explanation_score_name = "pat_score", prediction_score_name = 
     return anlg_tran_data, pred_data, pred_d
 
 
-def prudent(prob, explanation_score_name = "pat_score", prediction_score_name = "pato_score"):
+def prudent(prob, explanation_score_name = "pat_score", prediction_score_name = "pato_score",
+            test_anlgs = None, test_trans = None):
 
     anlg_tran_data = []
     pred_data = []
     pred_d = None
 
     # get all pairs of anlg and trans for this prob
-    anlg_tran_pairs = prob_anlg_tran_new.get_anlg_tran_pairs(prob)
+    anlg_tran_pairs = prob_anlg_tran_new.get_anlg_tran_pairs(prob, test_anlgs = test_anlgs, test_trans = test_trans)
 
     # explain the problem with each pair of anlg and tran
     for anlg, tran in anlg_tran_pairs:

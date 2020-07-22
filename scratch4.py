@@ -1,4 +1,10 @@
-from problem import load_ace_problems, load_problems
+import run
+import strategy
 
-
-load_ace_problems(show_me = True)
+# M-prudent strategy
+run.run(strategy.prudent,
+        test_problems = ["m4"],
+        prediction_score_name = "mato_score",
+        test_name = "ace",
+        test_anlgs = ["A:B::C:?"],
+        test_trans = ["XXX"])
