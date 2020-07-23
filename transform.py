@@ -107,42 +107,6 @@ def evaluate_rearrange(u1, u2):
         return min_max_score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y
 
 
-def evaluate_XXX(u1, u2, u3):
-    """
-    1) u1 and u2 have some common (or very similar)components such that
-    an injective mapping exists by the correspondence of similar pairs.
-    2) u1 and u3 share the same topological structure by considering
-    two relations, "disconnect" and "inside".
-    :param u1: an binary image
-    :param u2: a binary iamge
-    :param u3: a binary image
-    :return: MAT score
-    """
-
-    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
-    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
-    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
-
-    jcm, min_jc = map.jaccard_map(u1_coms, u2_coms)
-
-    if min_jc < 0.7:
-        return 0
-
-    u1_tpm_coms, u3_tpm_coms = map.topological_map(u1, u3, u1_coms, u3_coms)
-
-    if u1_tpm_coms is not None:
-        # success tpm
-        pass
-    else:
-        # fail tpm
-        pass
-
-    return None
-
-
-
-
-
 def rearrange(img, old_xs, old_ys, new_xs, new_ys):
 
     coms, coms_x, coms_y = utils.decompose(img, 8)
@@ -492,3 +456,32 @@ def inv_unite(A, B, C):
 
 def preserving_subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref, coords = False):
     return subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref, coords)
+
+
+def evaluate_XXX(u1, u2, u3):
+    """
+    1) u1 and u2 have some common (or very similar)components such that
+    an injective mapping exists by the correspondence of similar pairs.
+    2) u1 and u3 share the same topological structure by considering
+    two relations, "disconnect" and "inside".
+    :param u1: an binary image
+    :param u2: a binary iamge
+    :param u3: a binary image
+    :return: MAT score
+    """
+
+    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+
+    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.jaccard_map(u1_coms, u2_coms)
+
+    tpm_u1_com_ids, tpm_u3_com_ids, tpm_score = map.topological_map(u1_coms, u3_coms)
+
+    mat_score = min(jcm_score, tpm_score)
+
+    return mat_score
+
+
+def XXX(u2, u3, u4):
+

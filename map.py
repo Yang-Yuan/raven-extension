@@ -14,27 +14,51 @@ def jaccard_map(A_coms, B_coms):
     :param B_coms:
     :return: indices of mapped pair, and minimal jaccard index
     """
-
     all_jc = np.array([[jaccard.jaccard_coef(A_com, B_com)[0] for B_com in B_coms] for A_com in A_coms])
 
-    A_coms_len = len(A_coms)
-    B_coms_len = len(B_coms)
-    max_coms_len = max(A_coms_len, B_coms_len)
+    thresholds = np.unique(all_jc)
 
-    # any value greater than 1, the range of jaccard index, will do here.
-    pad_value = 1.1
+    max_mapping = None
+    max_mapping_t = None
+    max_mapping_size = -np.inf
+    for t in thresholds:
+        mapping = all_jc >= t
 
-    all_jc = np.pad(all_jc,
-                    pad_width = ((0, max_coms_len - A_coms_len), (0, max_coms_len - B_coms_len)),
-                    constant_values = pad_value)
+        if utils.is_injective(mapping):
+            mapping_size = mapping.sum()
+            if mapping_size >= max_mapping_size:
+                max_mapping_size = mapping_size
+                max_mapping = mapping
+                max_mapping_t = t
 
-    ps = list(permutations(range(max_coms_len)))
-    all_jc_p = np.array([all_jc[tuple(range(max_coms_len)), p] for p in ps])
-    sum_max_p = all_jc_p.sum(axis = 1).argmax()
-    all_jc_p[sum_max_p].sort()
-    min_sum_max_jc = all_jc_p[sum_max_p][0]
+    if max_mapping is not None:
+        return (*np.where(max_mapping), max_mapping_t)
+    else:
+        return None, 0
 
-    return ps[sum_max_p], min_sum_max_jc
+
+# def jaccard_map_old(A_coms, B_coms):
+#
+#     all_jc = np.array([[jaccard.jaccard_coef(A_com, B_com)[0] for B_com in B_coms] for A_com in A_coms])
+#
+#     A_coms_len = len(A_coms)
+#     B_coms_len = len(B_coms)
+#     max_coms_len = max(A_coms_len, B_coms_len)
+#
+#     # any value greater than 1, the range of jaccard index, will do here.
+#     pad_value = 1.1
+#
+#     all_jc = np.pad(all_jc,
+#                     pad_width = ((0, max_coms_len - A_coms_len), (0, max_coms_len - B_coms_len)),
+#                     constant_values = pad_value)
+#
+#     ps = list(permutations(range(max_coms_len)))
+#     all_jc_p = np.array([all_jc[tuple(range(max_coms_len)), p] for p in ps])
+#     sum_max_p = all_jc_p.sum(axis = 1).argmax()
+#     all_jc_p[sum_max_p].sort()
+#     min_sum_max_jc = all_jc_p[sum_max_p][0]
+#
+#     return ps[sum_max_p], min_sum_max_jc
 
 
 def topological_map(A_coms, B_coms):
@@ -46,9 +70,9 @@ def topological_map(A_coms, B_coms):
                                list(range(len(A_coms))), list(range(len(B_coms))))
 
     if A_com_ids is not None and B_com_ids is not None:
-        B_com_ids = [B_com_ids[A_com_ids.index(ii)] for ii in range(len(A_com_ids))]
-
-    return B_com_ids
+        return A_com_ids, B_com_ids, 1
+    else:
+        return None, None, 0
 
 
 def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
@@ -99,9 +123,9 @@ def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
         cur_A_sub = utils.superimpose([A_coms[com_id] for com_id in cur_A_com_ids])
         cur_B_sub = utils.superimpose([B_coms[com_id] for com_id in cur_B_com_ids])
 
-        cur_A_sub_result, cur_B_sub_result = topological_map(A_coms, B_coms,
-                                                             cur_A_sub, cur_B_sub,
-                                                             cur_A_com_ids, cur_B_com_ids)
+        cur_A_sub_result, cur_B_sub_result = tpm(A_coms, B_coms,
+                                                 cur_A_sub, cur_B_sub,
+                                                 cur_A_com_ids, cur_B_com_ids)
         if cur_A_sub_result is None or cur_A_sub_result is None:
             return None, None
         else:
@@ -125,28 +149,28 @@ def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
         if 1 == group_n:
             A_sub = utils.superimpose([A_coms[com_id] for com_id in A_groups[0]])
             B_sub = utils.superimpose([B_coms[com_id] for com_id in B_groups[0]])
-            A_sub_result, B_sub_result = topological_map(A_coms, B_coms,
-                                                         A_sub, B_sub,
-                                                         A_groups[0], B_groups[0])
+            A_sub_result, B_sub_result = tpm(A_coms, B_coms,
+                                             A_sub, B_sub,
+                                             A_groups[0], B_groups[0])
             if A_sub_result is None or B_sub_result is None:
                 return None, None
             else:
                 A_result = A_result + A_sub_result
                 B_result = B_result + B_sub_result
         else:
-            A_subs = [utils.superimpose([A_coms[com_id] for com_id in A_group]) for A_group in A_groups]
-            B_subs = [utils.superimpose([B_coms[com_id] for com_id in B_group]) for B_group in B_groups]
-
-            # there is bug, or error here, because I really should try to compare the topological structures
+            # Note: there is bug, because I really should try to compare the topological structures
             # first. If it doesn't resolve which A_sub should match which B_sub, then fall_back to jaccard_map.
             # But I am too tired to write the code, and for the current test problems,
-            # it is OK to use this.
-            jcm, _ = jaccard_map(A_subs, B_subs)
+            # it is OK to use this. Remember to enhance this when more complex problems in the future.
+            A_subs = [utils.superimpose([A_coms[com_id] for com_id in A_group]) for A_group in A_groups]
+            B_subs = [utils.superimpose([B_coms[com_id] for com_id in B_group]) for B_group in B_groups]
+            A_sub_ids, B_sub_ids, _ = jaccard_map(A_subs, B_subs)
+            # End Note
 
-            for A_sub_id, B_sub_id in enumerate(jcm):
-                A_sub_result, B_sub_result = topological_map(A_coms, B_coms,
-                                                             A_subs[A_sub_id], B_subs[B_sub_id],
-                                                             A_groups[A_sub_id], B_groups[B_sub_id])
+            for A_sub_id, B_sub_id in zip(A_sub_ids, B_sub_ids):
+                A_sub_result, B_sub_result = tpm(A_coms, B_coms,
+                                                 A_subs[A_sub_id], B_subs[B_sub_id],
+                                                 A_groups[A_sub_id], B_groups[B_sub_id])
                 if A_sub_result is None or B_sub_result is None:
                     return None, None
                 else:

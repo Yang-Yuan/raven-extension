@@ -332,3 +332,13 @@ def superimpose(images):
         result = np.logical_or(result, img)
 
     return result
+
+
+def is_injective(mapping):
+
+    col_injective = (mapping.sum(axis = 0) > 1).sum() == 0
+    row_injective = (mapping.sum(axis = 1) > 1).sum() == 0
+
+    return col_injective and row_injective
+
+
