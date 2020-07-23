@@ -480,8 +480,6 @@ def evaluate_XXX(u1, u2, u3):
 
     mat_score = min(jcm_score, tpm_score)
 
-    return mat_score
+    stub = utils.make_stub( jcm_u1_com_ids, jcm_u2_com_ids, tpm_u1_com_ids, tpm_u3_com_ids)
 
-
-def XXX(u2, u3, u4):
-
+    return mat_score, stub

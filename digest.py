@@ -107,7 +107,7 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
     elif "rearrange" == tran.get("name"):
         score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y = transform.evaluate_rearrange(u1, u2)
     elif "XXX" == tran.get("name"):
-        score = transform.evaluate_XXX(u1, u2, u3)
+        score, stub = transform.evaluate_XXX(u1, u2, u3)
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)

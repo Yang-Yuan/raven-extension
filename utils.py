@@ -1,3 +1,4 @@
+import inspect
 import json
 from matplotlib import pyplot as plt
 import numpy as np
@@ -340,5 +341,12 @@ def is_injective(mapping):
     row_injective = (mapping.sum(axis = 1) > 1).sum() == 0
 
     return col_injective and row_injective
+
+
+def make_stub(*args):
+    callers_local_vars = inspect.currentframe().f_back.f_locals.items()
+    return {name: value for name, value in callers_local_vars if value in args}
+
+
 
 
