@@ -35,7 +35,7 @@ def jaccard_map(A_coms, B_coms):
         mapping_ids = np.where(max_mapping)
         return mapping_ids[0].tolist(), mapping_ids[1].tolist(), max_mapping_t
     else:
-        return None, 0
+        return None, None, 0
 
 
 # def jaccard_map_old(A_coms, B_coms):
@@ -186,52 +186,44 @@ def are_consistent(A, B, C, D,
                    CD_C_ids, CD_D_ids,
                    AC_A_ids, AC_C_ids,
                    BD_B_ids, BD_D_ids):
+    if AB_A_ids is None \
+            or AB_B_ids is None \
+            or CD_C_ids is None \
+            or CD_D_ids is None \
+            or AC_A_ids is None \
+            or AC_C_ids is None \
+            or BD_B_ids is None \
+            or BD_D_ids is None:
+        return False
 
     for a in A:
-        b_1 = do_map(a, [AB_A_ids, AB_B_ids])
-        b_3 = do_map(a, [AC_A_ids, AC_C_ids], [CD_C_ids, CD_D_ids], [BD_D_ids, BD_B_ids])
-        if b_1 != b_3:
-            return False
-        c_1 = do_map(a, [AC_A_ids, AC_C_ids])
-        c_3 = do_map(a, [AB_A_ids, AB_B_ids], [BD_B_ids, BD_D_ids], [CD_D_ids, CD_C_ids])
-        if c_1 != c_3:
+        d_b = do_map(a, [AB_A_ids, AB_B_ids], [BD_B_ids, BD_D_ids])
+        d_c = do_map(a, [AC_A_ids, AC_C_ids], [CD_C_ids, CD_D_ids])
+        if d_b != d_c:
             return False
 
     for b in B:
-        a_1 = do_map(b, [AB_B_ids, AB_A_ids])
-        a_3 = do_map(b, [BD_B_ids, BD_D_ids], [CD_D_ids, CD_C_ids], [AC_C_ids, AC_A_ids])
-        if a_1 != a_3:
-            return False
-        d_1 = do_map(b, [BD_B_ids, BD_D_ids])
-        d_3 = do_map(b, [AB_B_ids, AB_A_ids], [AC_A_ids, AC_C_ids], [CD_C_ids, CD_D_ids])
-        if d_1 != d_3:
+        c_a = do_map(b, [AB_B_ids, AB_A_ids], [AC_A_ids, AC_C_ids])
+        c_d = do_map(b, [BD_B_ids, BD_D_ids], [CD_D_ids, CD_C_ids])
+        if c_a != c_d:
             return False
 
     for c in C:
-        a_1 = do_map(c, [AC_C_ids, AC_A_ids])
-        a_3 = do_map(c, [CD_C_ids, CD_D_ids], [BD_D_ids, BD_B_ids], [AB_B_ids, AB_A_ids])
-        if a_1 != a_3:
-            return False
-        d_1 = do_map(c, [CD_C_ids, CD_D_ids])
-        d_3 = do_map(c, [AC_C_ids, AC_A_ids], [AB_A_ids, AB_B_ids], [BD_B_ids, BD_D_ids])
-        if d_1 != d_3:
+        b_a = do_map(c, [AC_C_ids, AC_A_ids], [AB_A_ids, AB_B_ids])
+        b_d = do_map(c, [CD_C_ids, CD_D_ids], [BD_D_ids, BD_B_ids])
+        if b_a != b_d:
             return False
 
     for d in D:
-        b_1 = do_map(d, [BD_D_ids, BD_B_ids])
-        b_3 = do_map(d, [CD_D_ids, CD_C_ids], [AC_C_ids, AC_A_ids], [AB_A_ids, AB_B_ids])
-        if b_1 != b_3:
-            return False
-        c_1 = do_map(d, [CD_D_ids, CD_C_ids])
-        c_3 = do_map(d, [BD_D_ids, BD_B_ids], [AB_B_ids, AB_A_ids], [AC_A_ids, AC_C_ids])
-        if c_1 != c_3:
+        a_b = do_map(d, [BD_D_ids, BD_B_ids], [AB_B_ids, AB_A_ids])
+        a_c = do_map(d, [CD_D_ids, CD_C_ids], [AC_C_ids, AC_A_ids])
+        if a_b != a_c:
             return False
 
     return True
 
 
 def do_map(x, *mappings):
-
     for m in mappings:
         try:
             idx = m[0].index(x)

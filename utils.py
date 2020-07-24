@@ -302,6 +302,7 @@ def save_json(anlg_tran_data, pred_data, pred_d, prefix):
         d.pop("diff_to_u1_y", None)
         d.pop("diff_to_u2_x", None)
         d.pop("diff_to_u2_y", None)
+        d.pop("stub", None)
     for d in pred_data:
         d.pop("diff", None)
         d.pop("pred", None)
@@ -309,8 +310,10 @@ def save_json(anlg_tran_data, pred_data, pred_d, prefix):
         d.pop("diff_to_u1_y", None)
         d.pop("diff_to_u2_x", None)
         d.pop("diff_to_u2_y", None)
+        d.pop("stub", None)
     pred_d.pop("diff", None)
     pred_d.pop("pred", None)
+    pred_d.pop("stub", None)
 
     aggregation_progression = {
         "anlg_tran_data": anlg_tran_data,
@@ -350,10 +353,8 @@ def make_stub(*args):
     stub = {}
     for arg in args:
         names = [name for name, value in callers_local_vars if value is arg]
-        if 1 == len(names):
-            stub[names[0]] = arg
-        else:
-            raise Exception("Multiple names found in the caller frame refer to the same variable.")
+        for name in names:
+            stub[name] = arg
 
     return stub
 
