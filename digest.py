@@ -50,6 +50,7 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
     u1_coms_y = None
     u2_coms_x = None
     u2_coms_y = None
+    stub = None
 
     if "add_diff" == tran.get("name"):
         score, diff_to_u1_x, diff_to_u1_y, diff_to_u2_x, diff_to_u2_y, diff = \
@@ -129,7 +130,8 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
                                                  u1_coms_x = u1_coms_x,
                                                  u1_coms_y = u1_coms_y,
                                                  u2_coms_x = u2_coms_x,
-                                                 u2_coms_y = u2_coms_y)
+                                                 u2_coms_y = u2_coms_y,
+                                                 stub = stub)
 
     return prob_anlg_tran_d
 
@@ -235,8 +237,8 @@ def assemble_prob_anlg_tran_d(prob, anlg, tran, mat_score,
                               u2_coms_x = None,
                               u2_coms_y = None,
                               diff_to_b3_x = None, diff_to_b3_y = None,
-                              diff_to_b2_x = None, diff_to_b2_y = None
-                              ):
+                              diff_to_b2_x = None, diff_to_b2_y = None,
+                              stub = None):
 
     return {
         "prob_name": prob.name,
@@ -265,7 +267,8 @@ def assemble_prob_anlg_tran_d(prob, anlg, tran, mat_score,
         "diff_to_b3_x": diff_to_b3_x,
         "diff_to_b3_y": diff_to_b3_y,
         "diff_to_b2_x": diff_to_b2_x,
-        "diff_to_b2_y": diff_to_b2_y
+        "diff_to_b2_y": diff_to_b2_y,
+        "stub": stub
     }
 
 

@@ -344,8 +344,19 @@ def is_injective(mapping):
 
 
 def make_stub(*args):
+
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
-    return {name: value for name, value in callers_local_vars if value in args}
+
+    stub = {}
+    for arg in args:
+        names = [name for name, value in callers_local_vars if value is arg]
+        if 1 == len(names):
+            stub[names[0]] = arg
+        else:
+            raise Exception("Multiple names found in the caller frame refer to the same variable.")
+
+    return stub
+
 
 
 
