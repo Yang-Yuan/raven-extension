@@ -5,6 +5,41 @@ import jaccard
 import utils
 
 
+def location_map(A_coms, B_coms):
+
+    A_centers = np.array([utils.center_of_mass(com) for com in A_coms])
+    B_centers = np.array([utils.center_of_mass(com) for com in B_coms])
+
+    dist = np.array([[np.linalg.norm(A_c - B_c) for B_c in B_centers] for A_c in A_centers])
+
+    thresholds = np.unique(dist, return_inverse = True)
+
+    max_mapping_size = -np.inf
+    max_mapping = None
+    max_mapping_t = None
+    for t in thresholds:
+        mapping = dist <= t
+
+        if utils.is_injective(mapping):
+            mapping_size = mapping.sum()
+
+            if mapping_size >= max_mapping_size:
+                max_mapping_size = mapping_size
+                max_mapping = mapping
+                max_mapping_t = t
+
+    if max_mapping is not None:
+        mapping_ids = np.where(max_mapping)
+        # For the score, for large shape, small deviation doesn't matter
+        # but for small shape, small deviation matter
+        # So score = 1 - max_mapping_t / size_of_the_large_one
+        # if score < 0, then score = 0
+        return mapping_ids[0].tolist(), mapping_ids[1].tolist(), max_mapping_t
+    else:
+        return None, None, 0
+
+
+
 def jaccard_map(A_coms, B_coms):
     """
     find a injective (not necessarily surjective, bijective or well-defined) mapping
@@ -232,3 +267,5 @@ def do_map(x, *mappings):
             return None
 
     return x
+
+

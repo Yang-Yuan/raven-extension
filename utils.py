@@ -359,6 +359,13 @@ def make_stub(*args):
     return stub
 
 
+def center_of_mass(img):
+
+    y_coords, x_coords = np.where(img)
+
+    return x_coords.mean(), y_coords.mean()
+
+
 
 
 
