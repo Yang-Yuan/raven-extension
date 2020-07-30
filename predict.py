@@ -37,6 +37,8 @@ def predict_unary(prob, anlg, tran, d):
         return predict_rearrange(prob, anlg, tran, d)
     elif tran.get("name") == "XXX":
         return predict_XXX(prob, anlg, tran, d)
+    elif tran.get("name") == "YYY":
+        return predict_YYY(prob, anlg, tran, d)
     else:
         return predict_unary_default(prob, anlg, tran, d)
 
@@ -70,12 +72,47 @@ def predict_XXX(prob, anlg, tran, d):
         jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
         tpm_u2_com_ids, tpm_opt_com_ids, tpm_score = map.topological_map(u2_coms, opt_coms)
         score = min(jcm_score, tpm_score)
-        if 0 != score and not map.are_consistent(list(range(len(u1_coms))), list(range(len(u2_coms))),
-                                                 list(range(len(u3_coms))), list(range(len(opt_coms))),
-                                                 jcm_u1_com_ids, jcm_u2_com_ids,
-                                                 jcm_u3_com_ids, jcm_opt_com_ids,
-                                                 tpm_u1_com_ids, tpm_u3_com_ids,
-                                                 tpm_u2_com_ids, tpm_opt_com_ids):
+        if not map.are_consistent(list(range(len(u1_coms))), list(range(len(u2_coms))),
+                                  list(range(len(u3_coms))), list(range(len(opt_coms))),
+                                  jcm_u1_com_ids, jcm_u2_com_ids,
+                                  jcm_u3_com_ids, jcm_opt_com_ids,
+                                  tpm_u1_com_ids, tpm_u3_com_ids,
+                                  tpm_u2_com_ids, tpm_opt_com_ids):
+            score = 0
+        pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
+                          "pred": opt})
+
+    return pred_data
+
+
+def predict_YYY(prob, anlg, tran, d):
+    u1_coms = d.get("stub").get("u1_coms")
+    u2_coms = d.get("stub").get("u2_coms")
+    u3_coms = d.get("stub").get("u3_coms")
+    lcm_u1_com_ids = d.get("stub").get("lcm_u1_com_ids")
+    lcm_u2_com_ids = d.get("stub").get("lcm_u2_com_ids")
+    jcm_u1_com_ids = d.get("stub").get("jcm_u1_com_ids")
+    jcm_u2_com_ids = d.get("stub").get("jcm_u2_com_ids")
+    phm_u1_com_ids = d.get("stub").get("phm_u1_com_ids")
+    phm_u3_com_ids = d.get("stub").get("phm_u3_com_ids")
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+        opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
+        lcm_u3_com_ids, lcm_opt_com_ids, lcm_score = map.location_map(u3_coms, opt_coms)
+        jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
+        phm_u2_com_ids, phm_opt_com_ids = map.complete_placeholder_map(phm_u1_com_ids, phm_u3_com_ids,
+                                                                       jcm_u1_com_ids, jcm_u2_com_ids,
+                                                                       jcm_u3_com_ids, jcm_opt_com_ids)
+
+        score = min(lcm_score, jcm_score)
+        if not map.are_consistent(list(range(len(u1_coms))), list(range(len(u2_coms))),
+                                  list(range(len(u3_coms))), list(range(len(opt_coms))),
+                                  lcm_u1_com_ids, lcm_u2_com_ids,
+                                  lcm_u3_com_ids, lcm_opt_com_ids,
+                                  phm_u1_com_ids, phm_u3_com_ids,
+                                  phm_u2_com_ids, phm_opt_com_ids):
             score = 0
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": opt})

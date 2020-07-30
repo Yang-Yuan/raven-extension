@@ -1,8 +1,60 @@
 from matplotlib import pyplot as plt
-from itertools import permutations
 import numpy as np
 import jaccard
 import utils
+
+
+def placeholder_map(A_coms, B_coms):
+    """
+    this mapping serves as a placeholder mapping derived from an
+    original mapping that lies in the other direction.
+    This mapping should be consistent with the original mapping in
+    that the two elements mapped by the original mapping have the same
+    computational role in the this new mapping, i.e. if there exists
+    a link between two elements in this mapping (or its inverse mapping)
+    , then their images in the original mapping should also have a link
+    in this new mapping (or its inverse mapping).
+    Since an arbitrary bijective mapping is used for this placeholder,
+    how well this mapping holds is actually indicated by the score of its
+    original mapping at different stages (digest and predict).
+    Why bijective?
+    Because bijective mapping is more rigorous than mappings of other kinds
+    in that it involves all elements.
+    If you use only injective or surjective mapping, you have to decide which
+    ones are mapped and which one are not.
+    Why only a single map?
+    This choice is based on the assumption that there is no other obvious (high-scored) mapping
+    between A_coms and B_coms (and the original mapping is very significant in this case).
+    In this sense, all the random bijective mappings are equal to represent the relation
+    between A and B.
+    :param A_coms:
+    :param B_coms:
+    :return:
+    """
+
+    if len(A_coms) != len(B_coms):
+        return None, None, 0
+    else:
+        return np.random.permutation(len(A_coms)).tolist(), np.random.permutation(len(B_coms)).tolist(), 1
+
+
+def complete_placeholder_map(phm_digest_source, phm_digest_target,
+                             orm_digest_source, orm_digest_target,
+                             orm_predict_source, orm_predict_target):
+    """
+    derive the mapping from the placeholder mapping and the original mappings
+    :return: phm_predict_source, phm_predict_target
+    """
+    phm_predict_source = []
+    phm_predict_target = []
+    for source_id, target_id in zip(phm_digest_source, phm_digest_target):
+        new_source_id = do_map(source_id, [orm_digest_source, orm_digest_target])
+        new_target_id = do_map(target_id, [orm_predict_source, orm_predict_target])
+        if new_source_id is not None and new_target_id is not None:
+            phm_predict_source.append(new_target_id)
+            phm_predict_target.append(new_target_id)
+
+    return phm_predict_source, phm_predict_target
 
 
 def location_map(A_coms, B_coms):
@@ -12,7 +64,7 @@ def location_map(A_coms, B_coms):
 
     dist = np.array([[np.linalg.norm(A_c - B_c) for B_c in B_centers] for A_c in A_centers])
 
-    thresholds = np.unique(dist, return_inverse = True)
+    thresholds = np.unique(dist)[::-1]
 
     max_mapping_size = -np.inf
     max_mapping = None
@@ -34,10 +86,17 @@ def location_map(A_coms, B_coms):
         # but for small shape, small deviation matter
         # So score = 1 - max_mapping_t / size_of_the_large_one
         # if score < 0, then score = 0
-        return mapping_ids[0].tolist(), mapping_ids[1].tolist(), max_mapping_t
+        # max_size = -np.inf
+        # for A_com_id, B_com_id in zip(*(np.where(dist == max_mapping_t))):
+        #     A_size = max(utils.trim_binary_image(A_coms[A_com_id]).shape)
+        #     B_size = max(utils.trim_binary_image(B_coms[B_com_id]).shape)
+        #     size = max(A_size, B_size)
+        #     if size > max_size:
+        #         max_size = size
+
+        return mapping_ids[0].tolist(), mapping_ids[1].tolist(), 1 - max_mapping_t / max(A_coms[0].shape)
     else:
         return None, None, 0
-
 
 
 def jaccard_map(A_coms, B_coms):

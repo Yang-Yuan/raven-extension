@@ -32,7 +32,8 @@ unary_transformations = [
     {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
-    {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2}
+    {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2},
+    {"name": "YYY", "value": [{"name": "YYY"}], "type": "unary", "group": 2}
 ]
 
 binary_transformations = [
@@ -484,3 +485,34 @@ def evaluate_XXX(u1, u2, u3):
                            jcm_u1_com_ids, jcm_u2_com_ids, tpm_u1_com_ids, tpm_u3_com_ids)
 
     return mat_score, stub
+
+
+def evaluate_YYY(u1, u2, u3):
+    """
+    1) u1 and u2 have some components that are located at the same (or close)
+    positions such that an injective mapping can be formed by location correspondence.
+    2) u1 and u3 forms a placeholder mapping that is going to be derived from
+    jaccard mappings in its orthogonal direction.
+    :param u1: an binary image
+    :param u2: a binary iamge
+    :param u3: a binary image
+    :return: MAT score
+    """
+
+    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+
+    lcm_u1_com_ids, lcm_u2_com_ids, lcm_score = map.location_map(u1_coms, u2_coms)
+    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    phm_u1_com_ids, phm_u3_com_ids, phm_score = map.placeholder_map(u1_coms, u3_coms)
+
+    mat_score = min(lcm_score, jcm_score, phm_score)
+
+    stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
+                           lcm_u1_com_ids, lcm_u2_com_ids,
+                           jcm_u1_com_ids, jcm_u2_com_ids,
+                           phm_u1_com_ids, phm_u3_com_ids)
+
+    return mat_score, stub
+
