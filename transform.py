@@ -29,7 +29,7 @@ unary_transformations = [
     # {"name": "upscale_to", "value": [{"name": "upscale_to"}], "type": "unary"},
     {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary", "group": 1},
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary", "group": 1},
-    {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
+    # {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
     {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2},

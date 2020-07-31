@@ -22,11 +22,10 @@ def placeholder_map(A_coms, B_coms):
     in that it involves all elements.
     If you use only injective or surjective mapping, you have to decide which
     ones are mapped and which one are not.
-    Why only a single map?
-    This choice is based on the assumption that there is no other obvious (high-scored) mapping
-    between A_coms and B_coms (and the original mapping is very significant in this case).
-    In this sense, all the random bijective mappings are equal to represent the relation
-    between A and B.
+    Why not choose a single random map?
+    Because, this placeholder mapping should always be consistent with its
+    original mapping, i.e. all the possible bijective mapping should be checked
+    when predicting/make decision about each option.
     :param A_coms:
     :param B_coms:
     :return:
@@ -35,7 +34,7 @@ def placeholder_map(A_coms, B_coms):
     if len(A_coms) != len(B_coms):
         return None, None, 0
     else:
-        return np.random.permutation(len(A_coms)).tolist(), np.random.permutation(len(B_coms)).tolist(), 1
+        return None, None, 1
 
 
 def complete_placeholder_map(phm_digest_source, phm_digest_target,
@@ -45,6 +44,9 @@ def complete_placeholder_map(phm_digest_source, phm_digest_target,
     derive the mapping from the placeholder mapping and the original mappings
     :return: phm_predict_source, phm_predict_target
     """
+    if phm_digest_source is None or phm_digest_target is None:
+        return None, None
+
     phm_predict_source = []
     phm_predict_target = []
     for source_id, target_id in zip(phm_digest_source, phm_digest_target):
@@ -130,30 +132,6 @@ def jaccard_map(A_coms, B_coms):
         return mapping_ids[0].tolist(), mapping_ids[1].tolist(), max_mapping_t
     else:
         return None, None, 0
-
-
-# def jaccard_map_old(A_coms, B_coms):
-#
-#     all_jc = np.array([[jaccard.jaccard_coef(A_com, B_com)[0] for B_com in B_coms] for A_com in A_coms])
-#
-#     A_coms_len = len(A_coms)
-#     B_coms_len = len(B_coms)
-#     max_coms_len = max(A_coms_len, B_coms_len)
-#
-#     # any value greater than 1, the range of jaccard index, will do here.
-#     pad_value = 1.1
-#
-#     all_jc = np.pad(all_jc,
-#                     pad_width = ((0, max_coms_len - A_coms_len), (0, max_coms_len - B_coms_len)),
-#                     constant_values = pad_value)
-#
-#     ps = list(permutations(range(max_coms_len)))
-#     all_jc_p = np.array([all_jc[tuple(range(max_coms_len)), p] for p in ps])
-#     sum_max_p = all_jc_p.sum(axis = 1).argmax()
-#     all_jc_p[sum_max_p].sort()
-#     min_sum_max_jc = all_jc_p[sum_max_p][0]
-#
-#     return ps[sum_max_p], min_sum_max_jc
 
 
 def topological_map(A_coms, B_coms):
@@ -323,6 +301,10 @@ def do_map(x, *mappings):
             idx = m[0].index(x)
             x = m[1][idx]
         except ValueError:
+            return None
+        except AttributeError:
+            return None
+        except IndexError:
             return None
 
     return x
