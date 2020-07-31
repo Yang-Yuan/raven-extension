@@ -23,8 +23,8 @@ def placeholder_map(A_coms, B_coms):
     If you use only injective or surjective mapping, you have to decide which
     ones are mapped and which one are not.
     Why not choose a single random map?
-    Because, this placeholder mapping should always be consistent with its
-    original mapping, i.e. all the possible bijective mapping should be checked
+    Because this placeholder mapping should always be consistent with its
+    original mapping, i.e. all the possible bijective mappings should be checked
     when predicting/make decision about each option.
     :param A_coms:
     :param B_coms:
@@ -53,7 +53,7 @@ def complete_placeholder_map(phm_digest_source, phm_digest_target,
         new_source_id = do_map(source_id, [orm_digest_source, orm_digest_target])
         new_target_id = do_map(target_id, [orm_predict_source, orm_predict_target])
         if new_source_id is not None and new_target_id is not None:
-            phm_predict_source.append(new_target_id)
+            phm_predict_source.append(new_source_id)
             phm_predict_target.append(new_target_id)
 
     return phm_predict_source, phm_predict_target
