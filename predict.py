@@ -1,6 +1,5 @@
 import map
 import numpy as np
-from itertools import permutations
 from matplotlib import pyplot as plt
 import analogy_new
 import transform
@@ -94,8 +93,6 @@ def predict_YYY(prob, anlg, tran, d):
     lcm_u2_com_ids = d.get("stub").get("lcm_u2_com_ids")
     jcm_u1_com_ids = d.get("stub").get("jcm_u1_com_ids")
     jcm_u2_com_ids = d.get("stub").get("jcm_u2_com_ids")
-    phm_u1_com_ids = d.get("stub").get("phm_u1_com_ids")
-    phm_u3_com_ids = d.get("stub").get("phm_u3_com_ids")
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
@@ -104,27 +101,19 @@ def predict_YYY(prob, anlg, tran, d):
         lcm_u3_com_ids, lcm_opt_com_ids, lcm_score = map.location_map(u3_coms, opt_coms)
         jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
 
-        score = min(lcm_score, jcm_score)
-        if len(u1_coms) == len(u3_coms) and len(u2_coms) == len(opt_coms):
-            for p in permutations(range(len(u3_coms))):
+        isomorphic_mappings = map.derive_isomorphic_mappings(list(range(len(u1_coms))), list(range(len(u2_coms))),
+                                                             list(range(len(u3_coms))), list(range(len(opt_coms))),
+                                                             lcm_u1_com_ids, lcm_u2_com_ids,
+                                                             jcm_u1_com_ids, jcm_u2_com_ids,
+                                                             lcm_u3_com_ids, lcm_opt_com_ids,
+                                                             jcm_u3_com_ids, jcm_opt_com_ids)
 
-                phm_u1_com_ids = list(range(len(u1_coms)))
-                phm_u3_com_ids = list(p)
-
-                phm_u2_com_ids, phm_opt_com_ids = map.complete_placeholder_map(phm_u1_com_ids, phm_u3_com_ids,
-                                                                               jcm_u1_com_ids, jcm_u2_com_ids,
-                                                                               jcm_u3_com_ids, jcm_opt_com_ids)
-
-                if not map.are_consistent(list(range(len(u1_coms))), list(range(len(u2_coms))),
-                                          list(range(len(u3_coms))), list(range(len(opt_coms))),
-                                          lcm_u1_com_ids, lcm_u2_com_ids,
-                                          lcm_u3_com_ids, lcm_opt_com_ids,
-                                          phm_u1_com_ids, phm_u3_com_ids,
-                                          phm_u2_com_ids, phm_opt_com_ids):
-                    score = 0
-                    break
+        if isomorphic_mappings is not None and 0 != len(isomorphic_mappings):
+            phm_score = 1
         else:
-            score = 0
+            phm_score = 0
+
+        score = min(lcm_score, jcm_score, phm_score)
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": opt})
 

@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from itertools import permutations
 import numpy as np
 import jaccard
 import utils
@@ -37,30 +38,74 @@ def placeholder_map(A_coms, B_coms):
         return None, None, 1
 
 
-def complete_placeholder_map(phm_digest_source, phm_digest_target,
-                             orm_digest_source, orm_digest_target,
-                             orm_predict_source, orm_predict_target):
+def derive_isomorphic_mappings(A, B, C, D,
+                               m1_AB_A_com_ids, m1_AB_B_com_ids,
+                               m2_AB_A_com_ids, m2_AB_B_com_ids,
+                               m1_CD_C_com_ids, m1_CD_D_com_ids,
+                               m2_CD_C_com_ids, m2_CD_D_com_ids):
+    if len(A) == len(C) and len(B) == len(D):
+
+        isomorphic_mappings = []
+        for p in permutations(C):
+
+            AC_A_com_ids = A
+            AC_C_com_ids = list(p)
+
+            m1_BD_B_com_ids, m1_BD_D_com_ids = complete_placeholder_map(AC_A_com_ids, AC_C_com_ids,
+                                                                        m1_AB_A_com_ids, m1_AB_B_com_ids,
+                                                                        m1_CD_C_com_ids, m1_CD_D_com_ids)
+
+            m2_BD_B_com_ids, m2_BD_D_com_ids = complete_placeholder_map(AC_A_com_ids, AC_C_com_ids,
+                                                                        m2_AB_A_com_ids, m2_AB_B_com_ids,
+                                                                        m2_CD_C_com_ids, m2_CD_D_com_ids)
+
+            if same_mappings(B, D, m1_BD_B_com_ids, m1_BD_D_com_ids, m2_BD_B_com_ids, m2_BD_D_com_ids):
+                isomorphic_mappings.append([m1_BD_B_com_ids, m1_BD_D_com_ids])
+
+    else:
+        return None
+
+
+def same_mappings(A, B, m1_AB_A_com_ids, m1_AB_B_com_ids, m2_AB_A_com_ids, m2_AB_B_com_ids):
+
+    for a in A:
+        b1 = do_map(a, [m1_AB_A_com_ids, m1_AB_B_com_ids])
+        b2 = do_map(a, [m2_AB_A_com_ids, m2_AB_B_com_ids])
+        if b1 != b2:
+            return False
+
+    for b in B:
+        a1 = do_map(b, [m1_AB_B_com_ids, m1_AB_A_com_ids])
+        a2 = do_map(b, [m2_AB_B_com_ids, m2_AB_A_com_ids])
+        if a1 != a2:
+            return False
+
+    return True
+
+
+def complete_placeholder_map(AC_A_com_ids, AC_C_com_ids,
+                             AB_A_com_ids, AB_B_com_ids,
+                             CD_C_com_ids, CD_D_com_ids):
     """
-    derive the mapping from the placeholder mapping and the original mappings
-    :return: phm_predict_source, phm_predict_target
+    derive the mapping from B to D
+    :return:
     """
-    if phm_digest_source is None or phm_digest_target is None:
+    if AC_A_com_ids is None or AC_C_com_ids is None:
         return None, None
 
-    phm_predict_source = []
-    phm_predict_target = []
-    for source_id, target_id in zip(phm_digest_source, phm_digest_target):
-        new_source_id = do_map(source_id, [orm_digest_source, orm_digest_target])
-        new_target_id = do_map(target_id, [orm_predict_source, orm_predict_target])
-        if new_source_id is not None and new_target_id is not None:
-            phm_predict_source.append(new_source_id)
-            phm_predict_target.append(new_target_id)
+    BD_B_com_ids = []
+    BD_D_com_ids = []
+    for A_com_id, C_com_id in zip(AC_A_com_ids, AC_C_com_ids):
+        B_com_id = do_map(A_com_id, [AB_A_com_ids, AB_B_com_ids])
+        D_com_id = do_map(C_com_id, [CD_C_com_ids, CD_D_com_ids])
+        if B_com_id is not None and D_com_id is not None:
+            BD_B_com_ids.append(B_com_id)
+            BD_D_com_ids.append(D_com_id)
 
-    return phm_predict_source, phm_predict_target
+    return BD_B_com_ids, BD_D_com_ids
 
 
 def location_map(A_coms, B_coms):
-
     A_centers = np.array([utils.center_of_mass(com) for com in A_coms])
     B_centers = np.array([utils.center_of_mass(com) for com in B_coms])
 
@@ -308,5 +353,3 @@ def do_map(x, *mappings):
             return None
 
     return x
-
-
