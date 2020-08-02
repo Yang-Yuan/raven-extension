@@ -505,7 +505,14 @@ def evaluate_YYY(u1, u2, u3):
 
     lcm_u1_com_ids, lcm_u2_com_ids, lcm_score = map.location_map(u1_coms, u2_coms)
     jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.jaccard_map(u1_coms, u2_coms)
-    phm_u1_com_ids, phm_u3_com_ids, phm_score = map.placeholder_map(u1_coms, u3_coms)
+    if 1 != len(lcm_u1_com_ids) and \
+            len(lcm_u1_com_ids) == len(jcm_u1_com_ids) and \
+            len(lcm_u2_com_ids) == len(jcm_u2_com_ids) and \
+            (np.unique(lcm_u1_com_ids) == np.unique(jcm_u1_com_ids)).all() and \
+            (np.unique(lcm_u2_com_ids) == np.unique(jcm_u2_com_ids)).all():
+        phm_u1_com_ids, phm_u3_com_ids, phm_score = map.placeholder_map(u1_coms, u3_coms)
+    else:
+        phm_u1_com_ids, phm_u3_com_ids, phm_score = (None, None, 0)
 
     mat_score = min(lcm_score, jcm_score, phm_score)
 

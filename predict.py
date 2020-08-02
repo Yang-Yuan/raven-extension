@@ -100,16 +100,28 @@ def predict_YYY(prob, anlg, tran, d):
         opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
         lcm_u3_com_ids, lcm_opt_com_ids, lcm_score = map.location_map(u3_coms, opt_coms)
         jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
+        if 1 != len(lcm_u1_com_ids) and \
+                len(lcm_u1_com_ids) == len(jcm_u1_com_ids) and \
+                len(lcm_u2_com_ids) == len(jcm_u2_com_ids) and \
+                (np.unique(lcm_u1_com_ids) == np.unique(jcm_u1_com_ids)).all() and \
+                (np.unique(lcm_u2_com_ids) == np.unique(jcm_u2_com_ids)).all() and \
+                len(lcm_u1_com_ids) == len(lcm_u3_com_ids) and \
+                len(lcm_u3_com_ids) == len(jcm_u3_com_ids) and \
+                len(lcm_opt_com_ids) == len(jcm_opt_com_ids) and \
+                (np.unique(lcm_u3_com_ids) == np.unique(jcm_u3_com_ids)).all() and \
+                (np.unique(lcm_opt_com_ids) == np.unique(jcm_opt_com_ids)).all():
 
-        isomorphic_mappings = map.derive_isomorphic_mappings(list(range(len(u1_coms))), list(range(len(u2_coms))),
-                                                             list(range(len(u3_coms))), list(range(len(opt_coms))),
-                                                             lcm_u1_com_ids, lcm_u2_com_ids,
-                                                             jcm_u1_com_ids, jcm_u2_com_ids,
-                                                             lcm_u3_com_ids, lcm_opt_com_ids,
-                                                             jcm_u3_com_ids, jcm_opt_com_ids)
+            isomorphic_mappings = map.derive_isomorphic_mappings(list(range(len(u1_coms))), list(range(len(u2_coms))),
+                                                                 list(range(len(u3_coms))), list(range(len(opt_coms))),
+                                                                 lcm_u1_com_ids, lcm_u2_com_ids,
+                                                                 jcm_u1_com_ids, jcm_u2_com_ids,
+                                                                 lcm_u3_com_ids, lcm_opt_com_ids,
+                                                                 jcm_u3_com_ids, jcm_opt_com_ids)
 
-        if isomorphic_mappings is not None and 0 != len(isomorphic_mappings):
-            phm_score = 1
+            if isomorphic_mappings is not None and 0 != len(isomorphic_mappings):
+                phm_score = 1
+            else:
+                phm_score = 0
         else:
             phm_score = 0
 

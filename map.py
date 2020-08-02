@@ -51,16 +51,18 @@ def derive_isomorphic_mappings(A, B, C, D,
             AC_A_com_ids = A
             AC_C_com_ids = list(p)
 
-            m1_BD_B_com_ids, m1_BD_D_com_ids = complete_placeholder_map(AC_A_com_ids, AC_C_com_ids,
-                                                                        m1_AB_A_com_ids, m1_AB_B_com_ids,
-                                                                        m1_CD_C_com_ids, m1_CD_D_com_ids)
+            m1_BD_B_com_ids, m1_BD_D_com_ids = translate_mapping(AC_A_com_ids, AC_C_com_ids,
+                                                                 m1_AB_A_com_ids, m1_AB_B_com_ids,
+                                                                 m1_CD_C_com_ids, m1_CD_D_com_ids)
 
-            m2_BD_B_com_ids, m2_BD_D_com_ids = complete_placeholder_map(AC_A_com_ids, AC_C_com_ids,
-                                                                        m2_AB_A_com_ids, m2_AB_B_com_ids,
-                                                                        m2_CD_C_com_ids, m2_CD_D_com_ids)
+            m2_BD_B_com_ids, m2_BD_D_com_ids = translate_mapping(AC_A_com_ids, AC_C_com_ids,
+                                                                 m2_AB_A_com_ids, m2_AB_B_com_ids,
+                                                                 m2_CD_C_com_ids, m2_CD_D_com_ids)
 
             if same_mappings(B, D, m1_BD_B_com_ids, m1_BD_D_com_ids, m2_BD_B_com_ids, m2_BD_D_com_ids):
                 isomorphic_mappings.append([m1_BD_B_com_ids, m1_BD_D_com_ids])
+
+        return isomorphic_mappings
 
     else:
         return None
@@ -83,9 +85,9 @@ def same_mappings(A, B, m1_AB_A_com_ids, m1_AB_B_com_ids, m2_AB_A_com_ids, m2_AB
     return True
 
 
-def complete_placeholder_map(AC_A_com_ids, AC_C_com_ids,
-                             AB_A_com_ids, AB_B_com_ids,
-                             CD_C_com_ids, CD_D_com_ids):
+def translate_mapping(AC_A_com_ids, AC_C_com_ids,
+                      AB_A_com_ids, AB_B_com_ids,
+                      CD_C_com_ids, CD_D_com_ids):
     """
     derive the mapping from B to D
     :return:
@@ -143,7 +145,7 @@ def location_map(A_coms, B_coms):
 
         return mapping_ids[0].tolist(), mapping_ids[1].tolist(), 1 - max_mapping_t / max(A_coms[0].shape)
     else:
-        return None, None, 0
+        return [], [], 0
 
 
 def jaccard_map(A_coms, B_coms):
@@ -176,7 +178,7 @@ def jaccard_map(A_coms, B_coms):
         mapping_ids = np.where(max_mapping)
         return mapping_ids[0].tolist(), mapping_ids[1].tolist(), max_mapping_t
     else:
-        return None, None, 0
+        return [], [], 0
 
 
 def topological_map(A_coms, B_coms):
@@ -190,7 +192,7 @@ def topological_map(A_coms, B_coms):
     if A_com_ids is not None and B_com_ids is not None:
         return A_com_ids, B_com_ids, 1
     else:
-        return None, None, 0
+        return [], [], 0
 
 
 def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
