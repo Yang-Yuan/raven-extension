@@ -370,7 +370,7 @@ def tpm_go_deeper(A_coms, B_coms, cur_A_com_ids, cur_A_filled, cur_B_com_ids, cu
         return [], []
     else:
         A_result = A_result + cur_A_sub_result
-        B_result = B_result + cur_A_sub_result
+        B_result = B_result + cur_B_sub_result
 
     return A_result, B_result
 
