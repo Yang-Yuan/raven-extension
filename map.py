@@ -55,10 +55,9 @@ def human_mapping(PR, order):
         return [], [], 0
 
 
-def location_diff_map(A_coms, B_coms, C_coms, D_coms,
-                      AB_A_com_ids, AB_B_com_ids,
-                      CD_C_com_ids, CD_D_com_ids):
-
+def delta_location_map(A_coms, B_coms, C_coms, D_coms,
+                       AB_A_com_ids, AB_B_com_ids,
+                       CD_C_com_ids, CD_D_com_ids):
     if len(AB_A_com_ids) != len(CD_C_com_ids):
         return None, None, None, None, 0
 
@@ -75,6 +74,32 @@ def location_diff_map(A_coms, B_coms, C_coms, D_coms,
         AC_C_com_ids = [CD_C_com_ids[CD_id] for CD_id in CD_loc_diff_ids]
         BD_D_com_ids = [CD_D_com_ids[CD_id] for CD_id in CD_loc_diff_ids]
         return AC_A_com_ids, AC_C_com_ids, BD_B_com_ids, BD_D_com_ids, 1 - level / max(A_coms[0].shape)
+    else:
+        return [], [], [], [], 0
+
+
+def delta_jaccard_map(A_coms, B_coms, C_coms, D_coms,
+                      AB_A_com_ids, AB_B_com_ids,
+                      CD_C_com_ids, CD_D_com_ids):
+
+    if len(AB_A_com_ids) != len(CD_C_com_ids):
+        return None, None, None, None, 0
+
+    AB_jaccard_diff = [jaccard.jaccard_coef(A_coms[A_com_id], B_coms[B_com_id])[0] for A_com_id, B_com_id in
+                       zip(AB_A_com_ids, AB_B_com_ids)]
+    CD_jaccard_diff = [jaccard.jaccard_coef(C_coms[C_com_id], D_coms[D_com_id])[0] for C_com_id, D_com_id in
+                       zip(CD_C_com_ids, CD_D_com_ids)]
+
+    dist = np.array([[abs(AB_jcd - CD_jcd) for CD_jcd in CD_jaccard_diff] for AB_jcd in AB_jaccard_diff])
+
+    AB_jaccard_diff_ids, CD_jaccard_diff_ids, level = human_mapping(dist, lambda a, b: a <= b)
+
+    if AB_jaccard_diff_ids is not None and CD_jaccard_diff_ids is not None and len(AB_jaccard_diff_ids) == len(AB_A_com_ids):
+        AC_A_com_ids = [AB_A_com_ids[AB_id] for AB_id in AB_jaccard_diff_ids]
+        BD_B_com_ids = [AB_B_com_ids[AB_id] for AB_id in AB_jaccard_diff_ids]
+        AC_C_com_ids = [CD_C_com_ids[CD_id] for CD_id in CD_jaccard_diff_ids]
+        BD_D_com_ids = [CD_D_com_ids[CD_id] for CD_id in CD_jaccard_diff_ids]
+        return AC_A_com_ids, AC_C_com_ids, BD_B_com_ids, BD_D_com_ids, 1 - level
     else:
         return [], [], [], [], 0
 
@@ -256,7 +281,6 @@ def topological_map(A_coms, B_coms):
 
 
 def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
-
     if len(cur_A_com_ids) != len(cur_B_com_ids):
         return [], []
 
@@ -286,13 +310,12 @@ def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
                     for B_filled_com in cur_B_filled_coms]
 
     if 1 == len(A_com_groups) and 1 == len(B_com_groups):
-        return tpm_go_deeper(A_coms, B_coms, cur_A_com_ids, cur_A_filled,  cur_B_com_ids, cur_B_filled)
+        return tpm_go_deeper(A_coms, B_coms, cur_A_com_ids, cur_A_filled, cur_B_com_ids, cur_B_filled)
     else:
         return tpm_go_wider(A_coms, B_coms, A_com_groups, B_com_groups)
 
 
 def tpm_go_wider(A_coms, B_coms, A_com_groups, B_com_groups):
-
     A_com_group_sizes = np.array([len(g) for g in A_com_groups])
     B_com_group_sizes = np.array([len(g) for g in B_com_groups])
 
@@ -347,7 +370,6 @@ def tpm_go_wider(A_coms, B_coms, A_com_groups, B_com_groups):
 
 
 def tpm_go_deeper(A_coms, B_coms, cur_A_com_ids, cur_A_filled, cur_B_com_ids, cur_B_filled):
-
     A_result = []
     B_result = []
 

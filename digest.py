@@ -115,6 +115,8 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
         score, stub = transform.evaluate_YYY(u1, u2, u3)
     elif "ZZZ" == tran.get("name"):
         score, stub = transform.evaluate_ZZZ(u1, u2, u3)
+    elif "ZZ" == tran.get("name"):
+        score, stub = transform.evaluate_ZZ(u1, u2, u3)
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)

@@ -35,7 +35,8 @@ unary_transformations = [
     {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
     {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2},
     {"name": "YYY", "value": [{"name": "YYY"}], "type": "unary", "group": 2},
-    {"name": "ZZZ", "value": [{"name": "ZZZ"}], "type": "unary", "group": 2}
+    {"name": "ZZZ", "value": [{"name": "ZZZ"}], "type": "unary", "group": 2},
+    {"name": "ZZ", "value": [{"name": "ZZZ"}], "type": "unary", "group": 2}
 ]
 
 binary_transformations = [
@@ -481,7 +482,7 @@ def evaluate_XXX(u1, u2, u3):
 
     tpm_u1_com_ids, tpm_u3_com_ids, tpm_score = map.topological_map(u1_coms, u3_coms)
 
-    mat_score = min(jcm_score, tpm_score)
+    mat_score = (jcm_score + tpm_score) / 2
 
     stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
                            jcm_u1_com_ids, jcm_u2_com_ids, tpm_u1_com_ids, tpm_u3_com_ids)
@@ -541,6 +542,25 @@ def evaluate_ZZZ(u1, u2, u3):
 
     stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
                            jcm_u1_com_ids, jcm_u2_com_ids)
+
+    return mat_score, stub
+
+
+def evaluate_ZZ(u1, u2, u3):
+
+    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+
+    tpm_u1_com_ids, tpm_u2_com_ids, tpm_score = map.topological_map(u1_coms, u2_coms)
+
+    if 1 == len(tpm_u1_com_ids):
+        mat_score = 0
+    else:
+        mat_score = tpm_score
+
+    stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
+                           tpm_u1_com_ids, tpm_u2_com_ids)
 
     return mat_score, stub
 
