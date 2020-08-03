@@ -32,8 +32,10 @@ unary_transformations = [
     # {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
+    {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
     {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2},
-    {"name": "YYY", "value": [{"name": "YYY"}], "type": "unary", "group": 2}
+    {"name": "YYY", "value": [{"name": "YYY"}], "type": "unary", "group": 2},
+    {"name": "ZZZ", "value": [{"name": "ZZZ"}], "type": "unary", "group": 2}
 ]
 
 binary_transformations = [
@@ -514,12 +516,49 @@ def evaluate_YYY(u1, u2, u3):
     else:
         phm_u1_com_ids, phm_u3_com_ids, phm_score = (None, None, 0)
 
-    mat_score = min(lcm_score, jcm_score, phm_score)
+    mat_score = min((lcm_score + jcm_score) / 2, phm_score)
 
     stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
                            lcm_u1_com_ids, lcm_u2_com_ids,
                            jcm_u1_com_ids, jcm_u2_com_ids,
                            phm_u1_com_ids, phm_u3_com_ids)
+
+    return mat_score, stub
+
+
+def evaluate_ZZZ(u1, u2, u3):
+
+    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+
+    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.jaccard_map(u1_coms, u2_coms)
+
+    if 1 == len(jcm_u1_com_ids):
+        mat_score = 0
+    else:
+        mat_score = jcm_score
+
+    stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
+                           jcm_u1_com_ids, jcm_u2_com_ids)
+
+    return mat_score, stub
+
+
+def evaluate_WWW(u1, u2, u3):
+
+    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+
+    jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids, jcm_u1_u2_score = map.jaccard_map(u1_coms, u2_coms)
+    jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids, jcm_u1_u3_score = map.jaccard_map(u1_coms, u3_coms)
+
+    mat_score = (jcm_u1_u2_score + jcm_u1_u3_score) / 2
+
+    stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
+                           jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids,
+                           jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids)
 
     return mat_score, stub
 

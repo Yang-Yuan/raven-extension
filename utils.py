@@ -366,6 +366,9 @@ def center_of_mass(img):
     return x_coords.mean(), y_coords.mean()
 
 
-
+def location_diff(A_coms, B_coms, A_com_ids, B_com_ids):
+    A_centers = np.array([center_of_mass(A_coms[com_id]) for com_id in A_com_ids])
+    B_centers = np.array([center_of_mass(B_coms[com_id]) for com_id in B_com_ids])
+    return B_centers - A_centers
 
 

@@ -5,6 +5,80 @@ import jaccard
 import utils
 
 
+def human_mapping(PR, order):
+    """
+    This function tries to emulate how a human forms an injective mapping
+    when given a quantitative description of how well/bad each element in the domain
+    is related to each element in the codomain.
+    The way human do this mapping is different from the formal/mathematical methods in
+    planning or optimization problems, in particular when some "conflicts/ambiguity" exist
+    and the decisions need to be made to resolve the "conflicts/ambiguity", and you don't
+    how the decision is going to influence the final result until the final step is reached.
+    Formal methods, pursuing the optimal solution with various techniques,
+    deal with this situation much more comprehensively than humans (if humans don't
+    go through these formal methods themselves), while humans mostly only identify the
+    most perceptually significant correspondences, ignoring the elements they are not sure about.
+    In the intelligence tests for humans, we tend to favor the human mapping method for two reasons:
+    (1) it is designed by/for human.
+    (2) it is computationally inexpensive.
+    (3) if a correspondence not perceptually significant, how do you guarantee it can surpport
+        the following reasoning steps?
+    Therefore, we decide to implement a method that emulates human's mapping by considering only
+    correspondences that are more significant than others, and at the same they can form an
+    injective mapping that includes as many such correspondences as possible.
+    :param PR: a matrix denoting the perceptual relations between each element
+                in the domain and each element in codomain.
+    :param order: a function taking as input two values in PR to decide whether one is more
+                    significant than the other. Return True for more or equally significant, False for not.
+    :return: a mapping
+    """
+    levels = np.unique(PR)
+    PR_flat = PR.flatten()
+
+    max_mapping = None
+    max_mapping_level = None
+    max_mapping_size = -np.inf
+    for level in levels:
+        mapping = np.array(list(map(order, PR_flat, np.full_like(PR_flat, level)))).reshape(PR.shape)
+
+        if utils.is_injective(mapping):
+            mapping_size = mapping.sum()
+            if mapping_size >= max_mapping_size:
+                max_mapping_size = mapping_size
+                max_mapping = mapping
+                max_mapping_level = level
+
+    if max_mapping is not None:
+        mapping_ids = np.where(max_mapping)
+        return mapping_ids[0].tolist(), mapping_ids[1].tolist(), max_mapping_level
+    else:
+        return [], [], 0
+
+
+def location_diff_map(A_coms, B_coms, C_coms, D_coms,
+                      AB_A_com_ids, AB_B_com_ids,
+                      CD_C_com_ids, CD_D_com_ids):
+
+    if len(AB_A_com_ids) != len(CD_C_com_ids):
+        return None, None, None, None, 0
+
+    AB_loc_diff = utils.location_diff(A_coms, B_coms, AB_A_com_ids, AB_B_com_ids)
+    CD_loc_diff = utils.location_diff(C_coms, D_coms, CD_C_com_ids, CD_D_com_ids)
+
+    dist = np.array([[np.linalg.norm(AB_lcd - CD_lcd) for CD_lcd in CD_loc_diff] for AB_lcd in AB_loc_diff])
+
+    AB_loc_diff_ids, CD_loc_diff_ids, level = human_mapping(dist, lambda a, b: a <= b)
+
+    if AB_loc_diff_ids is not None and CD_loc_diff_ids is not None and len(AB_loc_diff_ids) == len(AB_A_com_ids):
+        AC_A_com_ids = [AB_A_com_ids[AB_id] for AB_id in AB_loc_diff_ids]
+        BD_B_com_ids = [AB_B_com_ids[AB_id] for AB_id in AB_loc_diff_ids]
+        AC_C_com_ids = [CD_C_com_ids[CD_id] for CD_id in CD_loc_diff_ids]
+        BD_D_com_ids = [CD_D_com_ids[CD_id] for CD_id in CD_loc_diff_ids]
+        return AC_A_com_ids, AC_C_com_ids, BD_B_com_ids, BD_D_com_ids, 1 - level / max(A_coms[0].shape)
+    else:
+        return [], [], [], [], 0
+
+
 def placeholder_map(A_coms, B_coms):
     """
     this mapping serves as a placeholder mapping derived from an
@@ -69,7 +143,6 @@ def derive_isomorphic_mappings(A, B, C, D,
 
 
 def same_mappings(A, B, m1_AB_A_com_ids, m1_AB_B_com_ids, m2_AB_A_com_ids, m2_AB_B_com_ids):
-
     for a in A:
         b1 = do_map(a, [m1_AB_A_com_ids, m1_AB_B_com_ids])
         b2 = do_map(a, [m2_AB_A_com_ids, m2_AB_B_com_ids])
@@ -131,18 +204,6 @@ def location_map(A_coms, B_coms):
 
     if max_mapping is not None:
         mapping_ids = np.where(max_mapping)
-        # For the score, for large shape, small deviation doesn't matter
-        # but for small shape, small deviation matter
-        # So score = 1 - max_mapping_t / size_of_the_large_one
-        # if score < 0, then score = 0
-        # max_size = -np.inf
-        # for A_com_id, B_com_id in zip(*(np.where(dist == max_mapping_t))):
-        #     A_size = max(utils.trim_binary_image(A_coms[A_com_id]).shape)
-        #     B_size = max(utils.trim_binary_image(B_coms[B_com_id]).shape)
-        #     size = max(A_size, B_size)
-        #     if size > max_size:
-        #         max_size = size
-
         return mapping_ids[0].tolist(), mapping_ids[1].tolist(), 1 - max_mapping_t / max(A_coms[0].shape)
     else:
         return [], [], 0
@@ -185,19 +246,19 @@ def topological_map(A_coms, B_coms):
     A = utils.superimpose(A_coms)
     B = utils.superimpose(B_coms)
 
-    A_com_ids, B_com_ids = tpm(A_coms, B_coms,
-                               A, B,
+    A_com_ids, B_com_ids = tpm(A_coms, B_coms, A, B,
                                list(range(len(A_coms))), list(range(len(B_coms))))
 
-    if A_com_ids is not None and B_com_ids is not None:
+    if 0 != len(A_com_ids) and 0 != len(B_com_ids):
         return A_com_ids, B_com_ids, 1
     else:
         return [], [], 0
 
 
 def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
+
     if len(cur_A_com_ids) != len(cur_B_com_ids):
-        return None, None
+        return [], []
 
     if 1 == len(cur_A_com_ids) and 1 == len(cur_B_com_ids):
         return cur_A_com_ids, cur_B_com_ids
@@ -209,7 +270,12 @@ def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
     cur_B_filled_coms, _, _ = utils.decompose(cur_B_filled, 8, trim = False)
 
     if len(cur_A_filled_coms) != len(cur_B_filled_coms):
-        return None, None
+        return [], []
+
+    if len(cur_A_filled_coms) == len(cur_A_com_ids):
+        # TODO inside-outside topo mapping failed here.
+        # TODO fallback mapping method can be applied here, but for the current problems, it is unnecessary.
+        return [], []
 
     A_com_groups = [[com_id for com_id in cur_A_com_ids
                      if (np.logical_and(A_coms[com_id], A_filled_com) == A_coms[com_id]).all()]
@@ -219,83 +285,92 @@ def tpm(A_coms, B_coms, cur_A, cur_B, cur_A_com_ids, cur_B_com_ids):
                      if (np.logical_and(B_coms[com_id], B_filled_com) == B_coms[com_id]).all()]
                     for B_filled_com in cur_B_filled_coms]
 
+    if 1 == len(A_com_groups) and 1 == len(B_com_groups):
+        return tpm_go_deeper(A_coms, B_coms, cur_A_com_ids, cur_A_filled,  cur_B_com_ids, cur_B_filled)
+    else:
+        return tpm_go_wider(A_coms, B_coms, A_com_groups, B_com_groups)
+
+
+def tpm_go_wider(A_coms, B_coms, A_com_groups, B_com_groups):
+
     A_com_group_sizes = np.array([len(g) for g in A_com_groups])
     B_com_group_sizes = np.array([len(g) for g in B_com_groups])
 
     if not (np.sort(A_com_group_sizes) == np.sort(B_com_group_sizes)).all():
-        return None, None
+        return [], []
 
     A_result = []
     B_result = []
 
-    if 1 == len(A_com_groups) and 1 == len(B_com_groups):
-
-        for ii, com_id in enumerate(cur_A_com_ids):
-            if (utils.fill_holes(A_coms[com_id]) == cur_A_filled).all():
-                break
-        A_result.append(cur_A_com_ids.pop(ii))
-
-        for ii, com_id in enumerate(cur_B_com_ids):
-            if (utils.fill_holes(B_coms[com_id]) == cur_B_filled).all():
-                break
-        B_result.append(cur_B_com_ids.pop(ii))
-
-        cur_A_sub = utils.superimpose([A_coms[com_id] for com_id in cur_A_com_ids])
-        cur_B_sub = utils.superimpose([B_coms[com_id] for com_id in cur_B_com_ids])
-
-        cur_A_sub_result, cur_B_sub_result = tpm(A_coms, B_coms,
-                                                 cur_A_sub, cur_B_sub,
-                                                 cur_A_com_ids, cur_B_com_ids)
-        if cur_A_sub_result is None or cur_A_sub_result is None:
-            return None, None
-        else:
-            A_result = A_result + cur_A_sub_result
-            B_result = B_result + cur_A_sub_result
-
-        return A_result, B_result
-
     group_sizes = np.unique(A_com_group_sizes)
     for size in group_sizes:
-        A_group_ids = np.where(A_com_group_sizes == size)[0]
-        B_group_ids = np.where(B_com_group_sizes == size)[0]
-        A_groups = [A_com_groups[ii] for ii in A_group_ids]
-        B_groups = [B_com_groups[ii] for ii in B_group_ids]
+        A_size_group_ids = np.where(A_com_group_sizes == size)[0]
+        B_size_group_ids = np.where(B_com_group_sizes == size)[0]
+        A_size_groups = [A_com_groups[ii] for ii in A_size_group_ids]
+        B_size_groups = [B_com_groups[ii] for ii in B_size_group_ids]
 
-        # this should not happen.
-        if len(A_groups) != len(B_groups):
-            raise Exception("Ryan!")
+        A_size_result = []
+        B_size_result = []
+        for p in permutations(range(len(B_size_groups))):
+            A_size_group_ids = list(range(len(A_size_groups)))
+            B_size_group_ids = list(p)
 
-        group_n = len(A_groups)
-        if 1 == group_n:
-            A_sub = utils.superimpose([A_coms[com_id] for com_id in A_groups[0]])
-            B_sub = utils.superimpose([B_coms[com_id] for com_id in B_groups[0]])
-            A_sub_result, B_sub_result = tpm(A_coms, B_coms,
-                                             A_sub, B_sub,
-                                             A_groups[0], B_groups[0])
-            if A_sub_result is None or B_sub_result is None:
-                return None, None
-            else:
-                A_result = A_result + A_sub_result
-                B_result = B_result + B_sub_result
-        else:
-            # Note: there is bug, because I really should try to compare the topological structures
-            # first. If it doesn't resolve which A_sub should match which B_sub, then fall_back to jaccard_map.
-            # But I am too tired to write the code, and for the current test problems,
-            # it is OK to use this. Remember to enhance this when more complex problems in the future.
-            A_subs = [utils.superimpose([A_coms[com_id] for com_id in A_group]) for A_group in A_groups]
-            B_subs = [utils.superimpose([B_coms[com_id] for com_id in B_group]) for B_group in B_groups]
-            A_sub_ids, B_sub_ids, _ = jaccard_map(A_subs, B_subs)
-            # End Note
+            A_size_p_result = []
+            B_size_p_result = []
+            for A_group_id, B_group_id in zip(A_size_group_ids, B_size_group_ids):
+                A_sub = utils.superimpose([A_coms[com_id] for com_id in A_size_groups[A_group_id]])
+                B_sub = utils.superimpose([B_coms[com_id] for com_id in B_size_groups[B_group_id]])
 
-            for A_sub_id, B_sub_id in zip(A_sub_ids, B_sub_ids):
-                A_sub_result, B_sub_result = tpm(A_coms, B_coms,
-                                                 A_subs[A_sub_id], B_subs[B_sub_id],
-                                                 A_groups[A_sub_id], B_groups[B_sub_id])
-                if A_sub_result is None or B_sub_result is None:
-                    return None, None
+                A_sub_result, B_sub_result = tpm(A_coms, B_coms, A_sub, B_sub,
+                                                 A_size_groups[A_group_id], B_size_groups[B_group_id])
+
+                if 0 == len(A_sub_result) or 0 == len(B_sub_result):
+                    A_size_p_result = []
+                    B_size_p_result = []
+                    break
                 else:
-                    A_result = A_result + A_sub_result
-                    B_result = B_result + B_sub_result
+                    A_size_p_result = A_size_p_result + A_sub_result
+                    B_size_p_result = B_size_p_result + B_sub_result
+
+            if 0 != len(A_size_p_result) and 0 != len(B_size_p_result):
+                A_size_result = A_size_p_result
+                B_size_result = B_size_p_result
+                break
+
+        if 0 == len(A_size_result) or 0 == len(B_size_result):
+            return [], []
+        else:
+            A_result = A_result + A_size_result
+            B_result = B_result + B_size_result
+
+    return A_result, B_result
+
+
+def tpm_go_deeper(A_coms, B_coms, cur_A_com_ids, cur_A_filled, cur_B_com_ids, cur_B_filled):
+
+    A_result = []
+    B_result = []
+
+    for ii, com_id in enumerate(cur_A_com_ids):
+        if (utils.fill_holes(A_coms[com_id]) == cur_A_filled).all():
+            break
+    A_result.append(cur_A_com_ids.pop(ii))
+
+    for ii, com_id in enumerate(cur_B_com_ids):
+        if (utils.fill_holes(B_coms[com_id]) == cur_B_filled).all():
+            break
+    B_result.append(cur_B_com_ids.pop(ii))
+
+    cur_A_sub = utils.superimpose([A_coms[com_id] for com_id in cur_A_com_ids])
+    cur_B_sub = utils.superimpose([B_coms[com_id] for com_id in cur_B_com_ids])
+    cur_A_sub_result, cur_B_sub_result = tpm(A_coms, B_coms,
+                                             cur_A_sub, cur_B_sub,
+                                             cur_A_com_ids, cur_B_com_ids)
+    if 0 == len(cur_A_sub_result) or 0 == len(cur_A_sub_result):
+        return [], []
+    else:
+        A_result = A_result + cur_A_sub_result
+        B_result = B_result + cur_A_sub_result
 
     return A_result, B_result
 
