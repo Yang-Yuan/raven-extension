@@ -32,6 +32,7 @@ unary_transformations = [
     # {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
     {"name": "duplicate_new", "value": [{"name": "duplicate_new"}], "type": "unary", "group": 2},
+    {"name": "shape_texture_transfer", "value": [{"name": "shape_texture_transfer"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
     {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
     {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2},
@@ -625,4 +626,30 @@ def evaluate_duplicate(u1, u2):
     stub = utils.make_stub(u1_to_u2_locs)
 
     return mat_score, stub
+
+
+def evaluate_shape_texture_transfer(u1, u2, u3):
+
+    u1_filled = utils.fill_holes(u1)
+    u2_filled = utils.fill_holes(u2)
+    u3_filled = utils.fill_holes(u3)
+
+    u1_u3_shape_index = jaccard.jaccard_coef(u1_filled, u3_filled)[0]
+
+    u1_texture_index = np.logical_and(u1_filled, np.logical_not(u1)).sum() / u1_filled.sum()
+    u2_texture_index = np.logical_and(u2_filled, np.logical_not(u2)).sum() / u2_filled.sum()
+    u3_texture_index = np.logical_and(u3_filled, np.logical_not(u3)).sum() / u3_filled.sum()
+    u1_u2_texture_index = u1_texture_index - u2_texture_index
+
+    # _, u1_to_u3_x, u1_to_u3_y = jaccard.jaccard_coef(u1, u3)
+    # u1_texture_index, u3_texture_index = utils.texture_index(u1, u3, u1_filled, u3_filled, u1_to_u3_x, u1_to_u3_y)
+    # texture_score = 1 - abs(u1_texture_index - u3_texture_index)
+
+    mat_score = (1 - abs(u1_texture_index - u3_texture_index) + abs(u1_u2_texture_index) + u1_u3_shape_index) / 3
+
+    stub = utils.make_stub(u2_texture_index, u1_u2_texture_index, u3_filled, u2_filled, u1_u3_shape_index)
+
+    return mat_score, stub
+
+
 

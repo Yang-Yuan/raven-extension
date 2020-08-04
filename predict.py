@@ -35,6 +35,8 @@ def predict_unary(prob, anlg, tran, d):
         return predict_duplicate(prob, anlg, tran, d)
     elif tran.get("name") == "duplicate_new":
         return predict_duplicate_new(prob, anlg, tran, d)
+    elif tran.get("name") == "shape_texture_transfer":
+        return predict_shape_texture_transfer(prob, anlg, tran, d)
     elif tran.get("name") == "rearrange":
         return predict_rearrange(prob, anlg, tran, d)
     elif tran.get("name") == "WWW":
@@ -241,6 +243,39 @@ def predict_duplicate_new(prob, anlg, tran, d):
                 score = 0
             else:
                 score = (dup_score + (1 - level / max(u3.shape))) / 2
+
+        pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
+                          "pred": opt})
+
+    return pred_data
+
+
+def predict_shape_texture_transfer(prob, anlg, tran, d):
+
+    u3 = prob.matrix[anlg.get("value")[2]]
+    u2_filled = d.get("stub").get("u2_filled")
+    u3_filled = d.get("stub").get("u3_filled")
+    u1_u3_shape_index = d.get("stub").get("u1_u3_shape_index")
+    u1_u2_texture_index = d.get("stub").get("u1_u2_texture_index")
+    u2_texture_index = d.get("stub").get("u2_texture_index")
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+
+        opt_filled = utils.fill_holes(opt)
+        u2_opt_shape_index = jaccard.jaccard_coef(u2_filled, opt_filled)[0]
+
+        u3_texture_index = np.logical_and(u3_filled, np.logical_not(u3)).sum() / u3_filled.sum()
+        opt_texture_index = np.logical_and(opt_filled, np.logical_not(opt)).sum() / opt_filled.sum()
+        u3_opt_texture_index = u3_texture_index - opt_texture_index
+
+        # _, u2_to_opt_x, u2_to_opt_y = jaccard.jaccard_coef(u2, opt)
+        # u2_texture_index, opt_texture_index = utils.texture_index(u2, opt, u2_filled, opt_filled, u2_to_opt_x, u2_to_opt_y)
+        delta_texture_score = 1 - abs(u1_u2_texture_index - u3_opt_texture_index)
+        texture_score = 1 - abs(u2_texture_index - opt_texture_index)
+        shape_score = 1 - abs(u1_u3_shape_index - u2_opt_shape_index)
+        score = (texture_score + delta_texture_score + shape_score) / 3
 
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": opt})

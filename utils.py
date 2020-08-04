@@ -372,3 +372,19 @@ def location_diff(A_coms, B_coms, A_com_ids, B_com_ids):
     return B_centers - A_centers
 
 
+# def texture_index(A, B, A_filled, B_filled, A_to_B_x, A_to_B_y):
+#
+#     A_aligned, B_aligned, _, _ = align(A, B, A_to_B_x, A_to_B_y)
+#     A_filled_aligned, B_filled_aligned, _, _ = align(A_filled, B_filled, A_to_B_x, A_to_B_y)
+#     mask = np.logical_and(A_filled_aligned, B_filled_aligned)
+#     A_aligned_masked = np.logical_and(A_aligned, mask)
+#     B_aligned_masked = np.logical_and(B_aligned, mask)
+#     return A_aligned_masked.sum() / mask.sum(), B_aligned_masked.sum() / mask.sum()
+
+    # img_filled = fill_holes(img)
+    # return img_filled.sum() / np.prod(img.shape) - img.sum() / np.prod(img.shape)
+    # return img_filled.sum() / img.sum()
+    # return img.sum() / img_filled.sum()
+    # return np.logical_and(img_filled, np.logical_not(img)).sum() / img_filled.sum()
+
+
