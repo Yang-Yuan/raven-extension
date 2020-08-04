@@ -33,6 +33,8 @@ def predict_unary(prob, anlg, tran, d):
         return predict_upscale_to(prob, anlg, tran, d)
     elif tran.get("name") == "duplicate":
         return predict_duplicate(prob, anlg, tran, d)
+    elif tran.get("name") == "duplicate_new":
+        return predict_duplicate_new(prob, anlg, tran, d)
     elif tran.get("name") == "rearrange":
         return predict_rearrange(prob, anlg, tran, d)
     elif tran.get("name") == "WWW":
@@ -234,11 +236,11 @@ def predict_duplicate_new(prob, anlg, tran, d):
             # it is actually a location map
             dist = np.array([[np.linalg.norm(u1_to_u2_loc - u3_to_opt_loc) for u3_to_opt_loc in u3_to_opt_locs]
                              for u1_to_u2_loc in u1_to_u2_locs])
-            lcm_u2_com_ids, lcm_opt_com_ids, lcm_score = map.human_mapping(dist, lambda a, b: a <= b)
+            lcm_u2_com_ids, lcm_opt_com_ids, level = map.human_mapping(dist, lambda a, b: a <= b)
             if len(lcm_u2_com_ids) != len(u1_to_u2_locs):
                 score = 0
             else:
-                score = (dup_score + lcm_score) / 2
+                score = (dup_score + (1 - level / max(u3.shape))) / 2
 
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": opt})

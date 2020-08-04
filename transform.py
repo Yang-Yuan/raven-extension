@@ -31,6 +31,7 @@ unary_transformations = [
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary", "group": 1},
     # {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
+    {"name": "duplicate_new", "value": [{"name": "duplicate_new"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
     {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
     {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2},
@@ -617,8 +618,8 @@ def evaluate_duplicate(u1, u2):
         u1_to_u2_locs = []
     else:
         mat_score = np.mean(scores)
-        u1_to_u2_xs = (np.array(u1_to_u2_xs) - min(u1_to_u2_xs)).tolist()
-        u1_to_u2_ys = (np.array(u1_to_u2_ys) - min(u1_to_u2_ys)).tolist()
+        u1_to_u2_xs = ((np.array(u1_to_u2_xs) - min(u1_to_u2_xs)) / u1.shape[1]).tolist()
+        u1_to_u2_ys = ((np.array(u1_to_u2_ys) - min(u1_to_u2_ys)) / u1.shape[0]).tolist()
         u1_to_u2_locs = np.array(list(zip(u1_to_u2_xs, u1_to_u2_ys)))
 
     stub = utils.make_stub(u1_to_u2_locs)
