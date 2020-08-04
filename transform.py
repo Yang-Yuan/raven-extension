@@ -582,3 +582,46 @@ def evaluate_WWW(u1, u2, u3):
 
     return mat_score, stub
 
+
+def evaluate_duplicate(u1, u2):
+
+    scores = []
+    u1_to_u2_xs = []
+    u1_to_u2_ys = []
+    current = u2.copy()
+    current_to_u2_x = 0
+    current_to_u2_y = 0
+    while current.sum():
+        score_tmp, diff_tmp_to_u1_x, diff_tmp_to_u1_y, diff_tmp_to_current_x, diff_tmp_to_current_y, _ = \
+            asymmetric_jaccard.asymmetric_jaccard_coef(u1, current)
+
+        if score_tmp < 0.6:
+            break
+
+        scores.append(score_tmp)
+        u1_to_current_x = (-diff_tmp_to_u1_x) - (-diff_tmp_to_current_x)
+        u1_to_current_y = (-diff_tmp_to_u1_y) - (-diff_tmp_to_current_y)
+        u1_to_u2_x = u1_to_current_x + current_to_u2_x
+        u1_to_u2_y = u1_to_current_y + current_to_u2_y
+
+        u1_to_u2_xs.append(u1_to_u2_x)
+        u1_to_u2_ys.append(u1_to_u2_y)
+        u1_aligned, current_aligned, aligned_to_current_x, aligned_to_current_y = utils.align(
+            u1, current, u1_to_current_x, u1_to_current_y)
+        current = utils.erase_noise_point(np.logical_and(current_aligned, np.logical_not(u1_aligned)), 8)
+        current_to_u2_x = aligned_to_current_x + current_to_u2_x
+        current_to_u2_y = aligned_to_current_y + current_to_u2_y
+
+    if 1 >= len(scores):
+        mat_score = 0
+        u1_to_u2_locs = []
+    else:
+        mat_score = np.mean(scores)
+        u1_to_u2_xs = (np.array(u1_to_u2_xs) - min(u1_to_u2_xs)).tolist()
+        u1_to_u2_ys = (np.array(u1_to_u2_ys) - min(u1_to_u2_ys)).tolist()
+        u1_to_u2_locs = np.array(list(zip(u1_to_u2_xs, u1_to_u2_ys)))
+
+    stub = utils.make_stub(u1_to_u2_locs)
+
+    return mat_score, stub
+

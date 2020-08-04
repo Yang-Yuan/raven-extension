@@ -105,6 +105,8 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
             score = min(scores)
             copies_to_u1_x = (np.array(u1_to_u2_xs[1 :]) - u1_to_u2_xs[0]).tolist()
             copies_to_u1_y = (np.array(u1_to_u2_ys[1 :]) - u1_to_u2_ys[0]).tolist()
+    elif "duplicate_new" == tran.get("name"):
+        score, stub = transform.evaluate_duplicate(u1, u2)
     elif "rearrange" == tran.get("name"):
         score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y = transform.evaluate_rearrange(u1, u2)
     elif "WWW" == tran.get("name"):

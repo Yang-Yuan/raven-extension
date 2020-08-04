@@ -217,6 +217,35 @@ def predict_ZZ(prob, anlg, tran, d):
     return pred_data
 
 
+def predict_duplicate_new(prob, anlg, tran, d):
+
+    u3 = prob.matrix[anlg.get("value")[2]]
+    u1_to_u2_locs = d.get("stub").get("u1_to_u2_locs")
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+        dup_score, stub = transform.evaluate_duplicate(u3, opt)
+        u3_to_opt_locs = stub.get("u1_to_u2_locs")
+
+        if len(u1_to_u2_locs) <= 1 or len(u1_to_u2_locs) != len(u3_to_opt_locs):
+            score = 0
+        else:
+            # it is actually a location map
+            dist = np.array([[np.linalg.norm(u1_to_u2_loc - u3_to_opt_loc) for u3_to_opt_loc in u3_to_opt_locs]
+                             for u1_to_u2_loc in u1_to_u2_locs])
+            lcm_u2_com_ids, lcm_opt_com_ids, lcm_score = map.human_mapping(dist, lambda a, b: a <= b)
+            if len(lcm_u2_com_ids) != len(u1_to_u2_locs):
+                score = 0
+            else:
+                score = (dup_score + lcm_score) / 2
+
+        pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
+                          "pred": opt})
+
+    return pred_data
+
+
 def predict_rearrange(prob, anlg, tran, d):
     u1_coms_x = d.get("u1_coms_x")
     u1_coms_y = d.get("u1_coms_y")
