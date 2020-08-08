@@ -238,7 +238,7 @@ def predict_duplicate_new(prob, anlg, tran, d):
             # it is actually a location map
             dist = np.array([[np.linalg.norm(u1_to_u2_loc - u3_to_opt_loc) for u3_to_opt_loc in u3_to_opt_locs]
                              for u1_to_u2_loc in u1_to_u2_locs])
-            lcm_u2_com_ids, lcm_opt_com_ids, level = map.human_mapping(dist, lambda a, b: a <= b)
+            lcm_u2_com_ids, lcm_opt_com_ids, level = map.significant_level_first_injective_mapping(dist, lambda a, b: a <= b)
             if len(lcm_u2_com_ids) != len(u1_to_u2_locs):
                 score = 0
             else:

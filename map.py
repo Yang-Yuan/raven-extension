@@ -5,7 +5,34 @@ import jaccard
 import utils
 
 
-def human_mapping(PR, order):
+def size_first_injective_mapping(PR, order = None):
+    """
+    For now, assume ascending order as the significant order.
+    :param PR:
+    :param order: for future use
+    :return:
+    """
+
+    A_to_B_argmin = [np.argwhere(row == np.min(row)).flatten().tolist() for row in PR]
+    B_to_A_argmin = [np.argwhere(col == np.min(col)).flatten().tolist() for col in PR.transpose()]
+
+    A_ids = []
+    B_ids = []
+
+    for B_ids in A_to_B_argmin:
+        # TODO it might be too strict. Maybe, change it to a group mapping or the mappings
+        # TODO not so strictu such as mapping the minimum to the second minimum.
+        if 1 < len(B_ids):
+            continue
+        if 1 < len(B_to_A_argmin[B_ids[0]]):
+            continue
+        A_ids.append(B_ids[0])
+        B_ids.append(B_to_A_argmin[B_ids[0]][0])
+
+    return A_ids, B_ids
+
+
+def significant_level_first_injective_mapping(PR, order):
     """
     This function tries to emulate how a human forms an injective mapping
     when given a quantitative description of how well/bad each element in the domain
@@ -26,7 +53,7 @@ def human_mapping(PR, order):
     Therefore, we decide to implement a method that emulates human's mapping by considering only
     correspondences that are more significant than others, and at the same they can form an
     injective mapping that includes as many such correspondences as possible.
-    :param PR: a matrix denoting the perceptual relations between each element
+    :param PR: a matrix denoting significant level of the perceptual relations between each element
                 in the domain and each element in codomain.
     :param order: a function taking as input two values in PR to decide whether one is more
                     significant than the other. Return True for more or equally significant, False for not.
@@ -66,7 +93,7 @@ def delta_location_map(A_coms, B_coms, C_coms, D_coms,
 
     dist = np.array([[np.linalg.norm(AB_lcd - CD_lcd) for CD_lcd in CD_loc_diff] for AB_lcd in AB_loc_diff])
 
-    AB_loc_diff_ids, CD_loc_diff_ids, level = human_mapping(dist, lambda a, b: a <= b)
+    AB_loc_diff_ids, CD_loc_diff_ids, level = significant_level_first_injective_mapping(dist, lambda a, b: a <= b)
 
     if AB_loc_diff_ids is not None and CD_loc_diff_ids is not None and len(AB_loc_diff_ids) == len(AB_A_com_ids):
         AC_A_com_ids = [AB_A_com_ids[AB_id] for AB_id in AB_loc_diff_ids]
@@ -92,7 +119,7 @@ def delta_jaccard_map(A_coms, B_coms, C_coms, D_coms,
 
     dist = np.array([[abs(AB_jcd - CD_jcd) for CD_jcd in CD_jaccard_diff] for AB_jcd in AB_jaccard_diff])
 
-    AB_jaccard_diff_ids, CD_jaccard_diff_ids, level = human_mapping(dist, lambda a, b: a <= b)
+    AB_jaccard_diff_ids, CD_jaccard_diff_ids, level = significant_level_first_injective_mapping(dist, lambda a, b: a <= b)
 
     if AB_jaccard_diff_ids is not None and CD_jaccard_diff_ids is not None and len(AB_jaccard_diff_ids) == len(AB_A_com_ids):
         AC_A_com_ids = [AB_A_com_ids[AB_id] for AB_id in AB_jaccard_diff_ids]

@@ -6,12 +6,15 @@ from skimage.io import imsave
 import problem
 import utils
 from skimage.transform import resize
+import map
 
 
-img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")
-img0 = img[:, :, 0]
-c0 = Image.fromarray(img0)
-c0.save("./problems/ace analogies - chopped up/m5/c0.gif", mode = "L")
+
+
+# img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")
+# img0 = img[:, :, 0]
+# c0 = Image.fromarray(img0)
+# c0.save("./problems/ace analogies - chopped up/m5/c0.gif", mode = "L")
 
 # img = plt.imread("./problems/g1.png")
 # img0 = rgb2gray(img)
