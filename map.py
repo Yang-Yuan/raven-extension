@@ -13,23 +13,43 @@ def size_first_injective_mapping(PR, order = None):
     :return:
     """
 
+    A_len, B_len = PR.shape
+
     A_to_B_argmin = [np.argwhere(row == np.min(row)).flatten().tolist() for row in PR]
     B_to_A_argmin = [np.argwhere(col == np.min(col)).flatten().tolist() for col in PR.transpose()]
 
-    A_ids = []
-    B_ids = []
+    AB_A_ids = []
+    AB_B_ids = []
+    AA_1_ids = []
+    AA_2_idss = []
+    BB_1_ids = []
+    BB_2_idss = []
 
-    for B_ids in A_to_B_argmin:
-        # TODO it might be too strict. Maybe, change it to a group mapping or the mappings
-        # TODO not so strictu such as mapping the minimum to the second minimum.
-        if 1 < len(B_ids):
-            continue
-        if 1 < len(B_to_A_argmin[B_ids[0]]):
-            continue
-        A_ids.append(B_ids[0])
-        B_ids.append(B_to_A_argmin[B_ids[0]][0])
+    for A_id in range(len(A_len)):
+        for B_id in range(len(B_len)):
+            if A_id in B_to_A_argmin[B_id] and B_id in A_to_B_argmin[A_id]:
+                AB_A_ids.append(A_id)
+                AB_B_ids.append(B_id)
+            else:
+                raise Exception("miracle!")
 
-    return A_ids, B_ids
+    for A_1_id in range(len(A_len)):
+        if A_1_id not in AB_A_ids:
+            A_2_id = []
+            for B_id in A_to_B_argmin[A_1_id]:
+                A_2_id.extend(B_to_A_argmin[B_id])
+            AA_1_ids.append(A_1_id)
+            AA_2_idss.append(A_2_id)
+
+    for B_1_id in range(len(B_len)):
+        if B_1_id not in AB_B_ids:
+            B_2_id = []
+            for A_id in B_to_A_argmin[B_1_id]:
+                B_2_id.extend(A_to_B_argmin[A_id])
+            BB_1_ids.append(B_1_id)
+            BB_2_idss.append(B_2_id)
+
+    return AB_A_ids, AB_B_ids, AA_1_ids, AA_2_idss, BB_1_ids, BB_2_idss
 
 
 def significant_level_first_injective_mapping(PR, order):

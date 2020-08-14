@@ -1,11 +1,12 @@
 import numpy as np
 import utils
+import map
 
 A_x_max = 60
 A_y_max = 60
 B_x_max = 60
 B_y_max = 60
-master_distance = np.array([[[[???
+master_distance = np.array([[[[A_x + A_y + B_x + B_y
                                for A_x in range(B_y_max)]
                               for A_y in range(B_x_max)]
                              for B_x in range(A_y_max)]
@@ -25,9 +26,57 @@ def soft_jaccard_coef_internal(A_coords, B_coords):
     B_x = np.full((len(A_coords), len(B_coords)), B_coords[:, 0])
     B_y = np.full((len(A_coords), len(B_coords)), B_coords[:, 1])
 
-    dist = master_distance[A_x, A_y, B_x, B_y]
+    dist_AB = master_distance[A_x, A_y, B_x, B_y]
+    dist_AA = master_distance[A_x, A_y, B_x, B_y]
+    dist_BB = master_distance[B_x, B_y, B_x, B_y]
 
-    return None
+    AB_A_ids, AB_B_ids, AA_1_ids, AA_12_idss, BB_1_ids, BB_12_idss = map.size_first_injective_mapping(dist_AB)
+
+    AB_d = dist_AB[AB_A_ids, AB_B_ids].mean()
+
+    AA_2_ids = []
+    for AA_1_id, AA_12_ids in zip(AA_1_ids, AA_12_idss):
+        AA_2_ids.append(AA_2_ids[dist_AA[AA_1_id, AA_12_ids].argmin()])
+
+    AA_d = dist_AA[AA_1_ids, AA_2_ids].mean()
+
+    BB_2_ids = []
+    for BB_1_id, BB_12_ids in zip(BB_1_ids, BB_12_idss):
+        BB_2_ids.append(BB_2_ids[dist_BB[BB_1_id, BB_12_ids].argmin()])
+
+    BB_d = dist_BB[BB_1_ids, BB_2_ids].mean()
+
+    sim = np.exp(-(AB_d + AA_d + BB_d))
+
+    return sim
+
+
+def soft_jaccard_naive_embed(frgd, bkgd):
+    bgd_shape_y, bgd_shape_x = bkgd.shape
+    fgd_shape_y, fgd_shape_x = frgd.shape
+
+    padding_y = int(fgd_shape_y * 0.25)
+    padding_x = int(fgd_shape_x * 0.25)
+
+    delta_xs = list(range(-padding_x, bgd_shape_x - fgd_shape_x + 1 + padding_x))
+    delta_ys = list(range(-padding_y, bgd_shape_y - fgd_shape_y + 1 + padding_y))
+
+    length = int(len(delta_xs) * len(delta_ys))
+    coords = np.full((length, 2), fill_value = -1, dtype = np.int)
+    j_coefs = np.zeros(length, dtype = np.float)
+
+    frgd_coords = np.argwhere(frgd)
+    bkgd_coords = np.argwhere(bkgd)
+
+    kk = 0
+    for delta_x in delta_xs:
+        for delta_y in delta_ys:
+            coords[kk] = [delta_x, delta_y]
+            frgd_coords_shifted = frgd_coords + [delta_y, delta_x]
+            j_coefs[kk] = soft_jaccard_coef_internal(frgd_coords_shifted, bkgd_coords)
+            kk += 1
+
+    return coords, j_coefs
 
 
 def soft_jaccard_naive_cross(hrz, vtc):
@@ -54,34 +103,6 @@ def soft_jaccard_naive_cross(hrz, vtc):
             vtc_coords_shifted = vtc_coords + [delta_y, 0]
             coords[kk] = [delta_x, delta_y]
             j_coefs[kk] = soft_jaccard_coef_internal(hrz_coords_shifted, vtc_coords_shifted)
-            kk += 1
-
-    return coords, j_coefs
-
-
-def soft_jaccard_naive_embed(frgd, bkgd):
-    bgd_shape_y, bgd_shape_x = bkgd.shape
-    fgd_shape_y, fgd_shape_x = frgd.shape
-
-    padding_y = int(fgd_shape_y * 0.25)
-    padding_x = int(fgd_shape_x * 0.25)
-
-    delta_xs = list(range(-padding_x, bgd_shape_x - fgd_shape_x + 1 + padding_x))
-    delta_ys = list(range(-padding_y, bgd_shape_y - fgd_shape_y + 1 + padding_y))
-
-    length = int(len(delta_xs) * len(delta_ys))
-    coords = np.full((length, 2), fill_value = -1, dtype = np.int)
-    j_coefs = np.zeros(length, dtype = np.float)
-
-    frgd_coords = np.argwhere(frgd)
-    bkgd_coords = np.argwhere(bkgd)
-
-    kk = 0
-    for delta_x in delta_xs:
-        for delta_y in delta_ys:
-            coords[kk] = [delta_x, delta_y]
-            frgd_coords_shifted = frgd_coords + [delta_y, delta_x]
-            j_coefs[kk] = soft_jaccard_coef_internal(frgd_coords_shifted, bkgd_coords)
             kk += 1
 
     return coords, j_coefs
@@ -131,4 +152,4 @@ def soft_jaccard(A, B):
     A_tr, tr_to_A_x, tr_to_A_y = utils.trim_binary_image(A, coord = True)
     B_tr, tr_to_B_x, tr_to_B_y = utils.trim_binary_image(B, coord = True)
 
-    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_x = soft_jaccard_naive(A_trimmed, B_trimmed)
+    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_x = soft_jaccard_naive(A_tr, B_tr)

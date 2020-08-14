@@ -7,9 +7,12 @@ import problem
 import utils
 from skimage.transform import resize
 import map
+import soft_jaccard
 
+A_coords = np.array([[1, 2], [3, 4], [5, 6]])
+B_coords = np.array([[-1, -2], [-3, -4], [-5, -6]])
 
-
+dist = soft_jaccard.soft_jaccard_coef_internal(A_coords, B_coords)
 
 # img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")
 # img0 = img[:, :, 0]
