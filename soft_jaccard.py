@@ -32,21 +32,21 @@ def soft_jaccard_coef_internal(A_coords, B_coords):
 
     AB_A_ids, AB_B_ids, AA_1_ids, AA_12_idss, BB_1_ids, BB_12_idss = map.size_first_injective_mapping(dist_AB)
 
-    AB_d = dist_AB[AB_A_ids, AB_B_ids].mean()
+    AB_d = dist_AB[AB_A_ids, AB_B_ids].sum()
 
     AA_2_ids = []
     for AA_1_id, AA_12_ids in zip(AA_1_ids, AA_12_idss):
         AA_2_ids.append(AA_2_ids[dist_AA[AA_1_id, AA_12_ids].argmin()])
 
-    AA_d = dist_AA[AA_1_ids, AA_2_ids].mean()
+    AA_d = dist_AA[AA_1_ids, AA_2_ids].sum()
 
     BB_2_ids = []
     for BB_1_id, BB_12_ids in zip(BB_1_ids, BB_12_idss):
         BB_2_ids.append(BB_2_ids[dist_BB[BB_1_id, BB_12_ids].argmin()])
 
-    BB_d = dist_BB[BB_1_ids, BB_2_ids].mean()
+    BB_d = dist_BB[BB_1_ids, BB_2_ids].sum()
 
-    sim = np.exp(-(AB_d + AA_d + BB_d))
+    sim = np.exp(-(AB_d + AA_d + BB_d) / (len(AB_A_ids) + len(AA_1_ids) + len(BB_1_ids)))
 
     return sim
 
