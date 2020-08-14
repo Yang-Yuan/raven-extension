@@ -25,15 +25,13 @@ def size_first_injective_mapping(PR, order = None):
     BB_1_ids = []
     BB_2_idss = []
 
-    for A_id in range(len(A_len)):
-        for B_id in range(len(B_len)):
+    for A_id in range(A_len):
+        for B_id in range(B_len):
             if A_id in B_to_A_argmin[B_id] and B_id in A_to_B_argmin[A_id]:
                 AB_A_ids.append(A_id)
                 AB_B_ids.append(B_id)
-            else:
-                raise Exception("miracle!")
 
-    for A_1_id in range(len(A_len)):
+    for A_1_id in range(A_len):
         if A_1_id not in AB_A_ids:
             A_2_id = []
             for B_id in A_to_B_argmin[A_1_id]:
@@ -41,7 +39,7 @@ def size_first_injective_mapping(PR, order = None):
             AA_1_ids.append(A_1_id)
             AA_2_idss.append(A_2_id)
 
-    for B_1_id in range(len(B_len)):
+    for B_1_id in range(B_len):
         if B_1_id not in AB_B_ids:
             B_2_id = []
             for A_id in B_to_A_argmin[B_1_id]:

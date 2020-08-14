@@ -27,7 +27,7 @@ def soft_jaccard_coef_internal(A_coords, B_coords):
     B_y = np.full((len(A_coords), len(B_coords)), B_coords[:, 1])
 
     dist_AB = master_distance[A_x, A_y, B_x, B_y]
-    dist_AA = master_distance[A_x, A_y, B_x, B_y]
+    dist_AA = master_distance[A_x, A_y, A_x, A_y]
     dist_BB = master_distance[B_x, B_y, B_x, B_y]
 
     AB_A_ids, AB_B_ids, AA_1_ids, AA_12_idss, BB_1_ids, BB_12_idss = map.size_first_injective_mapping(dist_AB)
@@ -36,13 +36,13 @@ def soft_jaccard_coef_internal(A_coords, B_coords):
 
     AA_2_ids = []
     for AA_1_id, AA_12_ids in zip(AA_1_ids, AA_12_idss):
-        AA_2_ids.append(AA_2_ids[dist_AA[AA_1_id, AA_12_ids].argmin()])
+        AA_2_ids.append(AA_12_ids[dist_AA[AA_1_id, AA_12_ids].argmin()])
 
     AA_d = dist_AA[AA_1_ids, AA_2_ids].sum()
 
     BB_2_ids = []
     for BB_1_id, BB_12_ids in zip(BB_1_ids, BB_12_idss):
-        BB_2_ids.append(BB_2_ids[dist_BB[BB_1_id, BB_12_ids].argmin()])
+        BB_2_ids.append(BB_12_ids[dist_BB[BB_1_id, BB_12_ids].argmin()])
 
     BB_d = dist_BB[BB_1_ids, BB_2_ids].sum()
 
@@ -152,4 +152,9 @@ def soft_jaccard(A, B):
     A_tr, tr_to_A_x, tr_to_A_y = utils.trim_binary_image(A, coord = True)
     B_tr, tr_to_B_x, tr_to_B_y = utils.trim_binary_image(B, coord = True)
 
-    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_x = soft_jaccard_naive(A_tr, B_tr)
+    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_y = soft_jaccard_naive(A_tr, B_tr)
+
+    A_to_B_x = -tr_to_A_x + A_tr_to_B_tr_x + tr_to_B_x
+    A_to_B_y = -tr_to_A_y + A_tr_to_B_tr_y + tr_to_B_x
+
+    return sj, A_to_B_x, A_to_B_y
