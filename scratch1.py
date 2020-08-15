@@ -10,21 +10,21 @@ import map
 import soft_jaccard
 
 
-A = np.full((10, 10), False)
+A = np.full((20, 20), False)
 A[0, :] = True
 A[:, 0] = True
-A[9, :] = True
-A[:, 9] = True
-B = np.full((10, 10), False)
+A[19, :] = True
+A[:, 19] = True
+B = np.full((20, 20), False)
 B[0, :] = True
-B[:, 9] = True
-for ii in range(10):
+B[:, 19] = True
+for ii in range(20):
     B[ii, ii] = True
-C = np.full((10, 10), False)
-C[0, 0 : 9] = True
-C[0 : 9, 0] = True
-C[8, 0 : 9] = True
-C[0 : 9, 8] = True
+C = np.full((20, 20), False)
+C[0, 0 : 19] = True
+C[0 : 19, 0] = True
+C[18, 0 : 19] = True
+C[0 : 19, 18] = True
 
 j_AB = np.logical_and(A, B).sum() / np.logical_or(A, B).sum()
 j_AC = np.logical_and(A, C).sum() / np.logical_or(A, C).sum()
