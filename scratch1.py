@@ -9,16 +9,27 @@ from skimage.transform import resize
 import map
 import soft_jaccard
 
-
 A = np.full((3, 3), False)
-A[1, 0] = True
-A[1, 2] = True
+A[1, 1] = True
+A[2, 0] = True
+A[2, 1] = True
 B = np.full((3, 3), False)
 B[0, 1] = True
-B[2, 1] = True
+B[0, 2] = True
+B[1, 1] = True
 
 sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+# A = np.full((3, 3), False)
+# A[1, 0] = True
+# A[1, 2] = True
+# B = np.full((3, 3), False)
+# B[0, 1] = True
+# B[2, 1] = True
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
 
 # A = np.full((3, 3), True)
 # B = np.full((2, 2), True)
@@ -34,6 +45,8 @@ sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
 
 print("llohe")
+
+
 # img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")
 # img0 = img[:, :, 0]
 # c0 = Image.fromarray(img0)
