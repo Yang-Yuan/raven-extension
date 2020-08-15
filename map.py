@@ -37,7 +37,7 @@ def size_first_injective_mapping(PR, order = None):
             for B_id in A_to_B_argmin[A_1_id]:
                 A_2_id.extend(B_to_A_argmin[B_id])
             AA_1_ids.append(A_1_id)
-            AA_2_idss.append(A_2_id)
+            AA_2_idss.append(np.unique(A_2_id).tolist())
 
     for B_1_id in range(B_len):
         if B_1_id not in AB_B_ids:
@@ -45,7 +45,7 @@ def size_first_injective_mapping(PR, order = None):
             for A_id in B_to_A_argmin[B_1_id]:
                 B_2_id.extend(A_to_B_argmin[A_id])
             BB_1_ids.append(B_1_id)
-            BB_2_idss.append(B_2_id)
+            BB_2_idss.append(np.unique(B_2_id).tolist())
 
     return AB_A_ids, AB_B_ids, AA_1_ids, AA_2_idss, BB_1_ids, BB_2_idss
 

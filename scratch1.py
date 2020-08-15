@@ -9,11 +9,31 @@ from skimage.transform import resize
 import map
 import soft_jaccard
 
-A_coords = np.array([[1, 2], [3, 4], [5, 6]])
-B_coords = np.array([[-1, -2], [-3, -4], [-5, -6]])
 
-dist = soft_jaccard.soft_jaccard_coef_internal(A_coords, B_coords)
+A = np.full((3, 3), False)
+A[1, 0] = True
+A[1, 2] = True
+B = np.full((3, 3), False)
+B[0, 1] = True
+B[2, 1] = True
 
+sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+# A = np.full((3, 3), True)
+# B = np.full((2, 2), True)
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+# A = np.full((3, 3), True)
+# B = np.full((3, 3), True)
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+#
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+print("llohe")
 # img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")
 # img0 = img[:, :, 0]
 # c0 = Image.fromarray(img0)
