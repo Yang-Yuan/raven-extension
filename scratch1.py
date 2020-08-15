@@ -9,17 +9,82 @@ from skimage.transform import resize
 import map
 import soft_jaccard
 
-A = np.full((3, 3), False)
-A[1, 1] = True
-A[2, 0] = True
-A[2, 1] = True
-B = np.full((3, 3), False)
-B[0, 1] = True
-B[0, 2] = True
-B[1, 1] = True
+
+A = np.full((10, 10), False)
+A[0, :] = True
+A[:, 0] = True
+A[9, :] = True
+A[:, 9] = True
+B = np.full((10, 10), False)
+B[0, :] = True
+B[:, 9] = True
+for ii in range(10):
+    B[ii, ii] = True
+C = np.full((10, 10), False)
+C[0, 0 : 9] = True
+C[0 : 9, 0] = True
+C[8, 0 : 9] = True
+C[0 : 9, 8] = True
+
+j_AB = np.logical_and(A, B).sum() / np.logical_or(A, B).sum()
+j_AC = np.logical_and(A, C).sum() / np.logical_or(A, C).sum()
 
 sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+sj_AC, A_to_C_x, A_to_C_y = soft_jaccard.soft_jaccard(A, C)
+sj_CA, C_to_A_x, C_to_A_y = soft_jaccard.soft_jaccard(C, A)
+
+print("llohe")
+
+
+# A = np.full((1, 1), False)
+# A[0, 0] = True
+# B = np.full((3, 3), False)
+# B[1, 1] = True
+# B[2, 2] = True
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+#
+# print("llohe")
+
+# A = np.full((3, 3), False)
+# A[0, 2] = True
+# A[0, 0] = True
+# A[1, 1] = True
+# A[2, 2] = True
+# B = np.full((3, 3), False)
+# B[2, 0] = True
+# B[0, 0] = True
+# B[1, 1] = True
+# B[2, 2] = True
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+# A = np.full((3, 3), False)
+# A[1, :] = True
+# A[2, 1] = True
+# B = np.full((3, 3), False)
+# B[1, :] = True
+# B[0, 1] = True
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+
+# A = np.full((3, 3), False)
+# A[1, 1] = True
+# A[2, 0] = True
+# A[2, 1] = True
+# B = np.full((3, 3), False)
+# B[0, 1] = True
+# B[0, 2] = True
+# B[1, 1] = True
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
 
 # A = np.full((3, 3), False)
 # A[1, 0] = True
@@ -43,8 +108,6 @@ sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
 # sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 #
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
-
-print("llohe")
 
 
 # img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")

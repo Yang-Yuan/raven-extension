@@ -58,8 +58,8 @@ def soft_jaccard_naive_embed(frgd, bkgd):
     bgd_shape_y, bgd_shape_x = bkgd.shape
     fgd_shape_y, fgd_shape_x = frgd.shape
 
-    padding_y = int(fgd_shape_y * 0.25)
-    padding_x = int(fgd_shape_x * 0.25)
+    padding_y = int(fgd_shape_y * 0.5)
+    padding_x = int(fgd_shape_x * 0.5)
 
     delta_xs = list(range(-padding_x, bgd_shape_x - fgd_shape_x + 1 + padding_x))
     delta_ys = list(range(-padding_y, bgd_shape_y - fgd_shape_y + 1 + padding_y))
@@ -86,8 +86,8 @@ def soft_jaccard_naive_cross(hrz, vtc):
     hrz_shape_y, hrz_shape_x = hrz.shape
     vtc_shape_y, vtc_shape_x = vtc.shape
 
-    padding_y = int(vtc_shape_y * 0.25)
-    padding_x = int(hrz_shape_x * 0.25)
+    padding_y = int(vtc_shape_y * 0.5)
+    padding_x = int(hrz_shape_x * 0.5)
 
     delta_xs = list(range(-padding_x, vtc_shape_x - hrz_shape_x + 1 + padding_x))
     delta_ys = list(range(-padding_y, hrz_shape_y - vtc_shape_y + 1 + padding_y))
