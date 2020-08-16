@@ -1,18 +1,18 @@
-from matplotlib import pyplot as plt
-from PIL import Image
-import numpy as np
-from skimage.color import rgb2gray
-from skimage.io import imsave
-import problem
-import utils
-from skimage.transform import resize
-import map
-from math import sin, cos, pi
-import jaccard
-import soft_jaccard
+# from matplotlib import pyplot as plt
+# from PIL import Image
+# import numpy as np
+# from skimage.color import rgb2gray
+# from skimage.io import imsave
+# import problem
+# import utils
+# from skimage.transform import resize
+# import map
+# from math import sin, cos, pi
+# import jaccard
+# import soft_jaccard
+# import norm
 
-m5 = problem.load_ace_problems()[4]
-
+# norm.load_norm_to_p()
 
 
 # r = 10
@@ -127,6 +127,8 @@ m5 = problem.load_ace_problems()[4]
 #
 # sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+#
+# print("aloha")
 
 # A = np.full((3, 3), False)
 # A[1, :] = True
@@ -137,7 +139,8 @@ m5 = problem.load_ace_problems()[4]
 #
 # sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
-
+#
+# print("aloha")
 
 # A = np.full((3, 3), False)
 # A[1, 1] = True
@@ -150,6 +153,8 @@ m5 = problem.load_ace_problems()[4]
 #
 # sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+#
+# print("aloha")
 
 # A = np.full((3, 3), False)
 # A[1, 0] = True
@@ -160,12 +165,16 @@ m5 = problem.load_ace_problems()[4]
 #
 # sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+#
+# print("aloha")
 
 # A = np.full((3, 3), True)
 # B = np.full((2, 2), True)
 #
 # sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+#
+# print("aloha")
 
 # A = np.full((3, 3), True)
 # B = np.full((3, 3), True)
@@ -173,7 +182,8 @@ m5 = problem.load_ace_problems()[4]
 # sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
 #
 # sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
-
+#
+# print("aloha")
 
 # img = plt.imread("./problems/ace analogies - chopped up/m5/c.gif")
 # img0 = img[:, :, 0]

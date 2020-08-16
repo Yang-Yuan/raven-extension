@@ -1,41 +1,56 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import utils
-import map
+import norm
 
-p = 3
+norm.load_norm_to_p()
+
 alpha = 0.1
-A_x_max = 60
-A_y_max = 60
-B_x_max = 60
-B_y_max = 60
-
-# infinite_norm_to_p = np.array([[[[max(abs(A_x - B_x), abs(A_y - B_y)) ** p # at least of infinite order to differentiate shapes
-#                              for A_x in range(B_y_max)]
-#                             for A_y in range(B_x_max)]
-#                            for B_x in range(A_y_max)]
-#                           for B_y in range(A_x_max)])
-
-one_norm_to_p = np.array([[[[(abs(A_x - B_x) + abs(A_y - B_y)) ** p # at least of order 3 to differentiate shapes
-                             for A_x in range(B_y_max)]
-                            for A_y in range(B_x_max)]
-                           for B_x in range(A_y_max)]
-                          for B_y in range(A_x_max)])
-
-# two_norm_to_p = np.array([[[[((A_x - B_x) ** 2 + (A_y - B_y) ** 2) ** (p/2) # at least of order 4 to differentiate shapes
-#                              for A_x in range(B_y_max)]
-#                             for A_y in range(B_x_max)]
-#                            for B_x in range(A_y_max)]
-#                           for B_y in range(A_x_max)])
 
 
-def get_distance_matrix(A_coords, B_coords):
-    A_x = np.full((len(A_coords), len(B_coords)), A_coords[:, [0]])
-    A_y = np.full((len(A_coords), len(B_coords)), A_coords[:, [1]])
-    B_x = np.full((len(A_coords), len(B_coords)), B_coords[:, 0])
-    B_y = np.full((len(A_coords), len(B_coords)), B_coords[:, 1])
+def soft_partition(PR, order = None):
+    """
+    For now, assume ascending order as the significant order.
+    :param PR:
+    :param order: for future use
+    :return:
+    """
 
-    return one_norm_to_p[A_x, A_y, B_x, B_y]
+    A_len, B_len = PR.shape
+
+    A_to_B_argmin = [np.argwhere(row == np.min(row)).flatten().tolist() for row in PR]
+    B_to_A_argmin = [np.argwhere(col == np.min(col)).flatten().tolist() for col in PR.transpose()]
+
+    AB_A_ids = []
+    AB_B_ids = []
+    AA_1_ids = []
+    AA_2_idss = []
+    BB_1_ids = []
+    BB_2_idss = []
+
+    for A_id in range(A_len):
+        for B_id in A_to_B_argmin[A_id]:
+            if A_id in B_to_A_argmin[B_id]:
+                AB_A_ids.append(A_id)
+                AB_B_ids.append(B_id)
+
+    for A_1_id in range(A_len):
+        if A_1_id not in AB_A_ids:
+            A_2_id = []
+            for B_id in A_to_B_argmin[A_1_id]:
+                A_2_id.extend(B_to_A_argmin[B_id])
+            AA_1_ids.append(A_1_id)
+            AA_2_idss.append(np.unique(A_2_id).tolist())
+
+    for B_1_id in range(B_len):
+        if B_1_id not in AB_B_ids:
+            B_2_id = []
+            for A_id in B_to_A_argmin[B_1_id]:
+                B_2_id.extend(A_to_B_argmin[A_id])
+            BB_1_ids.append(B_1_id)
+            BB_2_idss.append(np.unique(B_2_id).tolist())
+
+    return AB_A_ids, AB_B_ids, AA_1_ids, AA_2_idss, BB_1_ids, BB_2_idss
 
 
 def soft_jaccard_coef_internal(A_coords, B_coords):
@@ -45,25 +60,29 @@ def soft_jaccard_coef_internal(A_coords, B_coords):
     A_coords = A_coords - [y_min, x_min]
     B_coords = B_coords - [y_min, x_min]
 
-    dist_AB = get_distance_matrix(A_coords, B_coords)
-    dist_AA = get_distance_matrix(A_coords, A_coords)
-    dist_BB = get_distance_matrix(B_coords, B_coords)
+    dist_AB = norm.get_distance_matrix(A_coords, B_coords)
 
-    AB_A_ids, AB_B_ids, AA_1_ids, AA_12_idss, BB_1_ids, BB_12_idss = map.size_first_injective_mapping(dist_AB)
+    AB_A_ids, AB_B_ids, AA_1_ids, AA_12_idss, BB_1_ids, BB_12_idss = soft_partition(dist_AB)
 
     AB_d = dist_AB[AB_A_ids, AB_B_ids].sum()
 
-    AA_2_ids = []
-    for AA_1_id, AA_12_ids in zip(AA_1_ids, AA_12_idss):
-        AA_2_ids.append(AA_12_ids[dist_AA[AA_1_id, AA_12_ids].argmin()])
+    if len(AA_1_ids) != 0:
+        dist_AA = norm.get_distance_matrix(A_coords, A_coords)
+        AA_2_ids = []
+        for AA_1_id, AA_12_ids in zip(AA_1_ids, AA_12_idss):
+            AA_2_ids.append(AA_12_ids[dist_AA[AA_1_id, AA_12_ids].argmin()])
+        AA_d = dist_AA[AA_1_ids, AA_2_ids].sum()
+    else:
+        AA_d = 0
 
-    AA_d = dist_AA[AA_1_ids, AA_2_ids].sum()
-
-    BB_2_ids = []
-    for BB_1_id, BB_12_ids in zip(BB_1_ids, BB_12_idss):
-        BB_2_ids.append(BB_12_ids[dist_BB[BB_1_id, BB_12_ids].argmin()])
-
-    BB_d = dist_BB[BB_1_ids, BB_2_ids].sum()
+    if len(BB_1_ids) != 0:
+        dist_BB = norm.get_distance_matrix(B_coords, B_coords)
+        BB_2_ids = []
+        for BB_1_id, BB_12_ids in zip(BB_1_ids, BB_12_idss):
+            BB_2_ids.append(BB_12_ids[dist_BB[BB_1_id, BB_12_ids].argmin()])
+        BB_d = dist_BB[BB_1_ids, BB_2_ids].sum()
+    else:
+        BB_d = 0
 
     sim = np.exp(-alpha * (AB_d + AA_d + BB_d) / (len(AB_A_ids) + len(AA_1_ids) + len(BB_1_ids)))
 
@@ -74,8 +93,8 @@ def soft_jaccard_naive_embed(frgd, bkgd):
     bgd_shape_y, bgd_shape_x = bkgd.shape
     fgd_shape_y, fgd_shape_x = frgd.shape
 
-    padding_y = int(fgd_shape_y * 0.1)
-    padding_x = int(fgd_shape_x * 0.1)
+    padding_y = int(fgd_shape_y * 0.05)
+    padding_x = int(fgd_shape_x * 0.05)
 
     delta_xs = list(range(-padding_x, bgd_shape_x - fgd_shape_x + 1 + padding_x))
     delta_ys = list(range(-padding_y, bgd_shape_y - fgd_shape_y + 1 + padding_y))
@@ -102,8 +121,8 @@ def soft_jaccard_naive_cross(hrz, vtc):
     hrz_shape_y, hrz_shape_x = hrz.shape
     vtc_shape_y, vtc_shape_x = vtc.shape
 
-    padding_y = int(vtc_shape_y * 0.1)
-    padding_x = int(hrz_shape_x * 0.1)
+    padding_y = int(vtc_shape_y * 0.05)
+    padding_x = int(hrz_shape_x * 0.05)
 
     delta_xs = list(range(-padding_x, vtc_shape_x - hrz_shape_x + 1 + padding_x))
     delta_ys = list(range(-padding_y, hrz_shape_y - vtc_shape_y + 1 + padding_y))

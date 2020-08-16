@@ -6,51 +6,6 @@ import soft_jaccard
 import utils
 
 
-def size_first_injective_mapping(PR, order = None):
-    """
-    For now, assume ascending order as the significant order.
-    :param PR:
-    :param order: for future use
-    :return:
-    """
-
-    A_len, B_len = PR.shape
-
-    A_to_B_argmin = [np.argwhere(row == np.min(row)).flatten().tolist() for row in PR]
-    B_to_A_argmin = [np.argwhere(col == np.min(col)).flatten().tolist() for col in PR.transpose()]
-
-    AB_A_ids = []
-    AB_B_ids = []
-    AA_1_ids = []
-    AA_2_idss = []
-    BB_1_ids = []
-    BB_2_idss = []
-
-    for A_id in range(A_len):
-        for B_id in range(B_len):
-            if A_id in B_to_A_argmin[B_id] and B_id in A_to_B_argmin[A_id]:
-                AB_A_ids.append(A_id)
-                AB_B_ids.append(B_id)
-
-    for A_1_id in range(A_len):
-        if A_1_id not in AB_A_ids:
-            A_2_id = []
-            for B_id in A_to_B_argmin[A_1_id]:
-                A_2_id.extend(B_to_A_argmin[B_id])
-            AA_1_ids.append(A_1_id)
-            AA_2_idss.append(np.unique(A_2_id).tolist())
-
-    for B_1_id in range(B_len):
-        if B_1_id not in AB_B_ids:
-            B_2_id = []
-            for A_id in B_to_A_argmin[B_1_id]:
-                B_2_id.extend(A_to_B_argmin[A_id])
-            BB_1_ids.append(B_1_id)
-            BB_2_idss.append(np.unique(B_2_id).tolist())
-
-    return AB_A_ids, AB_B_ids, AA_1_ids, AA_2_idss, BB_1_ids, BB_2_idss
-
-
 def significant_level_first_injective_mapping(PR, order):
     """
     This function tries to emulate how a human forms an injective mapping
