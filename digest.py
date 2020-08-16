@@ -113,12 +113,12 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
         score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y = transform.evaluate_rearrange(u1, u2)
     elif "WWW" == tran.get("name"):
         score, stub = transform.evaluate_WWW(u1, u2, u3)
-    elif "XXX" == tran.get("name"):
-        score, stub = transform.evaluate_XXX(u1, u2, u3)
-    elif "YYY" == tran.get("name"):
-        score, stub = transform.evaluate_YYY(u1, u2, u3)
-    elif "ZZZ" == tran.get("name"):
-        score, stub = transform.evaluate_ZZZ(u1, u2, u3)
+    elif "shape_topo_mapping" == tran.get("name"):
+        score, stub = transform.evaluate_shape_topo_mapping(u1, u2, u3)
+    elif "shape_loc_isomorphism" == tran.get("name"):
+        score, stub = transform.evaluate_shape_loc_isomorphism(u1, u2, u3)
+    elif "shape_delta_loc_isomorphism" == tran.get("name"):
+        score, stub = transform.evaluate_shape_delta_loc_isomorphism(u1, u2, u3)
     elif "ZZ" == tran.get("name"):
         score, stub = transform.evaluate_ZZ(u1, u2, u3)
     else:

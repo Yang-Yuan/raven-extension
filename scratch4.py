@@ -21,8 +21,9 @@ import strategy
 run.run(strategy.prudent,
         prediction_score_name = "mato_score",
         test_name = "ace",
-        test_trans = ["XXX"],
-        test_anlgs = ["A:B::C:?"])
+        test_trans = ["shape_delta_loc_isomorphism"],
+        test_anlgs = ["A:B::C:?"],
+        test_problems = ["m4"])
 
 
 # "m3", "m5", "m7", "m9", "m11", "m17"

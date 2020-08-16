@@ -41,12 +41,12 @@ def predict_unary(prob, anlg, tran, d):
         return predict_rearrange(prob, anlg, tran, d)
     elif tran.get("name") == "WWW":
         return predict_WWW(prob, anlg, tran, d)
-    elif tran.get("name") == "XXX":
-        return predict_XXX(prob, anlg, tran, d)
-    elif tran.get("name") == "YYY":
-        return predict_YYY(prob, anlg, tran, d)
-    elif tran.get("name") == "ZZZ":
-        return predict_ZZZ(prob, anlg, tran, d)
+    elif tran.get("name") == "shape_topo_mapping":
+        return predict_shape_topo_mapping(prob, anlg, tran, d)
+    elif tran.get("name") == "shape_loc_isomorphism":
+        return predict_shape_loc_isomorphism(prob, anlg, tran, d)
+    elif tran.get("name") == "shape_delta_loc_isomorphism":
+        return predict_shape_delta_loc_isomorphism(prob, anlg, tran, d)
     elif tran.get("name") == "ZZ":
         return predict_ZZ(prob, anlg, tran, d)
     else:
@@ -95,7 +95,7 @@ def predict_WWW(prob, anlg, tran, d):
     return pred_data
 
 
-def predict_XXX(prob, anlg, tran, d):
+def predict_shape_topo_mapping(prob, anlg, tran, d):
     u1_coms = d.get("stub").get("u1_coms")
     u2_coms = d.get("stub").get("u2_coms")
     u3_coms = d.get("stub").get("u3_coms")
@@ -108,6 +108,7 @@ def predict_XXX(prob, anlg, tran, d):
     for ii, opt in enumerate(prob.options):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
         opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
+        # jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
         jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.soft_jaccard_map(u3_coms, opt_coms)
         tpm_u2_com_ids, tpm_opt_com_ids, tpm_score = map.topological_map(u2_coms, opt_coms)
         score = (jcm_score + tpm_score) / 2
@@ -124,7 +125,7 @@ def predict_XXX(prob, anlg, tran, d):
     return pred_data
 
 
-def predict_YYY(prob, anlg, tran, d):
+def predict_shape_loc_isomorphism(prob, anlg, tran, d):
     u1_coms = d.get("stub").get("u1_coms")
     u2_coms = d.get("stub").get("u2_coms")
     u3_coms = d.get("stub").get("u3_coms")
@@ -138,7 +139,8 @@ def predict_YYY(prob, anlg, tran, d):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
         opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
         lcm_u3_com_ids, lcm_opt_com_ids, lcm_score = map.location_map(u3_coms, opt_coms)
-        jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
+        # old_jcm_u3_com_ids, old_jcm_opt_com_ids, old_jcm_score = map.jaccard_map(u3_coms, opt_coms)
+        jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.soft_jaccard_map(u3_coms, opt_coms)
         if 1 != len(lcm_u1_com_ids) and \
                 len(lcm_u1_com_ids) == len(jcm_u1_com_ids) and \
                 len(lcm_u2_com_ids) == len(jcm_u2_com_ids) and \
@@ -171,7 +173,7 @@ def predict_YYY(prob, anlg, tran, d):
     return pred_data
 
 
-def predict_ZZZ(prob, anlg, tran, d):
+def predict_shape_delta_loc_isomorphism(prob, anlg, tran, d):
     u1_coms = d.get("stub").get("u1_coms")
     u2_coms = d.get("stub").get("u2_coms")
     u3_coms = d.get("stub").get("u3_coms")
@@ -182,11 +184,12 @@ def predict_ZZZ(prob, anlg, tran, d):
     for ii, opt in enumerate(prob.options):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
         opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
-        jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
-        _, _, _, _, lcdm_score = map.delta_location_map(u1_coms, u2_coms, u3_coms, opt_coms,
-                                                        jcm_u1_com_ids, jcm_u2_com_ids,
-                                                        jcm_u3_com_ids, jcm_opt_com_ids)
-        if 1 == len(jcm_u3_com_ids):
+        old_jcm_u3_com_ids, old_jcm_opt_com_ids, old_jcm_score = map.jaccard_map(u3_coms, opt_coms)
+        jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.soft_jaccard_map(u3_coms, opt_coms)
+        AC_A_com_ids, _, _, _, lcdm_score = map.delta_location_map(u1_coms, u2_coms, u3_coms, opt_coms,
+                                                                   jcm_u1_com_ids, jcm_u2_com_ids,
+                                                                   jcm_u3_com_ids, jcm_opt_com_ids)
+        if 1 == len(jcm_u3_com_ids) or AC_A_com_ids is None:
             score = 0
         else:
             score = (jcm_score + lcdm_score) / 2
@@ -222,7 +225,6 @@ def predict_ZZ(prob, anlg, tran, d):
 
 
 def predict_duplicate_new(prob, anlg, tran, d):
-
     u3 = prob.matrix[anlg.get("value")[2]]
     u1_to_u2_locs = d.get("stub").get("u1_to_u2_locs")
 
@@ -238,7 +240,8 @@ def predict_duplicate_new(prob, anlg, tran, d):
             # it is actually a location map
             dist = np.array([[np.linalg.norm(u1_to_u2_loc - u3_to_opt_loc) for u3_to_opt_loc in u3_to_opt_locs]
                              for u1_to_u2_loc in u1_to_u2_locs])
-            lcm_u2_com_ids, lcm_opt_com_ids, level = map.significant_level_first_injective_mapping(dist, lambda a, b: a <= b)
+            lcm_u2_com_ids, lcm_opt_com_ids, level = map.significant_level_first_injective_mapping(dist,
+                                                                                                   lambda a, b: a <= b)
             if len(lcm_u2_com_ids) != len(u1_to_u2_locs):
                 score = 0
             else:
@@ -251,7 +254,6 @@ def predict_duplicate_new(prob, anlg, tran, d):
 
 
 def predict_shape_texture_transfer(prob, anlg, tran, d):
-
     u3 = prob.matrix[anlg.get("value")[2]]
     u2_filled = d.get("stub").get("u2_filled")
     u3_filled = d.get("stub").get("u3_filled")

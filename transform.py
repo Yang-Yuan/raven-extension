@@ -34,10 +34,11 @@ unary_transformations = [
     {"name": "duplicate_new", "value": [{"name": "duplicate_new"}], "type": "unary", "group": 2},
     {"name": "shape_texture_transfer", "value": [{"name": "shape_texture_transfer"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
+
     {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
-    {"name": "XXX", "value": [{"name": "XXX"}], "type": "unary", "group": 2},
-    {"name": "YYY", "value": [{"name": "YYY"}], "type": "unary", "group": 2},
-    {"name": "ZZZ", "value": [{"name": "ZZZ"}], "type": "unary", "group": 2},
+    {"name": "shape_topo_mapping", "value": [{"name": "shape_topo_mapping"}], "type": "unary", "group": 2},
+    {"name": "shape_loc_isomorphism", "value": [{"name": "shape_loc_isomorphism"}], "type": "unary", "group": 2},
+    {"name": "shape_delta_loc_isomorphism", "value": [{"name": "shape_delta_loc_isomorphism"}], "type": "unary", "group": 2},
     {"name": "ZZ", "value": [{"name": "ZZZ"}], "type": "unary", "group": 2}
 ]
 
@@ -464,12 +465,12 @@ def preserving_subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref, coord
     return subtract_diff(img, diff_to_ref_x, diff_to_ref_y, diff, ref, coords)
 
 
-def evaluate_XXX(u1, u2, u3):
+def evaluate_shape_topo_mapping(u1, u2, u3):
     """
-    1) u1 and u2 have some common (or very similar)components such that
+    1) horizontally, u1 and u2 have some common (or very similar)components such that
     an injective mapping exists by the correspondence of similar pairs.
-    2) u1 and u3 share the same topological structure by considering
-    two relations, "disconnect" and "inside".
+    2) vertically, u1 and u3 share the same topological structure by considering
+    two relations, "inside" and "outside".
     :param u1: an binary image
     :param u2: a binary iamge
     :param u3: a binary image
@@ -480,7 +481,7 @@ def evaluate_XXX(u1, u2, u3):
     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
 
-    old_jcm_u1_com_ids, old_jcm_u2_com_ids, old_jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    # old_jcm_u1_com_ids, old_jcm_u2_com_ids, old_jcm_score = map.jaccard_map(u1_coms, u2_coms)
 
     jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.soft_jaccard_map(u1_coms, u2_coms)
 
@@ -494,12 +495,16 @@ def evaluate_XXX(u1, u2, u3):
     return mat_score, stub
 
 
-def evaluate_YYY(u1, u2, u3):
+def evaluate_shape_loc_isomorphism(u1, u2, u3):
     """
-    1) u1 and u2 have some components that are located at the same (or close)
+    1) horizontally, u1 and u2 have some components that are located at the same (or close)
     positions such that an injective mapping can be formed by location correspondence.
-    2) u1 and u3 forms a placeholder mapping that is going to be derived from
-    jaccard mappings in its orthogonal direction.
+    2) horizontally, u1 and u2 have some components that have the same or similar shape such aht
+    and injective mapping can be found by shape correspondence.
+    3) vertically, u1 and u3 forms a placeholder mapping that requires only that u1 and u3 have the same number
+    of components. The placeholder mapping will be initiated by one or more mappings that express the isomorphism
+    between (u1, u2) and (u3, opt), where (u1, u2) represents the mappings btw components in u1 and u2 and (u3, opt)
+    represents the mappings btw components in u3 and opt.
     :param u1: an binary image
     :param u2: a binary iamge
     :param u3: a binary image
@@ -511,7 +516,8 @@ def evaluate_YYY(u1, u2, u3):
     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
 
     lcm_u1_com_ids, lcm_u2_com_ids, lcm_score = map.location_map(u1_coms, u2_coms)
-    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    # old_jcm_u1_com_ids, old_jcm_u2_com_ids, old_jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.soft_jaccard_map(u1_coms, u2_coms)
     if 1 != len(lcm_u1_com_ids) and \
             len(lcm_u1_com_ids) == len(jcm_u1_com_ids) and \
             len(lcm_u2_com_ids) == len(jcm_u2_com_ids) and \
@@ -531,13 +537,14 @@ def evaluate_YYY(u1, u2, u3):
     return mat_score, stub
 
 
-def evaluate_ZZZ(u1, u2, u3):
+def evaluate_shape_delta_loc_isomorphism(u1, u2, u3):
 
     u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
 
-    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    old_jcm_u1_com_ids, old_jcm_u2_com_ids, old_jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.soft_jaccard_map(u1_coms, u2_coms)
 
     if 1 == len(jcm_u1_com_ids):
         mat_score = 0
