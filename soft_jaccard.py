@@ -3,15 +3,30 @@ import numpy as np
 import utils
 import map
 
+p = 3
+alpha = 0.1
 A_x_max = 60
 A_y_max = 60
 B_x_max = 60
 B_y_max = 60
-infinite_norm = np.array([[[[max(abs(A_x - B_x), abs(A_y - B_y))
+
+# infinite_norm_to_p = np.array([[[[max(abs(A_x - B_x), abs(A_y - B_y)) ** p # at least of infinite order to differentiate shapes
+#                              for A_x in range(B_y_max)]
+#                             for A_y in range(B_x_max)]
+#                            for B_x in range(A_y_max)]
+#                           for B_y in range(A_x_max)])
+
+one_norm_to_p = np.array([[[[(abs(A_x - B_x) + abs(A_y - B_y)) ** p # at least of order 3 to differentiate shapes
                              for A_x in range(B_y_max)]
                             for A_y in range(B_x_max)]
                            for B_x in range(A_y_max)]
                           for B_y in range(A_x_max)])
+
+# two_norm_to_p = np.array([[[[((A_x - B_x) ** 2 + (A_y - B_y) ** 2) ** (p/2) # at least of order 4 to differentiate shapes
+#                              for A_x in range(B_y_max)]
+#                             for A_y in range(B_x_max)]
+#                            for B_x in range(A_y_max)]
+#                           for B_y in range(A_x_max)])
 
 
 def get_distance_matrix(A_coords, B_coords):
@@ -20,7 +35,7 @@ def get_distance_matrix(A_coords, B_coords):
     B_x = np.full((len(A_coords), len(B_coords)), B_coords[:, 0])
     B_y = np.full((len(A_coords), len(B_coords)), B_coords[:, 1])
 
-    return infinite_norm[A_x, A_y, B_x, B_y]
+    return one_norm_to_p[A_x, A_y, B_x, B_y]
 
 
 def soft_jaccard_coef_internal(A_coords, B_coords):
@@ -50,7 +65,7 @@ def soft_jaccard_coef_internal(A_coords, B_coords):
 
     BB_d = dist_BB[BB_1_ids, BB_2_ids].sum()
 
-    sim = np.exp(-(AB_d + AA_d + BB_d) / (len(AB_A_ids) + len(AA_1_ids) + len(BB_1_ids)))
+    sim = np.exp(-alpha * (AB_d + AA_d + BB_d) / (len(AB_A_ids) + len(AA_1_ids) + len(BB_1_ids)))
 
     return sim
 
@@ -59,8 +74,8 @@ def soft_jaccard_naive_embed(frgd, bkgd):
     bgd_shape_y, bgd_shape_x = bkgd.shape
     fgd_shape_y, fgd_shape_x = frgd.shape
 
-    padding_y = int(fgd_shape_y * 0.5)
-    padding_x = int(fgd_shape_x * 0.5)
+    padding_y = int(fgd_shape_y * 0.1)
+    padding_x = int(fgd_shape_x * 0.1)
 
     delta_xs = list(range(-padding_x, bgd_shape_x - fgd_shape_x + 1 + padding_x))
     delta_ys = list(range(-padding_y, bgd_shape_y - fgd_shape_y + 1 + padding_y))
@@ -87,8 +102,8 @@ def soft_jaccard_naive_cross(hrz, vtc):
     hrz_shape_y, hrz_shape_x = hrz.shape
     vtc_shape_y, vtc_shape_x = vtc.shape
 
-    padding_y = int(vtc_shape_y * 0.5)
-    padding_x = int(hrz_shape_x * 0.5)
+    padding_y = int(vtc_shape_y * 0.1)
+    padding_x = int(hrz_shape_x * 0.1)
 
     delta_xs = list(range(-padding_x, vtc_shape_x - hrz_shape_x + 1 + padding_x))
     delta_ys = list(range(-padding_y, hrz_shape_y - vtc_shape_y + 1 + padding_y))

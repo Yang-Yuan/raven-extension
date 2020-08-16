@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 from itertools import permutations
 import numpy as np
 import jaccard
+import soft_jaccard
 import utils
 
 
@@ -310,6 +311,22 @@ def jaccard_map(A_coms, B_coms):
         return mapping_ids[0].tolist(), mapping_ids[1].tolist(), max_mapping_t
     else:
         return [], [], 0
+
+
+def soft_jaccard_map(A_coms, B_coms):
+    """
+    find a injective (not necessarily surjective, bijective or well-defined) mapping
+    between A_coms and B_coms such that the sum of jaccard indices of each mapped pair
+    of components is maximized
+    :param A_coms:
+    :param B_coms:
+    :return: indices of mapped pair, and minimal jaccard index
+    """
+    all_jc = np.array([[soft_jaccard.soft_jaccard(A_com, B_com)[0] for B_com in B_coms] for A_com in A_coms])
+
+    A_ids, B_ids, level = significant_level_first_injective_mapping(all_jc, lambda a, b: a >= b)
+
+    return A_ids, B_ids, level
 
 
 def topological_map(A_coms, B_coms):

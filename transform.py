@@ -480,7 +480,9 @@ def evaluate_XXX(u1, u2, u3):
     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
 
-    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    old_jcm_u1_com_ids, old_jcm_u2_com_ids, old_jcm_score = map.jaccard_map(u1_coms, u2_coms)
+
+    jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.soft_jaccard_map(u1_coms, u2_coms)
 
     tpm_u1_com_ids, tpm_u3_com_ids, tpm_score = map.topological_map(u1_coms, u3_coms)
 

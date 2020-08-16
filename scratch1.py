@@ -11,64 +11,68 @@ from math import sin, cos, pi
 import jaccard
 import soft_jaccard
 
-r = 10
-A = np.full((21, 21), False)
-for gama in range(360):
-    y = 10 + r * sin(pi / 180 * gama)
-    x = 10 + r * cos(pi / 180 * gama)
-    if y - int(y) > 0.5:
-        y = int(y) + 1
-    else:
-        y = int(y)
-    if x - int(x) > 0.5:
-        x = int(x) + 1
-    else:
-        x = int(x)
-    A[y, x] = True
+m5 = problem.load_ace_problems()[4]
 
 
-r = 9
-B = np.full((21, 21), False)
-for gama in range(360):
-    y = 10 + r * sin(pi / 180 * gama)
-    x = 10 + r * cos(pi / 180 * gama)
-    if y - int(y) > 0.5:
-        y = int(y) + 1
-    else:
-        y = int(y)
-    if x - int(x) > 0.5:
-        x = int(x) + 1
-    else:
-        x = int(x)
-    B[y, x] = True
 
-
-r = 10
-C = np.full((21, 21), False)
-for gama in range(181):
-    y = 10 + r * sin(pi / 180 * gama)
-    x = 10 + r * cos(pi / 180 * gama)
-    if y - int(y) > 0.5:
-        y = int(y) + 1
-    else:
-        y = int(y)
-    if x - int(x) > 0.5:
-        x = int(x) + 1
-    else:
-        x = int(x)
-    C[y, x] = True
-C[10, :] = True
-
-j_AB, j_A_to_B_x, j_A_to_B_y = jaccard.jaccard_coef_naive(A, B)
-j_AC, j_A_to_C_x, j_A_to_C_y = jaccard.jaccard_coef_naive(A, C)
-
-sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
-sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
-
-sj_AC, A_to_C_x, A_to_C_y = soft_jaccard.soft_jaccard(A, C)
-sj_CA, C_to_A_x, C_to_A_y = soft_jaccard.soft_jaccard(C, A)
-
-print("llohe")
+# r = 10
+# A = np.full((21, 21), False)
+# for gama in range(360):
+#     y = 10 + r * sin(pi / 180 * gama)
+#     x = 10 + r * cos(pi / 180 * gama)
+#     if y - int(y) > 0.5:
+#         y = int(y) + 1
+#     else:
+#         y = int(y)
+#     if x - int(x) > 0.5:
+#         x = int(x) + 1
+#     else:
+#         x = int(x)
+#     A[y, x] = True
+#
+#
+# r = 9
+# B = np.full((21, 21), False)
+# for gama in range(360):
+#     y = 10 + r * sin(pi / 180 * gama)
+#     x = 10 + r * cos(pi / 180 * gama)
+#     if y - int(y) > 0.5:
+#         y = int(y) + 1
+#     else:
+#         y = int(y)
+#     if x - int(x) > 0.5:
+#         x = int(x) + 1
+#     else:
+#         x = int(x)
+#     B[y, x] = True
+#
+#
+# r = 10
+# C = np.full((21, 21), False)
+# for gama in range(181):
+#     y = 10 + r * sin(pi / 180 * gama)
+#     x = 10 + r * cos(pi / 180 * gama)
+#     if y - int(y) > 0.5:
+#         y = int(y) + 1
+#     else:
+#         y = int(y)
+#     if x - int(x) > 0.5:
+#         x = int(x) + 1
+#     else:
+#         x = int(x)
+#     C[y, x] = True
+# C[10, :] = True
+#
+# j_AB, j_A_to_B_x, j_A_to_B_y = jaccard.jaccard_coef_naive(A, B)
+# j_AC, j_A_to_C_x, j_A_to_C_y = jaccard.jaccard_coef_naive(A, C)
+#
+# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+#
+# sj_AC, A_to_C_x, A_to_C_y = soft_jaccard.soft_jaccard(A, C)
+# sj_CA, C_to_A_x, C_to_A_y = soft_jaccard.soft_jaccard(C, A)
+#
+# print("llohe")
 
 
 # A = np.full((20, 20), False)

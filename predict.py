@@ -108,7 +108,7 @@ def predict_XXX(prob, anlg, tran, d):
     for ii, opt in enumerate(prob.options):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
         opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
-        jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.jaccard_map(u3_coms, opt_coms)
+        jcm_u3_com_ids, jcm_opt_com_ids, jcm_score = map.soft_jaccard_map(u3_coms, opt_coms)
         tpm_u2_com_ids, tpm_opt_com_ids, tpm_score = map.topological_map(u2_coms, opt_coms)
         score = (jcm_score + tpm_score) / 2
         if not map.are_consistent(list(range(len(u1_coms))), list(range(len(u2_coms))),
