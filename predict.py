@@ -226,6 +226,7 @@ def predict_topo_delta_shape_isomorphism(prob, anlg, tran, d):
 
 def predict_duplicate_new(prob, anlg, tran, d):
     u3 = prob.matrix[anlg.get("value")[2]]
+    u3_tr = utils.trim_binary_image(u3)
     u1_to_u2_locs = d.get("stub").get("u1_to_u2_locs")
 
     pred_data = []
@@ -245,7 +246,8 @@ def predict_duplicate_new(prob, anlg, tran, d):
             if len(lcm_u2_com_ids) != len(u1_to_u2_locs):
                 score = 0
             else:
-                score = (dup_score + (1 - level / max(u3.shape))) / 2
+                shape_relative_location_score = 1 - level / ((u3.shape[0] / u3_tr.shape[0]) ** 2 + (u3.shape[1] / u3_tr.shape[1]) ** 2) ** 0.5
+                score = (dup_score + shape_relative_location_score) / 2
 
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": opt})

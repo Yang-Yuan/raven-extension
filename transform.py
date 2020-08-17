@@ -602,9 +602,13 @@ def evaluate_duplicate(u1, u2):
     current = u2.copy()
     current_to_u2_x = 0
     current_to_u2_y = 0
+    u1_tr = utils.trim_binary_image(u1)
     while current.sum():
-        score_tmp, diff_tmp_to_u1_x, diff_tmp_to_u1_y, diff_tmp_to_current_x, diff_tmp_to_current_y, _ = \
+        old_score_tmp, old_diff_tmp_to_u1_x, old_diff_tmp_to_u1_y, old_diff_tmp_to_current_x, old_diff_tmp_to_current_y, _ = \
             asymmetric_jaccard.asymmetric_jaccard_coef(u1, current)
+
+        score_tmp, diff_tmp_to_u1_x, diff_tmp_to_u1_y, diff_tmp_to_current_x, diff_tmp_to_current_y, _ = \
+            soft_jaccard.soft_jaccard(u1, current, asymmetric = True)
 
         if score_tmp < 0.6:
             break
@@ -628,8 +632,8 @@ def evaluate_duplicate(u1, u2):
         u1_to_u2_locs = []
     else:
         mat_score = np.mean(scores)
-        u1_to_u2_xs = ((np.array(u1_to_u2_xs) - min(u1_to_u2_xs)) / u1.shape[1]).tolist()
-        u1_to_u2_ys = ((np.array(u1_to_u2_ys) - min(u1_to_u2_ys)) / u1.shape[0]).tolist()
+        u1_to_u2_xs = ((np.array(u1_to_u2_xs) - min(u1_to_u2_xs)) / u1_tr.shape[1]).tolist()
+        u1_to_u2_ys = ((np.array(u1_to_u2_ys) - min(u1_to_u2_ys)) / u1_tr.shape[0]).tolist()
         u1_to_u2_locs = np.array(list(zip(u1_to_u2_xs, u1_to_u2_ys)))
 
     stub = utils.make_stub(u1_to_u2_locs)
