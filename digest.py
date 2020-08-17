@@ -111,16 +111,14 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
         score, stub = transform.evaluate_shape_texture_transfer(u1, u2, u3)
     elif "rearrange" == tran.get("name"):
         score, u1_coms_x, u1_coms_y, u2_coms_x, u2_coms_y = transform.evaluate_rearrange(u1, u2)
-    elif "WWW" == tran.get("name"):
-        score, stub = transform.evaluate_WWW(u1, u2, u3)
     elif "shape_topo_mapping" == tran.get("name"):
         score, stub = transform.evaluate_shape_topo_mapping(u1, u2, u3)
     elif "shape_loc_isomorphism" == tran.get("name"):
         score, stub = transform.evaluate_shape_loc_isomorphism(u1, u2, u3)
     elif "shape_delta_loc_isomorphism" == tran.get("name"):
         score, stub = transform.evaluate_shape_delta_loc_isomorphism(u1, u2, u3)
-    elif "ZZ" == tran.get("name"):
-        score, stub = transform.evaluate_ZZ(u1, u2, u3)
+    elif "topo_delta_shape_isomorphism" == tran.get("name"):
+        score, stub = transform.evaluate_topo_delta_shape_isomorphism(u1, u2, u3)
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
         score, _, _ = jaccard.jaccard_coef(u1_t, u2)

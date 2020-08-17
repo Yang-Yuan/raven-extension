@@ -2,9 +2,9 @@ from matplotlib import pyplot as plt
 from skimage.transform import rotate
 from skimage.transform import rescale as rs
 from skimage.transform import resize
-from itertools import permutations
 from sys import modules
 import numpy as np
+import soft_jaccard
 import jaccard
 import asymmetric_jaccard
 import map
@@ -31,15 +31,15 @@ unary_transformations = [
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary", "group": 1},
     # {"name": "xor_diff", "value": [{"name": "xor_diff"}], "type": "unary", "group": 1},
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
-    {"name": "duplicate_new", "value": [{"name": "duplicate_new"}], "type": "unary", "group": 2},
-    {"name": "shape_texture_transfer", "value": [{"name": "shape_texture_transfer"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
 
-    {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
+    # {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
+    {"name": "duplicate_new", "value": [{"name": "duplicate_new"}], "type": "unary", "group": 2},
+    {"name": "shape_texture_transfer", "value": [{"name": "shape_texture_transfer"}], "type": "unary", "group": 2},
     {"name": "shape_topo_mapping", "value": [{"name": "shape_topo_mapping"}], "type": "unary", "group": 2},
     {"name": "shape_loc_isomorphism", "value": [{"name": "shape_loc_isomorphism"}], "type": "unary", "group": 2},
     {"name": "shape_delta_loc_isomorphism", "value": [{"name": "shape_delta_loc_isomorphism"}], "type": "unary", "group": 2},
-    {"name": "ZZ", "value": [{"name": "ZZZ"}], "type": "unary", "group": 2}
+    {"name": "topo_delta_shape_isomorphism", "value": [{"name": "topo_delta_shape_isomorphism"}], "type": "unary", "group": 2}
 ]
 
 binary_transformations = [
@@ -543,7 +543,7 @@ def evaluate_shape_delta_loc_isomorphism(u1, u2, u3):
     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
 
-    old_jcm_u1_com_ids, old_jcm_u2_com_ids, old_jcm_score = map.jaccard_map(u1_coms, u2_coms)
+    # old_jcm_u1_com_ids, old_jcm_u2_com_ids, old_jcm_score = map.jaccard_map(u1_coms, u2_coms)
     jcm_u1_com_ids, jcm_u2_com_ids, jcm_score = map.soft_jaccard_map(u1_coms, u2_coms)
 
     if 1 == len(jcm_u1_com_ids):
@@ -557,7 +557,7 @@ def evaluate_shape_delta_loc_isomorphism(u1, u2, u3):
     return mat_score, stub
 
 
-def evaluate_ZZ(u1, u2, u3):
+def evaluate_topo_delta_shape_isomorphism(u1, u2, u3):
 
     u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
@@ -576,22 +576,22 @@ def evaluate_ZZ(u1, u2, u3):
     return mat_score, stub
 
 
-def evaluate_WWW(u1, u2, u3):
-
-    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
-    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
-    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
-
-    jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids, jcm_u1_u2_score = map.jaccard_map(u1_coms, u2_coms)
-    jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids, jcm_u1_u3_score = map.jaccard_map(u1_coms, u3_coms)
-
-    mat_score = (jcm_u1_u2_score + jcm_u1_u3_score) / 2
-
-    stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
-                           jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids,
-                           jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids)
-
-    return mat_score, stub
+# def evaluate_WWW(u1, u2, u3):
+#
+#     u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+#     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+#     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+#
+#     jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids, jcm_u1_u2_score = map.jaccard_map(u1_coms, u2_coms)
+#     jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids, jcm_u1_u3_score = map.jaccard_map(u1_coms, u3_coms)
+#
+#     mat_score = (jcm_u1_u2_score + jcm_u1_u3_score) / 2
+#
+#     stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
+#                            jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids,
+#                            jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids)
+#
+#     return mat_score, stub
 
 
 def evaluate_duplicate(u1, u2):

@@ -53,7 +53,7 @@ def soft_partition(PR, order = None):
     return AB_A_ids, AB_B_ids, AA_1_ids, AA_2_idss, BB_1_ids, BB_2_idss
 
 
-def soft_jaccard_coef_internal(A_coords, B_coords):
+def soft_jaccard_coef_internal(A_coords, B_coords, asymmetric = False):
     x_min = min(A_coords[:, 1].min(), B_coords[:, 1].min())
     y_min = min(A_coords[:, 0].min(), B_coords[:, 0].min())
 
@@ -84,12 +84,15 @@ def soft_jaccard_coef_internal(A_coords, B_coords):
     else:
         BB_d = 0
 
-    sim = np.exp(-alpha * (AB_d + AA_d + BB_d) / (len(AB_A_ids) + len(AA_1_ids) + len(BB_1_ids)))
+    if asymmetric:
+        sim = np.exp(-alpha * (AB_d + AA_d) / (len(AB_A_ids) + len(AA_1_ids)))
+    else:
+        sim = np.exp(-alpha * (AB_d + AA_d + BB_d) / (len(AB_A_ids) + len(AA_1_ids) + len(BB_1_ids)))
 
     return sim
 
 
-def soft_jaccard_naive_embed(frgd, bkgd):
+def soft_jaccard_naive_embed(frgd, bkgd, asymmetric = False):
     bgd_shape_y, bgd_shape_x = bkgd.shape
     fgd_shape_y, fgd_shape_x = frgd.shape
 
@@ -111,13 +114,13 @@ def soft_jaccard_naive_embed(frgd, bkgd):
         for delta_y in delta_ys:
             coords[kk] = [delta_x, delta_y]
             frgd_coords_shifted = frgd_coords + [delta_y, delta_x]
-            sj_coefs[kk] = soft_jaccard_coef_internal(frgd_coords_shifted, bkgd_coords)
+            sj_coefs[kk] = soft_jaccard_coef_internal(frgd_coords_shifted, bkgd_coords, asymmetric)
             kk += 1
 
     return sj_coefs, coords
 
 
-def soft_jaccard_naive_cross(hrz, vtc):
+def soft_jaccard_naive_cross(hrz, vtc, asymmetric = False):
     hrz_shape_y, hrz_shape_x = hrz.shape
     vtc_shape_y, vtc_shape_x = vtc.shape
 
@@ -140,25 +143,25 @@ def soft_jaccard_naive_cross(hrz, vtc):
         for delta_y in delta_ys:
             vtc_coords_shifted = vtc_coords + [delta_y, 0]
             coords[kk] = [delta_x, -delta_y]
-            sj_coefs[kk] = soft_jaccard_coef_internal(hrz_coords_shifted, vtc_coords_shifted)
+            sj_coefs[kk] = soft_jaccard_coef_internal(hrz_coords_shifted, vtc_coords_shifted, asymmetric)
             kk += 1
 
     return sj_coefs, coords
 
 
-def soft_jaccard_naive(A, B):
+def soft_jaccard_naive(A, B, asymmetric = False):
     A_shape_y, A_shape_x = A.shape
     B_shape_y, B_shape_x = B.shape
 
     if A_shape_x <= B_shape_x and A_shape_y <= B_shape_y:
-        sj_coefs, A_to_B_coords = soft_jaccard_naive_embed(A, B)
+        sj_coefs, A_to_B_coords = soft_jaccard_naive_embed(A, B, asymmetric)
     elif A_shape_x > B_shape_x and A_shape_y > B_shape_y:
-        sj_coefs, B_to_A_coords = soft_jaccard_naive_embed(B, A)
+        sj_coefs, B_to_A_coords = soft_jaccard_naive_embed(B, A, asymmetric)
         A_to_B_coords = -B_to_A_coords
     elif A_shape_x <= B_shape_x and A_shape_y > B_shape_y:
-        sj_coefs, A_to_B_coords = soft_jaccard_naive_cross(A, B)
+        sj_coefs, A_to_B_coords = soft_jaccard_naive_cross(A, B, asymmetric)
     else:
-        sj_coefs, B_to_A_coords = soft_jaccard_naive_cross(B, A)
+        sj_coefs, B_to_A_coords = soft_jaccard_naive_cross(B, A, asymmetric)
         A_to_B_coords = -B_to_A_coords
 
     sj_coef = np.max(sj_coefs)
@@ -188,13 +191,32 @@ def soft_jaccard_naive(A, B):
     return sj_coef, int(A_to_B_x), int(A_to_B_y)
 
 
-def soft_jaccard(A, B):
-    A_tr, tr_to_A_x, tr_to_A_y = utils.trim_binary_image(A, coord = True)
-    B_tr, tr_to_B_x, tr_to_B_y = utils.trim_binary_image(B, coord = True)
+def soft_jaccard(A, B, asymmetric = False):
+    A_tr, A_tr_to_A_x, A_tr_to_A_y = utils.trim_binary_image(A, coord = True)
+    B_tr, B_tr_to_B_x, B_tr_to_B_y = utils.trim_binary_image(B, coord = True)
 
-    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_y = soft_jaccard_naive(A_tr, B_tr)
+    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_y = soft_jaccard_naive(A_tr, B_tr, asymmetric)
 
-    A_to_B_x = -tr_to_A_x + A_tr_to_B_tr_x + tr_to_B_x
-    A_to_B_y = -tr_to_A_y + A_tr_to_B_tr_y + tr_to_B_y
+    if asymmetric:
+        A_tr_aligned, B_tr_aligned, \
+        A_tr_B_tr_aligned_to_B_tr_x, A_tr_B_tr_aligned_to_B_tr_y = \
+            utils.align(A_tr, B_tr, A_tr_to_B_tr_x, A_tr_to_B_tr_y)
+        diff_aligned = utils.erase_noise_point(np.logical_and(B_tr_aligned, np.logical_not(A_tr_aligned)), 4)
 
-    return sj, A_to_B_x, A_to_B_y
+        if diff_aligned.any():
+            diff, tr_to_diff_aligned_x, tr_to_diff_aligned_y = utils.trim_binary_image(diff_aligned, coord = True)
+            diff_to_A_x = tr_to_diff_aligned_x + A_tr_B_tr_aligned_to_B_tr_x - A_tr_to_B_tr_x + A_tr_to_A_x
+            diff_to_A_y = tr_to_diff_aligned_y + A_tr_B_tr_aligned_to_B_tr_y - A_tr_to_B_tr_y + A_tr_to_A_y
+            diff_to_B_x = tr_to_diff_aligned_x + A_tr_B_tr_aligned_to_B_tr_x + B_tr_to_B_x
+            diff_to_B_y = tr_to_diff_aligned_y + A_tr_B_tr_aligned_to_B_tr_y + B_tr_to_B_y
+        else:
+            diff = np.full_like(A, False)
+            diff_to_A_x = 0
+            diff_to_A_y = 0
+            diff_to_B_x = -A_tr_to_A_x + A_tr_to_B_tr_x + B_tr_to_B_x
+            diff_to_B_y = -A_tr_to_A_y + A_tr_to_B_tr_y + B_tr_to_B_y
+        return sj, int(diff_to_A_x), int(diff_to_A_y), int(diff_to_B_x), int(diff_to_B_y), diff
+    else:
+        A_to_B_x = -A_tr_to_A_x + A_tr_to_B_tr_x + B_tr_to_B_x
+        A_to_B_y = -A_tr_to_A_y + A_tr_to_B_tr_y + B_tr_to_B_y
+        return sj, int(A_to_B_x), int(A_to_B_y)
