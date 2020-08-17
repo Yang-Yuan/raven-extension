@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import analogy_new
 import transform
+import soft_jaccard
 import jaccard
 import asymmetric_jaccard
 import utils
@@ -39,8 +40,6 @@ def predict_unary(prob, anlg, tran, d):
         return predict_shape_texture_transfer(prob, anlg, tran, d)
     elif tran.get("name") == "rearrange":
         return predict_rearrange(prob, anlg, tran, d)
-    elif tran.get("name") == "WWW":
-        return predict_WWW(prob, anlg, tran, d)
     elif tran.get("name") == "shape_topo_mapping":
         return predict_shape_topo_mapping(prob, anlg, tran, d)
     elif tran.get("name") == "shape_loc_isomorphism":
@@ -268,7 +267,9 @@ def predict_shape_texture_transfer(prob, anlg, tran, d):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
 
         opt_filled = utils.fill_holes(opt)
-        u2_opt_shape_index = jaccard.jaccard_coef(u2_filled, opt_filled)[0]
+        old_u2_opt_shape_index = jaccard.jaccard_coef(u2_filled, opt_filled)[0]
+
+        u2_opt_shape_index = soft_jaccard.soft_jaccard(u2_filled, opt_filled)[0]
 
         u3_texture_index = np.logical_and(u3_filled, np.logical_not(u3)).sum() / u3_filled.sum()
         opt_texture_index = np.logical_and(opt_filled, np.logical_not(opt)).sum() / opt_filled.sum()
@@ -278,8 +279,8 @@ def predict_shape_texture_transfer(prob, anlg, tran, d):
         # u2_texture_index, opt_texture_index = utils.texture_index(u2, opt, u2_filled, opt_filled, u2_to_opt_x, u2_to_opt_y)
         delta_texture_score = 1 - abs(u1_u2_texture_index - u3_opt_texture_index)
         texture_score = 1 - abs(u2_texture_index - opt_texture_index)
-        shape_score = 1 - abs(u1_u3_shape_index - u2_opt_shape_index)
-        score = (texture_score + delta_texture_score + shape_score) / 3
+        delta_shape_score = 1 - abs(u1_u3_shape_index - u2_opt_shape_index)
+        score = (texture_score + delta_texture_score + delta_shape_score) / 3
 
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": opt})

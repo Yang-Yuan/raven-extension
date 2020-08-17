@@ -647,18 +647,22 @@ def evaluate_shape_texture_transfer(u1, u2, u3):
     u2_filled = utils.fill_holes(u2)
     u3_filled = utils.fill_holes(u3)
 
-    u1_u3_shape_index = jaccard.jaccard_coef(u1_filled, u3_filled)[0]
+    old_u1_u3_shape_index = jaccard.jaccard_coef(u1_filled, u3_filled)[0]
+
+    u1_u3_shape_index = soft_jaccard.soft_jaccard(u1_filled, u3_filled)[0]
 
     u1_texture_index = np.logical_and(u1_filled, np.logical_not(u1)).sum() / u1_filled.sum()
     u2_texture_index = np.logical_and(u2_filled, np.logical_not(u2)).sum() / u2_filled.sum()
     u3_texture_index = np.logical_and(u3_filled, np.logical_not(u3)).sum() / u3_filled.sum()
     u1_u2_texture_index = u1_texture_index - u2_texture_index
+    u1_u3_texture_index = u1_texture_index - u3_texture_index
 
     # _, u1_to_u3_x, u1_to_u3_y = jaccard.jaccard_coef(u1, u3)
     # u1_texture_index, u3_texture_index = utils.texture_index(u1, u3, u1_filled, u3_filled, u1_to_u3_x, u1_to_u3_y)
     # texture_score = 1 - abs(u1_texture_index - u3_texture_index)
 
-    mat_score = (1 - abs(u1_texture_index - u3_texture_index) + abs(u1_u2_texture_index) + u1_u3_shape_index) / 3
+    # mat_score = (1 - abs(u1_u3_texture_index) + abs(u1_u2_texture_index) + u1_u3_shape_index) / 3
+    mat_score = 1 - abs(u1_u3_texture_index)
 
     stub = utils.make_stub(u2_texture_index, u1_u2_texture_index, u3_filled, u2_filled, u1_u3_shape_index)
 
