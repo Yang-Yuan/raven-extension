@@ -198,17 +198,16 @@ def soft_jaccard(A, B, asymmetric = False):
     sj, A_tr_to_B_tr_x, A_tr_to_B_tr_y = soft_jaccard_naive(A_tr, B_tr, asymmetric)
 
     if asymmetric:
-        A_tr_aligned, B_tr_aligned, \
-        A_tr_B_tr_aligned_to_B_tr_x, A_tr_B_tr_aligned_to_B_tr_y = \
+        A_tr_aligned, B_tr_aligned, aligned_to_B_tr_x, aligned_to_B_tr_y = \
             utils.align(A_tr, B_tr, A_tr_to_B_tr_x, A_tr_to_B_tr_y)
         diff_aligned = utils.erase_noise_point(np.logical_and(B_tr_aligned, np.logical_not(A_tr_aligned)), 4)
 
         if diff_aligned.any():
             diff, tr_to_diff_aligned_x, tr_to_diff_aligned_y = utils.trim_binary_image(diff_aligned, coord = True)
-            diff_to_A_x = tr_to_diff_aligned_x + A_tr_B_tr_aligned_to_B_tr_x - A_tr_to_B_tr_x + A_tr_to_A_x
-            diff_to_A_y = tr_to_diff_aligned_y + A_tr_B_tr_aligned_to_B_tr_y - A_tr_to_B_tr_y + A_tr_to_A_y
-            diff_to_B_x = tr_to_diff_aligned_x + A_tr_B_tr_aligned_to_B_tr_x + B_tr_to_B_x
-            diff_to_B_y = tr_to_diff_aligned_y + A_tr_B_tr_aligned_to_B_tr_y + B_tr_to_B_y
+            diff_to_A_x = tr_to_diff_aligned_x + aligned_to_B_tr_x - A_tr_to_B_tr_x + A_tr_to_A_x
+            diff_to_A_y = tr_to_diff_aligned_y + aligned_to_B_tr_y - A_tr_to_B_tr_y + A_tr_to_A_y
+            diff_to_B_x = tr_to_diff_aligned_x + aligned_to_B_tr_x + B_tr_to_B_x
+            diff_to_B_y = tr_to_diff_aligned_y + aligned_to_B_tr_y + B_tr_to_B_y
         else:
             diff = np.full_like(A, False)
             diff_to_A_x = 0
