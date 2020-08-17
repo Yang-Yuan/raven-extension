@@ -604,13 +604,13 @@ def evaluate_duplicate(u1, u2):
     current_to_u2_y = 0
     u1_tr = utils.trim_binary_image(u1)
     while current.sum():
-        old_score_tmp, old_diff_tmp_to_u1_x, old_diff_tmp_to_u1_y, old_diff_tmp_to_current_x, old_diff_tmp_to_current_y, _ = \
+        old_score_tmp, old_diff_tmp_to_u1_x, old_diff_tmp_to_u1_y, old_diff_tmp_to_current_x, old_diff_tmp_to_current_y, old_diff_tmp = \
             asymmetric_jaccard.asymmetric_jaccard_coef(u1, current)
 
-        score_tmp, diff_tmp_to_u1_x, diff_tmp_to_u1_y, diff_tmp_to_current_x, diff_tmp_to_current_y, _ = \
+        score_tmp, diff_tmp_to_u1_x, diff_tmp_to_u1_y, diff_tmp_to_current_x, diff_tmp_to_current_y, diff_tmp = \
             soft_jaccard.soft_jaccard(u1, current, asymmetric = True)
 
-        if score_tmp < 0.6:
+        if score_tmp < 0.9:
             break
 
         scores.append(score_tmp)
@@ -618,14 +618,12 @@ def evaluate_duplicate(u1, u2):
         u1_to_current_y = (-diff_tmp_to_u1_y) - (-diff_tmp_to_current_y)
         u1_to_u2_x = u1_to_current_x + current_to_u2_x
         u1_to_u2_y = u1_to_current_y + current_to_u2_y
-
         u1_to_u2_xs.append(u1_to_u2_x)
         u1_to_u2_ys.append(u1_to_u2_y)
-        u1_aligned, current_aligned, aligned_to_current_x, aligned_to_current_y = utils.align(
-            u1, current, u1_to_current_x, u1_to_current_y)
-        current = utils.erase_noise_point(np.logical_and(current_aligned, np.logical_not(u1_aligned)), 8)
-        current_to_u2_x = aligned_to_current_x + current_to_u2_x
-        current_to_u2_y = aligned_to_current_y + current_to_u2_y
+
+        current = diff_tmp
+        current_to_u2_x = diff_tmp_to_current_x + current_to_u2_x
+        current_to_u2_y = diff_tmp_to_current_y + current_to_u2_y
 
     if 1 >= len(scores):
         mat_score = 0

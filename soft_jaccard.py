@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import copy
 import numpy as np
 import utils
 import norm
@@ -89,7 +90,7 @@ def soft_jaccard_coef_internal(A_coords, B_coords, asymmetric = False):
     else:
         sim = np.exp(-alpha * (AB_d + AA_d + BB_d) / (len(AB_A_ids) + len(AA_1_ids) + len(BB_1_ids)))
 
-    return sim
+    return sim, [AB_A_ids, AB_B_ids]
 
 
 def soft_jaccard_naive_embed(frgd, bkgd, asymmetric = False):
@@ -105,6 +106,7 @@ def soft_jaccard_naive_embed(frgd, bkgd, asymmetric = False):
     length = int(len(delta_xs) * len(delta_ys))
     coords = np.full((length, 2), fill_value = -1, dtype = np.int)
     sj_coefs = np.zeros(length, dtype = np.float)
+    itsc_coord_idss = []
 
     frgd_coords = np.argwhere(frgd)
     bkgd_coords = np.argwhere(bkgd)
@@ -114,10 +116,11 @@ def soft_jaccard_naive_embed(frgd, bkgd, asymmetric = False):
         for delta_y in delta_ys:
             coords[kk] = [delta_x, delta_y]
             frgd_coords_shifted = frgd_coords + [delta_y, delta_x]
-            sj_coefs[kk] = soft_jaccard_coef_internal(frgd_coords_shifted, bkgd_coords, asymmetric)
+            sj_coefs[kk], itsc_coord_ids = soft_jaccard_coef_internal(frgd_coords_shifted, bkgd_coords, asymmetric)
+            itsc_coord_idss.append(itsc_coord_ids)
             kk += 1
 
-    return sj_coefs, coords
+    return sj_coefs, coords, itsc_coord_idss
 
 
 def soft_jaccard_naive_cross(hrz, vtc, asymmetric = False):
@@ -133,6 +136,7 @@ def soft_jaccard_naive_cross(hrz, vtc, asymmetric = False):
     length = int(len(delta_xs) * len(delta_ys))
     coords = np.full((length, 2), fill_value = -1, dtype = np.int)
     sj_coefs = np.zeros(length, dtype = np.float)
+    itsc_coord_idss = []
 
     hrz_coords = np.argwhere(hrz)
     vtc_coords = np.argwhere(vtc)
@@ -143,10 +147,11 @@ def soft_jaccard_naive_cross(hrz, vtc, asymmetric = False):
         for delta_y in delta_ys:
             vtc_coords_shifted = vtc_coords + [delta_y, 0]
             coords[kk] = [delta_x, -delta_y]
-            sj_coefs[kk] = soft_jaccard_coef_internal(hrz_coords_shifted, vtc_coords_shifted, asymmetric)
+            sj_coefs[kk], itsc_coord_ids = soft_jaccard_coef_internal(hrz_coords_shifted, vtc_coords_shifted, asymmetric)
+            itsc_coord_idss.append(itsc_coord_ids)
             kk += 1
 
-    return sj_coefs, coords
+    return sj_coefs, coords, itsc_coord_idss
 
 
 def soft_jaccard_naive(A, B, asymmetric = False):
@@ -154,15 +159,17 @@ def soft_jaccard_naive(A, B, asymmetric = False):
     B_shape_y, B_shape_x = B.shape
 
     if A_shape_x <= B_shape_x and A_shape_y <= B_shape_y:
-        sj_coefs, A_to_B_coords = soft_jaccard_naive_embed(A, B, asymmetric)
+        sj_coefs, A_to_B_coords, AB_itsc_coord_idss = soft_jaccard_naive_embed(A, B, asymmetric)
     elif A_shape_x > B_shape_x and A_shape_y > B_shape_y:
-        sj_coefs, B_to_A_coords = soft_jaccard_naive_embed(B, A, asymmetric)
+        sj_coefs, B_to_A_coords, BA_itsc_coord_idss = soft_jaccard_naive_embed(B, A, asymmetric)
         A_to_B_coords = -B_to_A_coords
+        AB_itsc_coord_idss = np.array(BA_itsc_coord_idss)[:, :: -1].tolist()
     elif A_shape_x <= B_shape_x and A_shape_y > B_shape_y:
-        sj_coefs, A_to_B_coords = soft_jaccard_naive_cross(A, B, asymmetric)
+        sj_coefs, A_to_B_coords, AB_itsc_coord_idss = soft_jaccard_naive_cross(A, B, asymmetric)
     else:
-        sj_coefs, B_to_A_coords = soft_jaccard_naive_cross(B, A, asymmetric)
+        sj_coefs, B_to_A_coords, BA_itsc_coord_idss = soft_jaccard_naive_cross(B, A, asymmetric)
         A_to_B_coords = -B_to_A_coords
+        AB_itsc_coord_idss = np.array(BA_itsc_coord_idss)[:, :: -1].tolist()
 
     sj_coef = np.max(sj_coefs)
     coef_argmax = np.where(sj_coefs == sj_coef)[0]
@@ -170,6 +177,7 @@ def soft_jaccard_naive(A, B, asymmetric = False):
     if 1 == len(coef_argmax):
         ii = coef_argmax[0]
         A_to_B_x, A_to_B_y = A_to_B_coords[ii]
+        AB_itsc_coord_ids = AB_itsc_coord_idss[ii]
     else:
 
         A_center_x = (A_shape_x - 1) / 2
@@ -187,33 +195,31 @@ def soft_jaccard_naive(A, B, asymmetric = False):
                 smallest_center_dist = center_dist
 
         A_to_B_x, A_to_B_y = A_to_B_coords[closest_center_ii]
+        AB_itsc_coord_ids = AB_itsc_coord_idss[closest_center_ii]
 
-    return sj_coef, int(A_to_B_x), int(A_to_B_y)
+    # diff_A = copy.copy(A)
+    diff_B = copy.copy(B)
+    # A_coords = np.argwhere(A)
+    B_coords = np.argwhere(B)
+    # diff_A[tuple(A_coords[AB_itsc_coord_ids[0]].transpose())] = False
+    diff_B[tuple(B_coords[AB_itsc_coord_ids[1]].transpose())] = False
+
+    return sj_coef, int(A_to_B_x), int(A_to_B_y), diff_B
 
 
 def soft_jaccard(A, B, asymmetric = False):
     A_tr, A_tr_to_A_x, A_tr_to_A_y = utils.trim_binary_image(A, coord = True)
     B_tr, B_tr_to_B_x, B_tr_to_B_y = utils.trim_binary_image(B, coord = True)
 
-    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_y = soft_jaccard_naive(A_tr, B_tr, asymmetric)
+    sj, A_tr_to_B_tr_x, A_tr_to_B_tr_y, diff_B_tr = soft_jaccard_naive(A_tr, B_tr, asymmetric)
 
     if asymmetric:
-        A_tr_aligned, B_tr_aligned, aligned_to_B_tr_x, aligned_to_B_tr_y = \
-            utils.align(A_tr, B_tr, A_tr_to_B_tr_x, A_tr_to_B_tr_y)
-        diff_aligned = utils.erase_noise_point(np.logical_and(B_tr_aligned, np.logical_not(A_tr_aligned)), 4)
+        diff = utils.erase_noise_point(diff_B_tr, 4)
+        diff_to_A_x = -A_tr_to_B_tr_x + A_tr_to_A_x
+        diff_to_A_y = -A_tr_to_B_tr_y + A_tr_to_A_y
+        diff_to_B_x = B_tr_to_B_x
+        diff_to_B_y = B_tr_to_B_y
 
-        if diff_aligned.any():
-            diff, tr_to_diff_aligned_x, tr_to_diff_aligned_y = utils.trim_binary_image(diff_aligned, coord = True)
-            diff_to_A_x = tr_to_diff_aligned_x + aligned_to_B_tr_x - A_tr_to_B_tr_x + A_tr_to_A_x
-            diff_to_A_y = tr_to_diff_aligned_y + aligned_to_B_tr_y - A_tr_to_B_tr_y + A_tr_to_A_y
-            diff_to_B_x = tr_to_diff_aligned_x + aligned_to_B_tr_x + B_tr_to_B_x
-            diff_to_B_y = tr_to_diff_aligned_y + aligned_to_B_tr_y + B_tr_to_B_y
-        else:
-            diff = np.full_like(A, False)
-            diff_to_A_x = 0
-            diff_to_A_y = 0
-            diff_to_B_x = -A_tr_to_A_x + A_tr_to_B_tr_x + B_tr_to_B_x
-            diff_to_B_y = -A_tr_to_A_y + A_tr_to_B_tr_y + B_tr_to_B_y
         return sj, int(diff_to_A_x), int(diff_to_A_y), int(diff_to_B_x), int(diff_to_B_y), diff
     else:
         A_to_B_x = -A_tr_to_A_x + A_tr_to_B_tr_x + B_tr_to_B_x
