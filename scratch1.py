@@ -1,6 +1,6 @@
 # from matplotlib import pyplot as plt
 # from PIL import Image
-# import numpy as np
+import numpy as np
 # from skimage.color import rgb2gray
 # from skimage.io import imsave
 # import problem
@@ -9,11 +9,22 @@
 # import map
 # from math import sin, cos, pi
 # import jaccard
-# import soft_jaccard
+import soft_jaccard
 # import norm
 
-# norm.load_norm_to_p()
+A = np.full((5, 5), False)
+A[0, 0] = True
+A[1:4, 1:4] = True
+B = np.full((5, 5), False)
+B[4, 4] = True
+B[1:4, 1:4] = True
 
+sj, diff_to_A_x, diff_to_A_y, diff_to_B_x, diff_to_B_y, diff = soft_jaccard.soft_jaccard(A, B, asymmetric = True)
+sj0, diff_to_A_x0, diff_to_A_y0, diff_to_B_x0, diff_to_B_y0, diff0 = soft_jaccard.soft_jaccard(B, A, asymmetric = True)
+
+print("aloha")
+
+# norm.load_norm_to_p()
 
 # r = 10
 # A = np.full((21, 21), False)

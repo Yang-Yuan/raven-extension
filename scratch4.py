@@ -24,7 +24,7 @@ run.run(strategy.prudent,
         test_name = "ace",
         test_trans = ["duplicate_new"],
         test_anlgs = ["A:B::C:?"],
-        test_problems = ["m4"])
+        test_problems = ["m16"])
 
 # test_trans = ["shape_topo_mapping", "shape_loc_isomorphism", "shape_delta_loc_isomorphism",
 #               "topo_delta_shape_isomorphism",
