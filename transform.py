@@ -22,10 +22,14 @@ unary_transformations = [
     {"name": "rot_180", "value": [{"name": "rot_binary", "args": {"angle": 180}}], "type": "unary", "group": 0},
     {"name": "rot_270", "value": [{"name": "rot_binary", "args": {"angle": 270}}], "type": "unary", "group": 0},
     {"name": "mirror", "value": [{"name": "mirror_left_right"}], "type": "unary", "group": 0},
-    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}], "type": "unary", "group": 0},
-    {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}], "type": "unary", "group": 0},
-    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}], "type": "unary", "group": 0},
-    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary", "group": 0},
+    {"name": "mirror_rot_90", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 90}}],
+     "type": "unary", "group": 0},
+    {"name": "mirror_rot_180", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 180}}],
+     "type": "unary", "group": 0},
+    {"name": "mirror_rot_270", "value": [{"name": "mirror_left_right"}, {"name": "rot_binary", "args": {"angle": 270}}],
+     "type": "unary", "group": 0},
+    {"name": "rescale", "value": [{"name": "rescale", "args": {"x_factor": 1.3, "y_factor": 1.4}}], "type": "unary",
+     "group": 0},
     # {"name": "upscale_to", "value": [{"name": "upscale_to"}], "type": "unary"},
     {"name": "add_diff", "value": [{"name": "add_diff"}], "type": "unary", "group": 1},
     {"name": "subtract_diff", "value": [{"name": "subtract_diff"}], "type": "unary", "group": 1},
@@ -33,13 +37,15 @@ unary_transformations = [
     {"name": "duplicate", "value": [{"name": "duplicate"}], "type": "unary", "group": 2},
     {"name": "rearrange", "value": [{"name": "rearrange"}], "type": "unary", "group": 2},
 
-    # {"name": "WWW", "value": [{"name": "WWW"}], "type": "unary", "group": 2},
+    {"name": "identity_shape_loc_isomorphism", "value": [{"name": "identity_shape_loc_isomorphism"}], "type": "unary", "group": 2},
     {"name": "duplicate_new", "value": [{"name": "duplicate_new"}], "type": "unary", "group": 2},
     {"name": "shape_texture_transfer", "value": [{"name": "shape_texture_transfer"}], "type": "unary", "group": 2},
     {"name": "shape_topo_mapping", "value": [{"name": "shape_topo_mapping"}], "type": "unary", "group": 2},
     {"name": "shape_loc_isomorphism", "value": [{"name": "shape_loc_isomorphism"}], "type": "unary", "group": 2},
-    {"name": "shape_delta_loc_isomorphism", "value": [{"name": "shape_delta_loc_isomorphism"}], "type": "unary", "group": 2},
-    {"name": "topo_delta_shape_isomorphism", "value": [{"name": "topo_delta_shape_isomorphism"}], "type": "unary", "group": 2}
+    {"name": "shape_delta_loc_isomorphism", "value": [{"name": "shape_delta_loc_isomorphism"}], "type": "unary",
+     "group": 2},
+    {"name": "topo_delta_shape_isomorphism", "value": [{"name": "topo_delta_shape_isomorphism"}], "type": "unary",
+     "group": 2}
 ]
 
 binary_transformations = [
@@ -63,7 +69,6 @@ def get_tran(tran_name):
 
 
 def duplicate(img, copies_to_img_x, copies_to_img_y):
-
     current = img.copy()
     current_to_img_x = 0
     current_to_img_y = 0
@@ -80,7 +85,6 @@ def duplicate(img, copies_to_img_x, copies_to_img_y):
 
 
 def evaluate_rearrange(u1, u2):
-
     u1_coms, u1_coms_x, u1_coms_y = utils.decompose(u1, 8)
     u2_coms, u2_coms_x, u2_coms_y = utils.decompose(u2, 8)
 
@@ -115,7 +119,6 @@ def evaluate_rearrange(u1, u2):
 
 
 def rearrange(img, old_xs, old_ys, new_xs, new_ys):
-
     coms, coms_x, coms_y = utils.decompose(img, 8)
 
     if len(coms) != len(old_xs):
@@ -135,7 +138,7 @@ def rearrange(img, old_xs, old_ys, new_xs, new_ys):
         x = new_xs[closest_ii]
         y = new_ys[closest_ii]
         bg = np.full((300, 300), fill_value = False)
-        bg[y : y + com.shape[0], x : x + com.shape[1]] = com  # A bug here, but I am too tired to fix it today.
+        bg[y: y + com.shape[0], x: x + com.shape[1]] = com  # A bug here, but I am too tired to fix it today.
         new_coms.append(bg)
 
     current = np.full((300, 300), fill_value = False)
@@ -146,7 +149,6 @@ def rearrange(img, old_xs, old_ys, new_xs, new_ys):
 
 
 def rescale(img, x_factor, y_factor):
-
     return utils.grey_to_binary(rs(np.logical_not(img), (y_factor, x_factor), order = 0), 0.7)
 
     # return utils.grey_to_binary(resize(np.logical_not(img), shape, order = 0), 0.7)
@@ -355,7 +357,7 @@ def apply_binary_transformation(imgA, imgB, tran,
                                 imgC = None):
     if imgA_to_imgB_x is None or imgA_to_imgB_y is None:
         align_foo_name = tran.get("align")
-        if align_foo_name is  None:
+        if align_foo_name is None:
             _, imgA_to_imgB_x, imgA_to_imgB_y = jaccard.jaccard_coef(imgA, imgB)
         else:
             align_foo = getattr(THIS, align_foo_name)
@@ -420,7 +422,6 @@ def xor(imgA, imgB):
 
 
 def shadow_mask_unite(A, B):
-
     shadow_A = utils.fill_holes(A)
     shadow_B = utils.fill_holes(B)
 
@@ -538,7 +539,6 @@ def evaluate_shape_loc_isomorphism(u1, u2, u3):
 
 
 def evaluate_shape_delta_loc_isomorphism(u1, u2, u3):
-
     u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
@@ -558,7 +558,6 @@ def evaluate_shape_delta_loc_isomorphism(u1, u2, u3):
 
 
 def evaluate_topo_delta_shape_isomorphism(u1, u2, u3):
-
     u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
@@ -576,26 +575,32 @@ def evaluate_topo_delta_shape_isomorphism(u1, u2, u3):
     return mat_score, stub
 
 
-# def evaluate_WWW(u1, u2, u3):
-#
-#     u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
-#     u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
-#     u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
-#
-#     jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids, jcm_u1_u2_score = map.jaccard_map(u1_coms, u2_coms)
-#     jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids, jcm_u1_u3_score = map.jaccard_map(u1_coms, u3_coms)
-#
-#     mat_score = (jcm_u1_u2_score + jcm_u1_u3_score) / 2
-#
-#     stub = utils.make_stub(u1_coms, u2_coms, u3_coms,
-#                            jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids,
-#                            jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids)
-#
-#     return mat_score, stub
+def evaluate_identity_shape_loc_isomorphism(u1, u2, u3):
+    u1_coms, _, _ = utils.decompose(u1, 8, trim = False)
+    u2_coms, _, _ = utils.decompose(u2, 8, trim = False)
+    u3_coms, _, _ = utils.decompose(u3, 8, trim = False)
+
+    if len(u1_coms) == len(u3_coms):
+
+        sjm_u1_com_ids, sjm_u2_com_ids, sjm_score = map.soft_jaccard_map(u1_coms, u2_coms)
+        lcm_u1_com_ids, lcm_u2_com_ids, lcm_score = map.location_map(u1_coms, u2_coms)
+
+        if map.same_mappings(list(range(len(u1_coms))), list(range(len(u2_coms))),
+                             sjm_u1_com_ids, sjm_u2_com_ids, lcm_u1_com_ids, lcm_u2_com_ids):
+            mat_score = (sjm_score + lcm_score) / 2
+            u1_com_ids = sjm_u1_com_ids
+            u2_com_ids = sjm_u2_com_ids
+            stub = utils.make_stub(u1_coms, u2_coms, u3_coms, u1_com_ids, u2_com_ids)
+            return mat_score, stub
+
+    mat_score = 0
+    u1_com_ids = []
+    u2_com_ids = []
+    stub = utils.make_stub(u1_coms, u2_coms, u3_coms, u1_com_ids, u2_com_ids)
+    return mat_score, stub
 
 
 def evaluate_duplicate(u1, u2):
-
     scores = []
     u1_to_u2_xs = []
     u1_to_u2_ys = []
@@ -640,14 +645,13 @@ def evaluate_duplicate(u1, u2):
 
 
 def evaluate_shape_texture_transfer(u1, u2, u3):
-
     u1_filled = utils.fill_holes(u1)
     u2_filled = utils.fill_holes(u2)
     u3_filled = utils.fill_holes(u3)
 
-    old_u1_u3_shape_index = jaccard.jaccard_coef(u1_filled, u3_filled)[0]
-
-    u1_u3_shape_index = soft_jaccard.soft_jaccard(u1_filled, u3_filled)[0]
+    # old_u1_u3_shape_index = jaccard.jaccard_coef(u1_filled, u3_filled)[0]
+    #
+    # u1_u3_shape_index = soft_jaccard.soft_jaccard(u1_filled, u3_filled)[0]
 
     u1_texture_index = np.logical_and(u1_filled, np.logical_not(u1)).sum() / u1_filled.sum()
     u2_texture_index = np.logical_and(u2_filled, np.logical_not(u2)).sum() / u2_filled.sum()
@@ -660,11 +664,8 @@ def evaluate_shape_texture_transfer(u1, u2, u3):
     # texture_score = 1 - abs(u1_texture_index - u3_texture_index)
 
     # mat_score = (1 - abs(u1_u3_texture_index) + abs(u1_u2_texture_index) + u1_u3_shape_index) / 3
-    mat_score = 1 - abs(u1_u3_texture_index)
+    mat_score = (1 - abs(u1_u3_texture_index) + abs(u1_u2_texture_index)) / 2
 
-    stub = utils.make_stub(u2_texture_index, u1_u2_texture_index, u3_filled, u2_filled, u1_u3_shape_index)
+    stub = utils.make_stub(u2_texture_index, u1_u2_texture_index, u3_filled, u2_filled, u1_filled)
 
     return mat_score, stub
-
-
-

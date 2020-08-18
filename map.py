@@ -86,13 +86,6 @@ def delta_shape_map(A_coms, B_coms, C_coms, D_coms,
     if len(AB_A_com_ids) != len(CD_C_com_ids):
         return None, None, None, None, 0
 
-    old_AB_jaccard_diff = [jaccard.jaccard_coef(A_coms[A_com_id], B_coms[B_com_id])[0] for A_com_id, B_com_id in
-                       zip(AB_A_com_ids, AB_B_com_ids)]
-    old_CD_jaccard_diff = [jaccard.jaccard_coef(C_coms[C_com_id], D_coms[D_com_id])[0] for C_com_id, D_com_id in
-                       zip(CD_C_com_ids, CD_D_com_ids)]
-
-    old_dist = np.array([[abs(AB_jcd - CD_jcd) for CD_jcd in old_CD_jaccard_diff] for AB_jcd in old_AB_jaccard_diff])
-
     AB_jaccard_diff = [soft_jaccard.soft_jaccard(A_coms[A_com_id], B_coms[B_com_id])[0] for A_com_id, B_com_id in
                        zip(AB_A_com_ids, AB_B_com_ids)]
     CD_jaccard_diff = [soft_jaccard.soft_jaccard(C_coms[C_com_id], D_coms[D_com_id])[0] for C_com_id, D_com_id in

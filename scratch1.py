@@ -12,6 +12,9 @@ import numpy as np
 import soft_jaccard
 # import norm
 
+
+# UTs are done with alpha = 0.1
+
 A = np.full((5, 5), False)
 A[0, 0] = True
 A[1:4, 1:4] = True

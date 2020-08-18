@@ -34,6 +34,8 @@ def predict_unary(prob, anlg, tran, d):
         return predict_upscale_to(prob, anlg, tran, d)
     elif tran.get("name") == "duplicate":
         return predict_duplicate(prob, anlg, tran, d)
+    elif tran.get("name") == "identity_shape_loc_isomorphism":
+        return predict_identity_shape_loc_isomorphism(prob, anlg, tran, d)
     elif tran.get("name") == "duplicate_new":
         return predict_duplicate_new(prob, anlg, tran, d)
     elif tran.get("name") == "shape_texture_transfer":
@@ -58,41 +60,57 @@ def predict_unary_default(prob, anlg, tran, d):
     pred_data = []
     for ii, opt in enumerate(prob.options):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
-        score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        old_score, _, _ = jaccard.jaccard_coef(opt, prediction)
+        score, _, _ = soft_jaccard.soft_jaccard(opt, prediction)
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": prediction})
 
     return pred_data
 
 
-# def predict_WWW(prob, anlg, tran, d):
-#     u1_coms = d.get("stub").get("u1_coms")
-#     u2_coms = d.get("stub").get("u2_coms")
-#     u3_coms = d.get("stub").get("u3_coms")
-#     jcm_u1_u2_u1_com_ids = d.get("stub").get("jcm_u1_u2_u1_com_ids")
-#     jcm_u1_u2_u2_com_ids = d.get("stub").get("jcm_u1_u2_u2_com_ids")
-#     jcm_u1_u3_u1_com_ids = d.get("stub").get("jcm_u1_u3_u1_com_ids")
-#     jcm_u1_u3_u3_com_ids = d.get("stub").get("jcm_u1_u3_u3_com_ids")
-#
-#     pred_data = []
-#     for ii, opt in enumerate(prob.options):
-#         print(prob.name, anlg.get("name"), tran.get("name"), ii)
-#         opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
-#         jcm_u3_opt_u3_com_ids, jcm_u3_opt_opt_com_ids, jcm_u3_opt_score = map.jaccard_map(u3_coms, opt_coms)
-#         jcm_u2_opt_u2_com_ids, jcm_u2_opt_opt_com_ids, jcm_u2_opt_score = map.jaccard_map(u2_coms, opt_coms)
-#         score = (jcm_u3_opt_score + jcm_u2_opt_score) / 2
-#         if not map.are_consistent(list(range(len(u1_coms))), list(range(len(u2_coms))),
-#                                   list(range(len(u3_coms))), list(range(len(opt_coms))),
-#                                   jcm_u1_u2_u1_com_ids, jcm_u1_u2_u2_com_ids,
-#                                   jcm_u3_opt_u3_com_ids, jcm_u3_opt_opt_com_ids,
-#                                   jcm_u1_u3_u1_com_ids, jcm_u1_u3_u3_com_ids,
-#                                   jcm_u2_opt_u2_com_ids, jcm_u2_opt_opt_com_ids):
-#             score = 0
-#         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
-#                           "pred": opt})
-#
-#     return pred_data
-#
+def predict_identity_shape_loc_isomorphism(prob, anlg, tran, d):
+    u1_coms = d.get("stub").get("u1_coms")
+    u2_coms = d.get("stub").get("u2_coms")
+    u3_coms = d.get("stub").get("u3_coms")
+    u12_u1_com_ids = d.get("stub").get("u1_com_ids")
+    u12_u2_com_ids = d.get("stub").get("u2_com_ids")
+
+    pred_data = []
+    for ii, opt in enumerate(prob.options):
+        print(prob.name, anlg.get("name"), tran.get("name"), ii)
+        opt_coms, _, _ = utils.decompose(opt, 8, trim = False)
+
+        if len(u2_coms) == len(opt_coms):
+            sjm_u3_com_ids, sjm_opt_com_ids, u3opt_sjm_score = map.soft_jaccard_map(u3_coms, opt_coms)
+            lcm_u3_com_ids, lcm_opt_com_ids, lcm_score = map.location_map(u3_coms, opt_coms)
+
+            if map.same_mappings(list(range(len(u3_coms))), list(range(len(opt_coms))),
+                                 sjm_u3_com_ids, sjm_opt_com_ids, lcm_u3_com_ids, lcm_opt_com_ids) \
+                    and len(sjm_u3_com_ids) == len(u12_u1_com_ids):
+                u3opt_u3_com_ids = sjm_u3_com_ids
+                u3opt_opt_com_ids = sjm_opt_com_ids
+                u13_1_com_ids, u13_3_com_ids, u13_sjm_score = map.soft_jaccard_map(u1_coms, u3_coms)
+                u2opt_1_com_ids, u2opt_opt_com_ids, u2opt_sjm_score = map.soft_jaccard_map(u2_coms, opt_coms)
+
+                if map.are_consistent(list(range(len(u1_coms))), list(range(len(u2_coms))),
+                                      list(range(len(u3_coms))), list(range(len(opt_coms))),
+                                      u12_u1_com_ids, u12_u2_com_ids,
+                                      u3opt_u3_com_ids, u3opt_opt_com_ids,
+                                      u13_1_com_ids, u13_3_com_ids,
+                                      u2opt_1_com_ids, u2opt_opt_com_ids):
+                    score = (u3opt_sjm_score + lcm_score + u13_sjm_score + u2opt_sjm_score) / 4
+                else:
+                    score = 0
+            else:
+                score = 0
+        else:
+            score = 0
+
+        pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
+                          "pred": opt})
+
+    return pred_data
+
 
 def predict_shape_topo_mapping(prob, anlg, tran, d):
     u1_coms = d.get("stub").get("u1_coms")
@@ -231,22 +249,27 @@ def predict_duplicate_new(prob, anlg, tran, d):
     pred_data = []
     for ii, opt in enumerate(prob.options):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
-        dup_score, stub = transform.evaluate_duplicate(u3, opt)
-        u3_to_opt_locs = stub.get("u1_to_u2_locs")
-
-        if len(u1_to_u2_locs) <= 1 or len(u1_to_u2_locs) != len(u3_to_opt_locs):
+        if len(u1_to_u2_locs) <= 1:
             score = 0
         else:
-            # it is actually a location map
-            dist = np.array([[np.linalg.norm(u1_to_u2_loc - u3_to_opt_loc) for u3_to_opt_loc in u3_to_opt_locs]
-                             for u1_to_u2_loc in u1_to_u2_locs])
-            lcm_u2_com_ids, lcm_opt_com_ids, level = map.significant_level_first_injective_mapping(dist,
-                                                                                                   lambda a, b: a <= b)
-            if len(lcm_u2_com_ids) != len(u1_to_u2_locs):
+            dup_score, stub = transform.evaluate_duplicate(u3, opt)
+            u3_to_opt_locs = stub.get("u1_to_u2_locs")
+
+            if len(u1_to_u2_locs) != len(u3_to_opt_locs):
                 score = 0
             else:
-                shape_relative_location_score = 1 - level / ((u3.shape[0] / u3_tr.shape[0]) ** 2 + (u3.shape[1] / u3_tr.shape[1]) ** 2) ** 0.5
-                score = (dup_score + shape_relative_location_score) / 2
+                # it is actually a location map
+                dist = np.array([[np.linalg.norm(u1_to_u2_loc - u3_to_opt_loc) for u3_to_opt_loc in u3_to_opt_locs]
+                                 for u1_to_u2_loc in u1_to_u2_locs])
+                lcm_u2_com_ids, lcm_opt_com_ids, level = map.significant_level_first_injective_mapping(dist,
+                                                                                                       lambda a,
+                                                                                                              b: a <= b)
+                if len(lcm_u2_com_ids) != len(u1_to_u2_locs):
+                    score = 0
+                else:
+                    shape_relative_location_score = 1 - level / (
+                                (u3.shape[0] / u3_tr.shape[0]) ** 2 + (u3.shape[1] / u3_tr.shape[1]) ** 2) ** 0.5
+                    score = (dup_score + shape_relative_location_score) / 2
 
         pred_data.append({**d, "optn": ii + 1, "optn_score": score, "mato_score": (d.get("mat_score") + score) / 2,
                           "pred": opt})
@@ -256,18 +279,21 @@ def predict_duplicate_new(prob, anlg, tran, d):
 
 def predict_shape_texture_transfer(prob, anlg, tran, d):
     u3 = prob.matrix[anlg.get("value")[2]]
+    u1_filled = d.get("stub").get("u1_filled")
     u2_filled = d.get("stub").get("u2_filled")
     u3_filled = d.get("stub").get("u3_filled")
-    u1_u3_shape_index = d.get("stub").get("u1_u3_shape_index")
     u1_u2_texture_index = d.get("stub").get("u1_u2_texture_index")
     u2_texture_index = d.get("stub").get("u2_texture_index")
+    u1_u3_shape_index = soft_jaccard.soft_jaccard(u1_filled, u3_filled)[0]
 
     pred_data = []
     for ii, opt in enumerate(prob.options):
         print(prob.name, anlg.get("name"), tran.get("name"), ii)
 
         opt_filled = utils.fill_holes(opt)
-        old_u2_opt_shape_index = jaccard.jaccard_coef(u2_filled, opt_filled)[0]
+
+        # old_u2_opt_shape_index = jaccard.jaccard_coef(u2_filled, opt_filled)[0]
+        # u2_opt_shape_index = soft_jaccard.soft_jaccard(u2_filled, opt_filled)[0]
 
         u2_opt_shape_index = soft_jaccard.soft_jaccard(u2_filled, opt_filled)[0]
 

@@ -3,6 +3,7 @@ import copy
 import analogy_new
 import transform
 import jaccard
+import soft_jaccard
 import asymmetric_jaccard
 from prob_anlg_tran_new import get_sub_probs
 from predict import predict
@@ -105,6 +106,8 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
             score = min(scores)
             copies_to_u1_x = (np.array(u1_to_u2_xs[1 :]) - u1_to_u2_xs[0]).tolist()
             copies_to_u1_y = (np.array(u1_to_u2_ys[1 :]) - u1_to_u2_ys[0]).tolist()
+    elif "identity_shape_loc_isomorphism" == tran.get("name"):
+        score, stub = transform.evaluate_identity_shape_loc_isomorphism(u1, u2, u3)
     elif "duplicate_new" == tran.get("name"):
         score, stub = transform.evaluate_duplicate(u1, u2)
     elif "shape_texture_transfer" == tran.get("name"):
@@ -121,7 +124,8 @@ def run_prob_anlg_tran_2x2(prob, anlg, tran):
         score, stub = transform.evaluate_topo_delta_shape_isomorphism(u1, u2, u3)
     else:
         u1_t = transform.apply_unary_transformation(u1, tran)
-        score, _, _ = jaccard.jaccard_coef(u1_t, u2)
+        old_score, _, _ = jaccard.jaccard_coef(u1_t, u2)
+        score, _, _ = soft_jaccard.soft_jaccard(u1_t, u2)
 
     if "mirror" == tran.get("name") or "mirror_rot_180" == tran.get("name"):
         # if u1 or u2 is already symmetric, then we shouldn't use mirror tran.
