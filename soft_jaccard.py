@@ -6,7 +6,7 @@ import norm
 
 norm.load_norm_to_p()
 
-alpha = 0.003
+alpha = 0.007
 
 
 def soft_partition(PR, order = None):
