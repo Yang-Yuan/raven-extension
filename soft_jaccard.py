@@ -6,7 +6,9 @@ import norm
 
 norm.load_norm_to_p()
 
-alpha = 0.007
+# alpha = 0.007 for ACE problems
+
+alpha = 0.1 # for UT
 
 
 def soft_partition(PR, order = None):

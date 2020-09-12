@@ -7,103 +7,114 @@ import numpy as np
 # import utils
 # from skimage.transform import resize
 # import map
-# from math import sin, cos, pi
-# import jaccard
+from math import sin, cos, pi
+import jaccard
 import soft_jaccard
 # import norm
 
 
 # UTs are done with alpha = 0.1
 
-A = np.full((5, 5), False)
-A[0, 0] = True
-A[1:4, 1:4] = True
-B = np.full((5, 5), False)
-B[4, 4] = True
-B[1:4, 1:4] = True
-
-sj, diff_to_A_x, diff_to_A_y, diff_to_B_x, diff_to_B_y, diff = soft_jaccard.soft_jaccard(A, B, asymmetric = True)
-sj0, diff_to_A_x0, diff_to_A_y0, diff_to_B_x0, diff_to_B_y0, diff0 = soft_jaccard.soft_jaccard(B, A, asymmetric = True)
-
-print("aloha")
+# A = np.full((5, 5), False)
+# A[0, 0] = True
+# A[1:4, 1:4] = True
+# B = np.full((5, 5), False)
+# B[4, 4] = True
+# B[1:4, 1:4] = True
+#
+# sj, diff_to_A_x, diff_to_A_y, diff_to_B_x, diff_to_B_y, diff = soft_jaccard.soft_jaccard(A, B, asymmetric = True)
+# sj0, diff_to_A_x0, diff_to_A_y0, diff_to_B_x0, diff_to_B_y0, diff0 = soft_jaccard.soft_jaccard(B, A, asymmetric = True)
+#
+# print("aloha")
 
 # norm.load_norm_to_p()
 
-# r = 10
-# A = np.full((21, 21), False)
-# for gama in range(360):
-#     y = 10 + r * sin(pi / 180 * gama)
-#     x = 10 + r * cos(pi / 180 * gama)
-#     if y - int(y) > 0.5:
-#         y = int(y) + 1
-#     else:
-#         y = int(y)
-#     if x - int(x) > 0.5:
-#         x = int(x) + 1
-#     else:
-#         x = int(x)
-#     A[y, x] = True
-#
-#
-# r = 9
-# B = np.full((21, 21), False)
-# for gama in range(360):
-#     y = 10 + r * sin(pi / 180 * gama)
-#     x = 10 + r * cos(pi / 180 * gama)
-#     if y - int(y) > 0.5:
-#         y = int(y) + 1
-#     else:
-#         y = int(y)
-#     if x - int(x) > 0.5:
-#         x = int(x) + 1
-#     else:
-#         x = int(x)
-#     B[y, x] = True
-#
-#
-# r = 10
-# C = np.full((21, 21), False)
-# for gama in range(181):
-#     y = 10 + r * sin(pi / 180 * gama)
-#     x = 10 + r * cos(pi / 180 * gama)
-#     if y - int(y) > 0.5:
-#         y = int(y) + 1
-#     else:
-#         y = int(y)
-#     if x - int(x) > 0.5:
-#         x = int(x) + 1
-#     else:
-#         x = int(x)
-#     C[y, x] = True
-# C[10, :] = True
-#
-# j_AB, j_A_to_B_x, j_A_to_B_y = jaccard.jaccard_coef_naive(A, B)
-# j_AC, j_A_to_C_x, j_A_to_C_y = jaccard.jaccard_coef_naive(A, C)
-#
-# sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
-# sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
-#
-# sj_AC, A_to_C_x, A_to_C_y = soft_jaccard.soft_jaccard(A, C)
-# sj_CA, C_to_A_x, C_to_A_y = soft_jaccard.soft_jaccard(C, A)
-#
-# print("llohe")
+r = 5.5
+A = np.full((12, 12), False)
+for gama in range(360):
+    y = 5.5 + r * sin(pi / 180 * gama)
+    x = 5.5 + r * cos(pi / 180 * gama)
+    if y - int(y) > 0.5:
+        y = int(y) + 1
+    else:
+        y = int(y)
+    if x - int(x) > 0.5:
+        x = int(x) + 1
+    else:
+        x = int(x)
+    A[y, x] = True
+A[0, [3, 8]] = False
+A[[3, 8], 0] = False
+A[11, [3, 8]] = False
+A[[3, 8], 11] = False
+
+r = 5.5
+B = np.full((12, 12), False)
+for gama in range(181):
+    y = 5.5 - r * sin(pi / 180 * gama)
+    x = 5.5 + r * cos(pi / 180 * gama)
+    if y - int(y) > 0.5:
+        y = int(y) + 1
+    else:
+        y = int(y)
+    if x - int(x) > 0.5:
+        x = int(x) + 1
+    else:
+        x = int(x)
+    B[y, x] = True
+B[5, :] = True
+B[0, [3, 8]] = False
+B[[3, 8], 0] = False
+B[11, [3, 8]] = False
+B[[3, 8], 11] = False
 
 
-# A = np.full((20, 20), False)
+r = 4.5
+C = np.full((12, 12), False)
+for gama in range(360):
+    y = 5.5 + r * sin(pi / 180 * gama)
+    x = 5.5 + r * cos(pi / 180 * gama)
+    if y - int(y) > 0.5:
+        y = int(y) + 1
+    else:
+        y = int(y)
+    if x - int(x) > 0.5:
+        x = int(x) + 1
+    else:
+        x = int(x)
+    C[y, x] = True
+C[1, [3, 8]] = False
+C[[3, 8], 1] = False
+C[10, [3, 8]] = False
+C[[3, 8], 10] = False
+
+j_AB, j_A_to_B_x, j_A_to_B_y = jaccard.jaccard_coef_naive(A, B)
+j_AC, j_A_to_C_x, j_A_to_C_y = jaccard.jaccard_coef_naive(A, C)
+
+sj_AB, A_to_B_x, A_to_B_y = soft_jaccard.soft_jaccard(A, B)
+sj_BA, B_to_A_x, B_to_A_y = soft_jaccard.soft_jaccard(B, A)
+
+sj_AC, A_to_C_x, A_to_C_y = soft_jaccard.soft_jaccard(A, C)
+sj_CA, C_to_A_x, C_to_A_y = soft_jaccard.soft_jaccard(C, A)
+
+print("llohe")
+
+
+# A = np.full((10, 10), False)
 # A[0, :] = True
 # A[:, 0] = True
-# A[19, :] = True
-# A[:, 19] = True
-# B = np.full((20, 20), False)
+# A[9, :] = True
+# A[:, 9] = True
+# B = np.full((10, 10), False)
 # B[0, :] = True
-# B[:, 19] = True
-# for ii in range(20):
+# B[:, 9] = True
+# for ii in range(10):
 #     B[ii, ii] = True
-# C = np.full((20, 20), False)
-# C[0, 0 : 19] = True
-# C[0 : 19, 0] = True
-# C[18, 0 : 19] = True
-# C[0 : 19, 18] = True
+# C = np.full((10, 10), False)
+# C[0, 0 : 9] = True
+# C[0 : 9, 0] = True
+# C[8, 0 : 9] = True
+# C[0 : 9, 8] = True
 #
 # j_AB = np.logical_and(A, B).sum() / np.logical_or(A, B).sum()
 # j_AC = np.logical_and(A, C).sum() / np.logical_or(A, C).sum()
